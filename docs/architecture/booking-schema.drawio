@@ -1,0 +1,730 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="booking-schema" name="Booking schema">
+    <mxGraphModel grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3300" pageHeight="1900" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="&lt;b&gt;Booking pricing · schema dữ liệu theo zone&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:12px;color:#64748b&quot;&gt;PK khoá chính · FK khoá ngoại · UK unique · nét liền: REFERENCES trong PostgreSQL · nét đứt: khoá logic (lake / entity của Feast) · viền đứt: bảng [Thiết kế]&lt;/span&gt;" style="text;html=1;align=left;verticalAlign=top;fontSize=22;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="1800" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="z_bronze" value="Bronze · MinIO landing + Kafka (Parquet, không ràng buộc)" style="rounded=1;arcSize=2;html=1;fillColor=#fff7ed;strokeColor=#fdba74;verticalAlign=top;align=left;spacingLeft=12;spacingTop=6;fontStyle=1;fontSize=15;fontColor=#9a3412;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="1">
+          <mxGeometry x="40" y="100" width="1230" height="946" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_hotels" value="raw_hotels  &lt;span style=&quot;font-weight:normal;font-size:11px;color:#64748b&quot;&gt;[Đã có]&lt;/span&gt;" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;rounded=1;arcSize=3;fillColor=#e2e8f0;swimlaneFillColor=#ffffff;strokeColor=#475569;dashed=0;fontStyle=1;fontSize=13;fontColor=#0f172a;align=left;spacingLeft=10;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="1">
+          <mxGeometry x="70" y="150" width="330" height="118" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_hotels__hotel_id" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;hotel_id&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_hotels">
+          <mxGeometry x="0" y="30" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_hotels__city" value="city &lt;span style=&quot;color:#64748b&quot;&gt;STRING&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_hotels">
+          <mxGeometry x="0" y="52" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_hotels__stars" value="stars &lt;span style=&quot;color:#64748b&quot;&gt;INT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_hotels">
+          <mxGeometry x="0" y="74" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_hotels__base_price" value="base_price &lt;span style=&quot;color:#64748b&quot;&gt;DOUBLE&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· VND/đêm&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_hotels">
+          <mxGeometry x="0" y="96" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_customers" value="raw_customers  &lt;span style=&quot;font-weight:normal;font-size:11px;color:#64748b&quot;&gt;[Đã có]&lt;/span&gt;" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;rounded=1;arcSize=3;fillColor=#e2e8f0;swimlaneFillColor=#ffffff;strokeColor=#475569;dashed=0;fontStyle=1;fontSize=13;fontColor=#0f172a;align=left;spacingLeft=10;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="1">
+          <mxGeometry x="70" y="304" width="330" height="96" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_customers__customer_id" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;customer_id&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_customers">
+          <mxGeometry x="0" y="30" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_customers__home_city" value="home_city &lt;span style=&quot;color:#64748b&quot;&gt;STRING&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_customers">
+          <mxGeometry x="0" y="52" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_customers__loyalty_tier" value="loyalty_tier &lt;span style=&quot;color:#64748b&quot;&gt;INT&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· 0–3&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_customers">
+          <mxGeometry x="0" y="74" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_events_calendar" value="raw_events_calendar  &lt;span style=&quot;font-weight:normal;font-size:11px;color:#64748b&quot;&gt;[Thiết kế]&lt;/span&gt;" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;rounded=1;arcSize=3;fillColor=#e2e8f0;swimlaneFillColor=#f8fafc;strokeColor=#475569;dashed=1;fontStyle=1;fontSize=13;fontColor=#0f172a;align=left;spacingLeft=10;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="1">
+          <mxGeometry x="70" y="436" width="330" height="162" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_events_calendar__event_id" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;event_id&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_events_calendar">
+          <mxGeometry x="0" y="30" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_events_calendar__city" value="city &lt;span style=&quot;color:#64748b&quot;&gt;STRING&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_events_calendar">
+          <mxGeometry x="0" y="52" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_events_calendar__start_date" value="start_date &lt;span style=&quot;color:#64748b&quot;&gt;DATE&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_events_calendar">
+          <mxGeometry x="0" y="74" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_events_calendar__end_date" value="end_date &lt;span style=&quot;color:#64748b&quot;&gt;DATE&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_events_calendar">
+          <mxGeometry x="0" y="96" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_events_calendar__announce_date" value="announce_date &lt;span style=&quot;color:#64748b&quot;&gt;DATE&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_events_calendar">
+          <mxGeometry x="0" y="118" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_events_calendar__demand_uplift" value="demand_uplift &lt;span style=&quot;color:#64748b&quot;&gt;DOUBLE&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_events_calendar">
+          <mxGeometry x="0" y="140" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_hotel_changes" value="raw_hotel_changes  &lt;span style=&quot;font-weight:normal;font-size:11px;color:#64748b&quot;&gt;[Đã có]&lt;/span&gt;" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;rounded=1;arcSize=3;fillColor=#e2e8f0;swimlaneFillColor=#ffffff;strokeColor=#475569;dashed=0;fontStyle=1;fontSize=13;fontColor=#0f172a;align=left;spacingLeft=10;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="1">
+          <mxGeometry x="490" y="150" width="330" height="118" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_hotel_changes__hotel_id" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;span style=&quot;color:#2563eb;font-weight:bold&quot;&gt;FK&lt;/span&gt; &lt;u&gt;hotel_id&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_hotel_changes">
+          <mxGeometry x="0" y="30" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_hotel_changes__valid_from" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;valid_from&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;TIMESTAMP&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_hotel_changes">
+          <mxGeometry x="0" y="52" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_hotel_changes__price_factor" value="price_factor &lt;span style=&quot;color:#64748b&quot;&gt;DOUBLE&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_hotel_changes">
+          <mxGeometry x="0" y="74" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_hotel_changes__price" value="price &lt;span style=&quot;color:#64748b&quot;&gt;DOUBLE&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· nguồn SCD2&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_hotel_changes">
+          <mxGeometry x="0" y="96" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_bookings" value="raw_bookings  &lt;span style=&quot;font-weight:normal;font-size:11px;color:#64748b&quot;&gt;[Đã có]&lt;/span&gt;" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;rounded=1;arcSize=3;fillColor=#e2e8f0;swimlaneFillColor=#ffffff;strokeColor=#475569;dashed=0;fontStyle=1;fontSize=13;fontColor=#0f172a;align=left;spacingLeft=10;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="1">
+          <mxGeometry x="490" y="304" width="330" height="272" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_bookings__booking_id" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;booking_id&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_bookings">
+          <mxGeometry x="0" y="30" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_bookings__idempotency_key" value="idempotency_key &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· 2% trùng&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_bookings">
+          <mxGeometry x="0" y="52" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_bookings__customer_id" value="&lt;span style=&quot;color:#2563eb;font-weight:bold&quot;&gt;FK&lt;/span&gt; customer_id &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_bookings">
+          <mxGeometry x="0" y="74" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_bookings__hotel_id" value="&lt;span style=&quot;color:#2563eb;font-weight:bold&quot;&gt;FK&lt;/span&gt; hotel_id &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_bookings">
+          <mxGeometry x="0" y="96" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_bookings__room_type | room_category" value="room_type | room_category &lt;span style=&quot;color:#64748b&quot;&gt;STRING&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· v1 | v2&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_bookings">
+          <mxGeometry x="0" y="118" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_bookings__created_at" value="created_at &lt;span style=&quot;color:#64748b&quot;&gt;TIMESTAMP&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_bookings">
+          <mxGeometry x="0" y="140" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_bookings__checkin" value="checkin &lt;span style=&quot;color:#64748b&quot;&gt;DATE&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_bookings">
+          <mxGeometry x="0" y="162" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_bookings__nights" value="nights &lt;span style=&quot;color:#64748b&quot;&gt;INT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_bookings">
+          <mxGeometry x="0" y="184" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_bookings__cancellation_policy" value="cancellation_policy &lt;span style=&quot;color:#64748b&quot;&gt;STRING&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· từ v2&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_bookings">
+          <mxGeometry x="0" y="206" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_bookings__price" value="price &lt;span style=&quot;color:#64748b&quot;&gt;DOUBLE&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_bookings">
+          <mxGeometry x="0" y="228" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_bookings__status" value="status &lt;span style=&quot;color:#64748b&quot;&gt;STRING&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_bookings">
+          <mxGeometry x="0" y="250" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_booking_events" value="raw_booking_events (Kafka)  &lt;span style=&quot;font-weight:normal;font-size:11px;color:#64748b&quot;&gt;[Đã có]&lt;/span&gt;" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;rounded=1;arcSize=3;fillColor=#e2e8f0;swimlaneFillColor=#ffffff;strokeColor=#475569;dashed=0;fontStyle=1;fontSize=13;fontColor=#0f172a;align=left;spacingLeft=10;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="1">
+          <mxGeometry x="490" y="612" width="330" height="206" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_booking_events__event_id" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;event_id&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· 1,5% trùng&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_booking_events">
+          <mxGeometry x="0" y="30" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_booking_events__booking_id" value="booking_id &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_booking_events">
+          <mxGeometry x="0" y="52" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_booking_events__customer_id" value="&lt;span style=&quot;color:#2563eb;font-weight:bold&quot;&gt;FK&lt;/span&gt; customer_id &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_booking_events">
+          <mxGeometry x="0" y="74" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_booking_events__hotel_id" value="&lt;span style=&quot;color:#2563eb;font-weight:bold&quot;&gt;FK&lt;/span&gt; hotel_id &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_booking_events">
+          <mxGeometry x="0" y="96" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_booking_events__type" value="type &lt;span style=&quot;color:#64748b&quot;&gt;STRING&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· created/paid/cancelled&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_booking_events">
+          <mxGeometry x="0" y="118" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_booking_events__device" value="device &lt;span style=&quot;color:#64748b&quot;&gt;STRING&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_booking_events">
+          <mxGeometry x="0" y="140" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_booking_events__event_time" value="event_time &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· ms&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_booking_events">
+          <mxGeometry x="0" y="162" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_booking_events__ingest_time" value="ingest_time &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· ms&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_booking_events">
+          <mxGeometry x="0" y="184" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_inventory" value="raw_inventory  &lt;span style=&quot;font-weight:normal;font-size:11px;color:#64748b&quot;&gt;[Thiết kế]&lt;/span&gt;" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;rounded=1;arcSize=3;fillColor=#e2e8f0;swimlaneFillColor=#f8fafc;strokeColor=#475569;dashed=1;fontStyle=1;fontSize=13;fontColor=#0f172a;align=left;spacingLeft=10;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="1">
+          <mxGeometry x="490" y="854" width="330" height="162" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_inventory__hotel_id" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;span style=&quot;color:#2563eb;font-weight:bold&quot;&gt;FK&lt;/span&gt; &lt;u&gt;hotel_id&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_inventory">
+          <mxGeometry x="0" y="30" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_inventory__room_type" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;room_type&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;STRING&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_inventory">
+          <mxGeometry x="0" y="52" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_inventory__stay_date" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;stay_date&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;DATE&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_inventory">
+          <mxGeometry x="0" y="74" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_inventory__snapshot_ts" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;snapshot_ts&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;TIMESTAMP&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_inventory">
+          <mxGeometry x="0" y="96" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_inventory__capacity" value="capacity &lt;span style=&quot;color:#64748b&quot;&gt;INT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_inventory">
+          <mxGeometry x="0" y="118" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_inventory__rooms_sold" value="rooms_sold &lt;span style=&quot;color:#64748b&quot;&gt;INT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_inventory">
+          <mxGeometry x="0" y="140" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_payments" value="raw_payments  &lt;span style=&quot;font-weight:normal;font-size:11px;color:#64748b&quot;&gt;[Đã có]&lt;/span&gt;" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;rounded=1;arcSize=3;fillColor=#e2e8f0;swimlaneFillColor=#ffffff;strokeColor=#475569;dashed=0;fontStyle=1;fontSize=13;fontColor=#0f172a;align=left;spacingLeft=10;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="1">
+          <mxGeometry x="910" y="150" width="330" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_payments__payment_id" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;payment_id&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_payments">
+          <mxGeometry x="0" y="30" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_payments__booking_id" value="&lt;span style=&quot;color:#2563eb;font-weight:bold&quot;&gt;FK&lt;/span&gt; booking_id &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_payments">
+          <mxGeometry x="0" y="52" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_payments__amount" value="amount &lt;span style=&quot;color:#64748b&quot;&gt;DOUBLE&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_payments">
+          <mxGeometry x="0" y="74" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_payments__provider" value="provider &lt;span style=&quot;color:#64748b&quot;&gt;STRING&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_payments">
+          <mxGeometry x="0" y="96" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_payments__status" value="status &lt;span style=&quot;color:#64748b&quot;&gt;STRING&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_payments">
+          <mxGeometry x="0" y="118" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_quotes" value="raw_quotes  &lt;span style=&quot;font-weight:normal;font-size:11px;color:#64748b&quot;&gt;[Thiết kế]&lt;/span&gt;" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;rounded=1;arcSize=3;fillColor=#e2e8f0;swimlaneFillColor=#f8fafc;strokeColor=#475569;dashed=1;fontStyle=1;fontSize=13;fontColor=#0f172a;align=left;spacingLeft=10;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="1">
+          <mxGeometry x="910" y="326" width="330" height="426" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_quotes__quote_id" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;quote_id&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_quotes">
+          <mxGeometry x="0" y="30" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_quotes__hotel_id" value="&lt;span style=&quot;color:#2563eb;font-weight:bold&quot;&gt;FK&lt;/span&gt; hotel_id &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_quotes">
+          <mxGeometry x="0" y="52" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_quotes__room_type" value="room_type &lt;span style=&quot;color:#64748b&quot;&gt;STRING&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_quotes">
+          <mxGeometry x="0" y="74" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_quotes__stay_date" value="stay_date &lt;span style=&quot;color:#64748b&quot;&gt;DATE&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_quotes">
+          <mxGeometry x="0" y="96" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_quotes__rate_plan" value="rate_plan &lt;span style=&quot;color:#64748b&quot;&gt;STRING&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_quotes">
+          <mxGeometry x="0" y="118" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_quotes__ts" value="ts &lt;span style=&quot;color:#64748b&quot;&gt;TIMESTAMP&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_quotes">
+          <mxGeometry x="0" y="140" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_quotes__session_id" value="session_id &lt;span style=&quot;color:#64748b&quot;&gt;STRING&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· không có customer_id&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_quotes">
+          <mxGeometry x="0" y="162" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_quotes__price" value="price &lt;span style=&quot;color:#64748b&quot;&gt;DOUBLE&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_quotes">
+          <mxGeometry x="0" y="184" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_quotes__policy_price" value="policy_price &lt;span style=&quot;color:#64748b&quot;&gt;DOUBLE&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_quotes">
+          <mxGeometry x="0" y="206" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_quotes__jitter" value="jitter &lt;span style=&quot;color:#64748b&quot;&gt;DOUBLE&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_quotes">
+          <mxGeometry x="0" y="228" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_quotes__propensity" value="propensity &lt;span style=&quot;color:#64748b&quot;&gt;DOUBLE&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· 1/5&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_quotes">
+          <mxGeometry x="0" y="250" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_quotes__jitter_clipped" value="jitter_clipped &lt;span style=&quot;color:#64748b&quot;&gt;BOOLEAN&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_quotes">
+          <mxGeometry x="0" y="272" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_quotes__available" value="available &lt;span style=&quot;color:#64748b&quot;&gt;BOOLEAN&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_quotes">
+          <mxGeometry x="0" y="294" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_quotes__lead_group" value="lead_group &lt;span style=&quot;color:#64748b&quot;&gt;INT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_quotes">
+          <mxGeometry x="0" y="316" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_quotes__model_version" value="model_version &lt;span style=&quot;color:#64748b&quot;&gt;STRING&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_quotes">
+          <mxGeometry x="0" y="338" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_quotes__beta_version" value="beta_version &lt;span style=&quot;color:#64748b&quot;&gt;STRING&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_quotes">
+          <mxGeometry x="0" y="360" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_quotes__source" value="source &lt;span style=&quot;color:#64748b&quot;&gt;STRING&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· nightly/overlay/fallback&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_quotes">
+          <mxGeometry x="0" y="382" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="raw_quotes__latency_ms" value="latency_ms &lt;span style=&quot;color:#64748b&quot;&gt;DOUBLE&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="raw_quotes">
+          <mxGeometry x="0" y="404" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="z_silver" value="Silver · Iceberg lake.silver (join theo natural key)" style="rounded=1;arcSize=2;html=1;fillColor=#eff6ff;strokeColor=#93c5fd;verticalAlign=top;align=left;spacingLeft=12;spacingTop=6;fontStyle=1;fontSize=15;fontColor=#1e40af;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="1">
+          <mxGeometry x="1340" y="100" width="390" height="770" as="geometry" />
+        </mxCell>
+        <mxCell id="stg_hotel_changes" value="stg_hotel_changes  &lt;span style=&quot;font-weight:normal;font-size:11px;color:#64748b&quot;&gt;[Đã có]&lt;/span&gt;" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;rounded=1;arcSize=3;fillColor=#e2e8f0;swimlaneFillColor=#ffffff;strokeColor=#475569;dashed=0;fontStyle=1;fontSize=13;fontColor=#0f172a;align=left;spacingLeft=10;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="1">
+          <mxGeometry x="1370" y="150" width="330" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="stg_hotel_changes__hotel_id" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;hotel_id&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="stg_hotel_changes">
+          <mxGeometry x="0" y="30" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="stg_hotel_changes__valid_from" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;valid_from&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;TIMESTAMP&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="stg_hotel_changes">
+          <mxGeometry x="0" y="52" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="stg_hotel_changes__city" value="city &lt;span style=&quot;color:#64748b&quot;&gt;STRING&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="stg_hotel_changes">
+          <mxGeometry x="0" y="74" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="stg_hotel_changes__stars" value="stars &lt;span style=&quot;color:#64748b&quot;&gt;INT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="stg_hotel_changes">
+          <mxGeometry x="0" y="96" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="stg_hotel_changes__price" value="price &lt;span style=&quot;color:#64748b&quot;&gt;DECIMAL&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="stg_hotel_changes">
+          <mxGeometry x="0" y="118" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="stg_bookings" value="stg_bookings  &lt;span style=&quot;font-weight:normal;font-size:11px;color:#64748b&quot;&gt;[Đã có]&lt;/span&gt;" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;rounded=1;arcSize=3;fillColor=#e2e8f0;swimlaneFillColor=#ffffff;strokeColor=#475569;dashed=0;fontStyle=1;fontSize=13;fontColor=#0f172a;align=left;spacingLeft=10;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="1">
+          <mxGeometry x="1370" y="326" width="330" height="294" as="geometry" />
+        </mxCell>
+        <mxCell id="stg_bookings__booking_id" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;booking_id&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· dedup theo idempotency_key&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="stg_bookings">
+          <mxGeometry x="0" y="30" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="stg_bookings__idempotency_key" value="&lt;span style=&quot;color:#7c3aed;font-weight:bold&quot;&gt;UK&lt;/span&gt; idempotency_key &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="stg_bookings">
+          <mxGeometry x="0" y="52" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="stg_bookings__customer_id" value="customer_id &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="stg_bookings">
+          <mxGeometry x="0" y="74" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="stg_bookings__hotel_id" value="hotel_id &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="stg_bookings">
+          <mxGeometry x="0" y="96" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="stg_bookings__city, stars" value="city, stars &lt;span style=&quot;color:#64748b&quot;&gt;&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· join hotels&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="stg_bookings">
+          <mxGeometry x="0" y="118" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="stg_bookings__room_category" value="room_category &lt;span style=&quot;color:#64748b&quot;&gt;STRING&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· đã gộp v1/v2&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="stg_bookings">
+          <mxGeometry x="0" y="140" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="stg_bookings__cancellation_policy" value="cancellation_policy &lt;span style=&quot;color:#64748b&quot;&gt;STRING&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="stg_bookings">
+          <mxGeometry x="0" y="162" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="stg_bookings__created_at" value="created_at &lt;span style=&quot;color:#64748b&quot;&gt;TIMESTAMP&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="stg_bookings">
+          <mxGeometry x="0" y="184" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="stg_bookings__checkin" value="checkin &lt;span style=&quot;color:#64748b&quot;&gt;DATE&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="stg_bookings">
+          <mxGeometry x="0" y="206" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="stg_bookings__nights" value="nights &lt;span style=&quot;color:#64748b&quot;&gt;INT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="stg_bookings">
+          <mxGeometry x="0" y="228" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="stg_bookings__price" value="price &lt;span style=&quot;color:#64748b&quot;&gt;DECIMAL&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="stg_bookings">
+          <mxGeometry x="0" y="250" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="stg_bookings__status" value="status &lt;span style=&quot;color:#64748b&quot;&gt;STRING&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="stg_bookings">
+          <mxGeometry x="0" y="272" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="stg_quotes" value="stg_quotes  &lt;span style=&quot;font-weight:normal;font-size:11px;color:#64748b&quot;&gt;[Thiết kế]&lt;/span&gt;" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;rounded=1;arcSize=3;fillColor=#e2e8f0;swimlaneFillColor=#f8fafc;strokeColor=#475569;dashed=1;fontStyle=1;fontSize=13;fontColor=#0f172a;align=left;spacingLeft=10;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="1">
+          <mxGeometry x="1370" y="656" width="330" height="184" as="geometry" />
+        </mxCell>
+        <mxCell id="stg_quotes__quote_id" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;quote_id&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="stg_quotes">
+          <mxGeometry x="0" y="30" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="stg_quotes__hotel_id" value="hotel_id &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="stg_quotes">
+          <mxGeometry x="0" y="52" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="stg_quotes__room_type" value="room_type &lt;span style=&quot;color:#64748b&quot;&gt;STRING&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="stg_quotes">
+          <mxGeometry x="0" y="74" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="stg_quotes__stay_date" value="stay_date &lt;span style=&quot;color:#64748b&quot;&gt;DATE&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="stg_quotes">
+          <mxGeometry x="0" y="96" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="stg_quotes__…" value="… &lt;span style=&quot;color:#64748b&quot;&gt;&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· cột như raw_quotes&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="stg_quotes">
+          <mxGeometry x="0" y="118" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="stg_quotes__capacity, rooms_left" value="capacity, rooms_left &lt;span style=&quot;color:#64748b&quot;&gt;INT&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· join raw_inventory&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="stg_quotes">
+          <mxGeometry x="0" y="140" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="stg_quotes__is_bot" value="is_bot &lt;span style=&quot;color:#64748b&quot;&gt;BOOLEAN&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="stg_quotes">
+          <mxGeometry x="0" y="162" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="z_gold" value="Gold · PostgreSQL schema gold (warehouse + offline store của Feast)" style="rounded=1;arcSize=2;html=1;fillColor=#f0fdf4;strokeColor=#86efac;verticalAlign=top;align=left;spacingLeft=12;spacingTop=6;fontStyle=1;fontSize=15;fontColor=#166534;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="1">
+          <mxGeometry x="1800" y="100" width="1650" height="1144" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_hotel_demand" value="feat_hotel_demand  &lt;span style=&quot;font-weight:normal;font-size:11px;color:#64748b&quot;&gt;[Đã có]&lt;/span&gt;" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;rounded=1;arcSize=3;fillColor=#e2e8f0;swimlaneFillColor=#ffffff;strokeColor=#475569;dashed=0;fontStyle=1;fontSize=13;fontColor=#0f172a;align=left;spacingLeft=10;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="1">
+          <mxGeometry x="1830" y="150" width="330" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_hotel_demand__hotel_id" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;hotel_id&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· entity&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_hotel_demand">
+          <mxGeometry x="0" y="30" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_hotel_demand__event_timestamp" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;event_timestamp&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;TIMESTAMP&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_hotel_demand">
+          <mxGeometry x="0" y="52" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_hotel_demand__bookings_7d" value="bookings_7d &lt;span style=&quot;color:#64748b&quot;&gt;INT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_hotel_demand">
+          <mxGeometry x="0" y="74" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_hotel_demand__cancel_rate_30d" value="cancel_rate_30d &lt;span style=&quot;color:#64748b&quot;&gt;NUMERIC(5,4)&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_hotel_demand">
+          <mxGeometry x="0" y="96" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_hotel_demand__created" value="created &lt;span style=&quot;color:#64748b&quot;&gt;TIMESTAMP&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_hotel_demand">
+          <mxGeometry x="0" y="118" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_hotel_realtime" value="feat_hotel_realtime  &lt;span style=&quot;font-weight:normal;font-size:11px;color:#64748b&quot;&gt;[Một phần]&lt;/span&gt;" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;rounded=1;arcSize=3;fillColor=#e2e8f0;swimlaneFillColor=#ffffff;strokeColor=#475569;dashed=0;fontStyle=1;fontSize=13;fontColor=#0f172a;align=left;spacingLeft=10;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="1">
+          <mxGeometry x="1830" y="326" width="330" height="118" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_hotel_realtime__hotel_id" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;hotel_id&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· entity&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_hotel_realtime">
+          <mxGeometry x="0" y="30" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_hotel_realtime__event_timestamp" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;event_timestamp&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;TIMESTAMP&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_hotel_realtime">
+          <mxGeometry x="0" y="52" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_hotel_realtime__bookings_1h" value="bookings_1h &lt;span style=&quot;color:#64748b&quot;&gt;INT&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· Flink Job 1&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_hotel_realtime">
+          <mxGeometry x="0" y="74" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_hotel_realtime__created" value="created &lt;span style=&quot;color:#64748b&quot;&gt;TIMESTAMP&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_hotel_realtime">
+          <mxGeometry x="0" y="96" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_hotel_conversion_7d" value="feat_hotel_conversion_7d  &lt;span style=&quot;font-weight:normal;font-size:11px;color:#64748b&quot;&gt;[Thiết kế]&lt;/span&gt;" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;rounded=1;arcSize=3;fillColor=#e2e8f0;swimlaneFillColor=#f8fafc;strokeColor=#475569;dashed=1;fontStyle=1;fontSize=13;fontColor=#0f172a;align=left;spacingLeft=10;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="1">
+          <mxGeometry x="1830" y="480" width="330" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_hotel_conversion_7d__hotel_id" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;hotel_id&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· entity&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_hotel_conversion_7d">
+          <mxGeometry x="0" y="30" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_hotel_conversion_7d__event_timestamp" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;event_timestamp&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;TIMESTAMP&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_hotel_conversion_7d">
+          <mxGeometry x="0" y="52" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_hotel_conversion_7d__quotes_7d" value="quotes_7d &lt;span style=&quot;color:#64748b&quot;&gt;INT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_hotel_conversion_7d">
+          <mxGeometry x="0" y="74" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_hotel_conversion_7d__look_to_book_7d" value="look_to_book_7d &lt;span style=&quot;color:#64748b&quot;&gt;NUMERIC&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_hotel_conversion_7d">
+          <mxGeometry x="0" y="96" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_hotel_conversion_7d__created" value="created &lt;span style=&quot;color:#64748b&quot;&gt;TIMESTAMP&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_hotel_conversion_7d">
+          <mxGeometry x="0" y="118" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_hotel_occupancy" value="feat_hotel_occupancy  &lt;span style=&quot;font-weight:normal;font-size:11px;color:#64748b&quot;&gt;[Thiết kế]&lt;/span&gt;" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;rounded=1;arcSize=3;fillColor=#e2e8f0;swimlaneFillColor=#f8fafc;strokeColor=#475569;dashed=1;fontStyle=1;fontSize=13;fontColor=#0f172a;align=left;spacingLeft=10;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="1">
+          <mxGeometry x="1830" y="656" width="330" height="206" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_hotel_occupancy__hotel_id" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;hotel_id&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· entity&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_hotel_occupancy">
+          <mxGeometry x="0" y="30" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_hotel_occupancy__room_type" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;room_type&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;TEXT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_hotel_occupancy">
+          <mxGeometry x="0" y="52" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_hotel_occupancy__stay_date" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;stay_date&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;DATE&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_hotel_occupancy">
+          <mxGeometry x="0" y="74" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_hotel_occupancy__event_timestamp" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;event_timestamp&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;TIMESTAMP&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_hotel_occupancy">
+          <mxGeometry x="0" y="96" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_hotel_occupancy__capacity" value="capacity &lt;span style=&quot;color:#64748b&quot;&gt;INT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_hotel_occupancy">
+          <mxGeometry x="0" y="118" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_hotel_occupancy__rooms_left" value="rooms_left &lt;span style=&quot;color:#64748b&quot;&gt;INT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_hotel_occupancy">
+          <mxGeometry x="0" y="140" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_hotel_occupancy__overbook_k" value="overbook_k &lt;span style=&quot;color:#64748b&quot;&gt;INT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_hotel_occupancy">
+          <mxGeometry x="0" y="162" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_hotel_occupancy__created" value="created &lt;span style=&quot;color:#64748b&quot;&gt;TIMESTAMP&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_hotel_occupancy">
+          <mxGeometry x="0" y="184" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_customer_booking_stats" value="feat_customer_booking_stats  &lt;span style=&quot;font-weight:normal;font-size:11px;color:#64748b&quot;&gt;[Đã có]&lt;/span&gt;" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;rounded=1;arcSize=3;fillColor=#e2e8f0;swimlaneFillColor=#ffffff;strokeColor=#475569;dashed=0;fontStyle=1;fontSize=13;fontColor=#0f172a;align=left;spacingLeft=10;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="1">
+          <mxGeometry x="1830" y="898" width="330" height="162" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_customer_booking_stats__customer_id" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;customer_id&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· entity&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_customer_booking_stats">
+          <mxGeometry x="0" y="30" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_customer_booking_stats__event_timestamp" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;event_timestamp&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;TIMESTAMP&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_customer_booking_stats">
+          <mxGeometry x="0" y="52" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_customer_booking_stats__bookings_90d" value="bookings_90d &lt;span style=&quot;color:#64748b&quot;&gt;INT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_customer_booking_stats">
+          <mxGeometry x="0" y="74" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_customer_booking_stats__cancel_rate_90d" value="cancel_rate_90d &lt;span style=&quot;color:#64748b&quot;&gt;NUMERIC(5,4)&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_customer_booking_stats">
+          <mxGeometry x="0" y="96" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_customer_booking_stats__avg_lead_days_90d" value="avg_lead_days_90d &lt;span style=&quot;color:#64748b&quot;&gt;NUMERIC(6,1)&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_customer_booking_stats">
+          <mxGeometry x="0" y="118" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_customer_booking_stats__created" value="created &lt;span style=&quot;color:#64748b&quot;&gt;TIMESTAMP&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_customer_booking_stats">
+          <mxGeometry x="0" y="140" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="rate_calendar" value="rate_calendar  &lt;span style=&quot;font-weight:normal;font-size:11px;color:#64748b&quot;&gt;[Thiết kế]&lt;/span&gt;" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;rounded=1;arcSize=3;fillColor=#e2e8f0;swimlaneFillColor=#f8fafc;strokeColor=#475569;dashed=1;fontStyle=1;fontSize=13;fontColor=#0f172a;align=left;spacingLeft=10;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="1">
+          <mxGeometry x="2250" y="150" width="330" height="272" as="geometry" />
+        </mxCell>
+        <mxCell id="rate_calendar__hotel_id" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;hotel_id&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="rate_calendar">
+          <mxGeometry x="0" y="30" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="rate_calendar__room_type" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;room_type&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;TEXT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="rate_calendar">
+          <mxGeometry x="0" y="52" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="rate_calendar__stay_date" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;stay_date&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;DATE&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="rate_calendar">
+          <mxGeometry x="0" y="74" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="rate_calendar__rate_plan" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;rate_plan&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;TEXT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="rate_calendar">
+          <mxGeometry x="0" y="96" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="rate_calendar__valid_from" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;valid_from&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· theo giờ&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="rate_calendar">
+          <mxGeometry x="0" y="118" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="rate_calendar__price" value="price &lt;span style=&quot;color:#64748b&quot;&gt;NUMERIC&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="rate_calendar">
+          <mxGeometry x="0" y="140" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="rate_calendar__lambda" value="lambda &lt;span style=&quot;color:#64748b&quot;&gt;NUMERIC&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· giá bóng&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="rate_calendar">
+          <mxGeometry x="0" y="162" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="rate_calendar__jitter" value="jitter &lt;span style=&quot;color:#64748b&quot;&gt;NUMERIC&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="rate_calendar">
+          <mxGeometry x="0" y="184" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="rate_calendar__model_version" value="model_version &lt;span style=&quot;color:#64748b&quot;&gt;TEXT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="rate_calendar">
+          <mxGeometry x="0" y="206" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="rate_calendar__beta_version" value="beta_version &lt;span style=&quot;color:#64748b&quot;&gt;TEXT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="rate_calendar">
+          <mxGeometry x="0" y="228" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="rate_calendar__source" value="source &lt;span style=&quot;color:#64748b&quot;&gt;TEXT&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· nightly/overlay/fallback&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="rate_calendar">
+          <mxGeometry x="0" y="250" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="dim_hotel" value="dim_hotel (SCD2)  &lt;span style=&quot;font-weight:normal;font-size:11px;color:#64748b&quot;&gt;[Đã có]&lt;/span&gt;" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;rounded=1;arcSize=3;fillColor=#e2e8f0;swimlaneFillColor=#ffffff;strokeColor=#475569;dashed=0;fontStyle=1;fontSize=13;fontColor=#0f172a;align=left;spacingLeft=10;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="1">
+          <mxGeometry x="2250" y="458" width="330" height="206" as="geometry" />
+        </mxCell>
+        <mxCell id="dim_hotel__hotel_key" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;hotel_key&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;BIGSERIAL&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· surrogate&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="dim_hotel">
+          <mxGeometry x="0" y="30" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="dim_hotel__hotel_id" value="hotel_id &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· natural key&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="dim_hotel">
+          <mxGeometry x="0" y="52" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="dim_hotel__city" value="city &lt;span style=&quot;color:#64748b&quot;&gt;TEXT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="dim_hotel">
+          <mxGeometry x="0" y="74" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="dim_hotel__stars" value="stars &lt;span style=&quot;color:#64748b&quot;&gt;SMALLINT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="dim_hotel">
+          <mxGeometry x="0" y="96" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="dim_hotel__price" value="price &lt;span style=&quot;color:#64748b&quot;&gt;NUMERIC(12,0)&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="dim_hotel">
+          <mxGeometry x="0" y="118" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="dim_hotel__valid_from_ts" value="valid_from_ts &lt;span style=&quot;color:#64748b&quot;&gt;TIMESTAMP&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="dim_hotel">
+          <mxGeometry x="0" y="140" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="dim_hotel__valid_to_ts" value="valid_to_ts &lt;span style=&quot;color:#64748b&quot;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· 9999-12-31&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="dim_hotel">
+          <mxGeometry x="0" y="162" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="dim_hotel__is_current" value="is_current &lt;span style=&quot;color:#64748b&quot;&gt;BOOLEAN&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="dim_hotel">
+          <mxGeometry x="0" y="184" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="dim_customer" value="dim_customer  &lt;span style=&quot;font-weight:normal;font-size:11px;color:#64748b&quot;&gt;[Đã có]&lt;/span&gt;" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;rounded=1;arcSize=3;fillColor=#e2e8f0;swimlaneFillColor=#ffffff;strokeColor=#475569;dashed=0;fontStyle=1;fontSize=13;fontColor=#0f172a;align=left;spacingLeft=10;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="1">
+          <mxGeometry x="2250" y="700" width="330" height="118" as="geometry" />
+        </mxCell>
+        <mxCell id="dim_customer__customer_key" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;customer_key&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;BIGSERIAL&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="dim_customer">
+          <mxGeometry x="0" y="30" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="dim_customer__customer_id" value="&lt;span style=&quot;color:#7c3aed;font-weight:bold&quot;&gt;UK&lt;/span&gt; customer_id &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="dim_customer">
+          <mxGeometry x="0" y="52" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="dim_customer__home_city" value="home_city &lt;span style=&quot;color:#64748b&quot;&gt;TEXT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="dim_customer">
+          <mxGeometry x="0" y="74" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="dim_customer__loyalty_tier" value="loyalty_tier &lt;span style=&quot;color:#64748b&quot;&gt;SMALLINT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="dim_customer">
+          <mxGeometry x="0" y="96" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="dim_event" value="dim_event  &lt;span style=&quot;font-weight:normal;font-size:11px;color:#64748b&quot;&gt;[Thiết kế]&lt;/span&gt;" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;rounded=1;arcSize=3;fillColor=#e2e8f0;swimlaneFillColor=#f8fafc;strokeColor=#475569;dashed=1;fontStyle=1;fontSize=13;fontColor=#0f172a;align=left;spacingLeft=10;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="1">
+          <mxGeometry x="2250" y="854" width="330" height="184" as="geometry" />
+        </mxCell>
+        <mxCell id="dim_event__event_key" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;event_key&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;BIGSERIAL&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="dim_event">
+          <mxGeometry x="0" y="30" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="dim_event__event_id" value="&lt;span style=&quot;color:#7c3aed;font-weight:bold&quot;&gt;UK&lt;/span&gt; event_id &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="dim_event">
+          <mxGeometry x="0" y="52" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="dim_event__city" value="city &lt;span style=&quot;color:#64748b&quot;&gt;TEXT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="dim_event">
+          <mxGeometry x="0" y="74" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="dim_event__start_date" value="start_date &lt;span style=&quot;color:#64748b&quot;&gt;DATE&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="dim_event">
+          <mxGeometry x="0" y="96" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="dim_event__end_date" value="end_date &lt;span style=&quot;color:#64748b&quot;&gt;DATE&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="dim_event">
+          <mxGeometry x="0" y="118" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="dim_event__announce_date" value="announce_date &lt;span style=&quot;color:#64748b&quot;&gt;DATE&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="dim_event">
+          <mxGeometry x="0" y="140" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="dim_event__demand_uplift" value="demand_uplift &lt;span style=&quot;color:#64748b&quot;&gt;NUMERIC&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="dim_event">
+          <mxGeometry x="0" y="162" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="fact_bookings" value="fact_bookings  &lt;span style=&quot;font-weight:normal;font-size:11px;color:#64748b&quot;&gt;[Đã có]&lt;/span&gt;" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;rounded=1;arcSize=3;fillColor=#e2e8f0;swimlaneFillColor=#ffffff;strokeColor=#475569;dashed=0;fontStyle=1;fontSize=13;fontColor=#0f172a;align=left;spacingLeft=10;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="1">
+          <mxGeometry x="2670" y="150" width="330" height="250" as="geometry" />
+        </mxCell>
+        <mxCell id="fact_bookings__booking_id" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;booking_id&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="fact_bookings">
+          <mxGeometry x="0" y="30" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="fact_bookings__hotel_key" value="&lt;span style=&quot;color:#2563eb;font-weight:bold&quot;&gt;FK&lt;/span&gt; hotel_key &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· phiên bản tại created_at&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="fact_bookings">
+          <mxGeometry x="0" y="52" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="fact_bookings__customer_key" value="&lt;span style=&quot;color:#2563eb;font-weight:bold&quot;&gt;FK&lt;/span&gt; customer_key &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="fact_bookings">
+          <mxGeometry x="0" y="74" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="fact_bookings__booking_date" value="booking_date &lt;span style=&quot;color:#64748b&quot;&gt;DATE&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="fact_bookings">
+          <mxGeometry x="0" y="96" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="fact_bookings__checkin_date" value="checkin_date &lt;span style=&quot;color:#64748b&quot;&gt;DATE&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="fact_bookings">
+          <mxGeometry x="0" y="118" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="fact_bookings__lead_days" value="lead_days &lt;span style=&quot;color:#64748b&quot;&gt;INT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="fact_bookings">
+          <mxGeometry x="0" y="140" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="fact_bookings__nights" value="nights &lt;span style=&quot;color:#64748b&quot;&gt;INT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="fact_bookings">
+          <mxGeometry x="0" y="162" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="fact_bookings__amount" value="amount &lt;span style=&quot;color:#64748b&quot;&gt;NUMERIC(14,0)&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="fact_bookings">
+          <mxGeometry x="0" y="184" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="fact_bookings__cancellation_policy" value="cancellation_policy &lt;span style=&quot;color:#64748b&quot;&gt;TEXT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="fact_bookings">
+          <mxGeometry x="0" y="206" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="fact_bookings__status" value="status &lt;span style=&quot;color:#64748b&quot;&gt;TEXT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="fact_bookings">
+          <mxGeometry x="0" y="228" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="labels_cancel" value="labels_cancel  &lt;span style=&quot;font-weight:normal;font-size:11px;color:#64748b&quot;&gt;[Thiết kế]&lt;/span&gt;" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;rounded=1;arcSize=3;fillColor=#e2e8f0;swimlaneFillColor=#f8fafc;strokeColor=#475569;dashed=1;fontStyle=1;fontSize=13;fontColor=#0f172a;align=left;spacingLeft=10;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="1">
+          <mxGeometry x="2670" y="436" width="330" height="96" as="geometry" />
+        </mxCell>
+        <mxCell id="labels_cancel__booking_id" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;span style=&quot;color:#2563eb;font-weight:bold&quot;&gt;FK&lt;/span&gt; &lt;u&gt;booking_id&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· chỉ booking đã qua check-in&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="labels_cancel">
+          <mxGeometry x="0" y="30" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="labels_cancel__is_cancelled" value="is_cancelled &lt;span style=&quot;color:#64748b&quot;&gt;BOOLEAN&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="labels_cancel">
+          <mxGeometry x="0" y="52" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="labels_cancel__event_timestamp" value="event_timestamp &lt;span style=&quot;color:#64748b&quot;&gt;TIMESTAMP&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="labels_cancel">
+          <mxGeometry x="0" y="74" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="train_cancel_segment" value="ml.train_cancel_segment (Iceberg)  &lt;span style=&quot;font-weight:normal;font-size:11px;color:#64748b&quot;&gt;[Thiết kế]&lt;/span&gt;" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;rounded=1;arcSize=3;fillColor=#e2e8f0;swimlaneFillColor=#f8fafc;strokeColor=#475569;dashed=1;fontStyle=1;fontSize=13;fontColor=#0f172a;align=left;spacingLeft=10;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="1">
+          <mxGeometry x="2670" y="568" width="330" height="96" as="geometry" />
+        </mxCell>
+        <mxCell id="train_cancel_segment__booking_id" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;booking_id&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· MERGE INTO … ON booking_id&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="train_cancel_segment">
+          <mxGeometry x="0" y="30" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="train_cancel_segment__feature …" value="feature … &lt;span style=&quot;color:#64748b&quot;&gt;&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· theo cancel-segment&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="train_cancel_segment">
+          <mxGeometry x="0" y="52" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="train_cancel_segment__is_cancelled" value="is_cancelled &lt;span style=&quot;color:#64748b&quot;&gt;BOOLEAN&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="train_cancel_segment">
+          <mxGeometry x="0" y="74" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="fact_quotes" value="fact_quotes  &lt;span style=&quot;font-weight:normal;font-size:11px;color:#64748b&quot;&gt;[Thiết kế]&lt;/span&gt;" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;rounded=1;arcSize=3;fillColor=#e2e8f0;swimlaneFillColor=#f8fafc;strokeColor=#475569;dashed=1;fontStyle=1;fontSize=13;fontColor=#0f172a;align=left;spacingLeft=10;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="1">
+          <mxGeometry x="2670" y="700" width="330" height="382" as="geometry" />
+        </mxCell>
+        <mxCell id="fact_quotes__quote_id" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;quote_id&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="fact_quotes">
+          <mxGeometry x="0" y="30" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="fact_quotes__hotel_key" value="&lt;span style=&quot;color:#2563eb;font-weight:bold&quot;&gt;FK&lt;/span&gt; hotel_key &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· phiên bản tại ts&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="fact_quotes">
+          <mxGeometry x="0" y="52" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="fact_quotes__event_key" value="&lt;span style=&quot;color:#2563eb;font-weight:bold&quot;&gt;FK&lt;/span&gt; event_key &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· NULL nếu không có sự kiện&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="fact_quotes">
+          <mxGeometry x="0" y="74" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="fact_quotes__room_type" value="room_type &lt;span style=&quot;color:#64748b&quot;&gt;TEXT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="fact_quotes">
+          <mxGeometry x="0" y="96" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="fact_quotes__stay_date" value="stay_date &lt;span style=&quot;color:#64748b&quot;&gt;DATE&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="fact_quotes">
+          <mxGeometry x="0" y="118" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="fact_quotes__rate_plan" value="rate_plan &lt;span style=&quot;color:#64748b&quot;&gt;TEXT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="fact_quotes">
+          <mxGeometry x="0" y="140" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="fact_quotes__ts" value="ts &lt;span style=&quot;color:#64748b&quot;&gt;TIMESTAMP&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="fact_quotes">
+          <mxGeometry x="0" y="162" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="fact_quotes__price" value="price &lt;span style=&quot;color:#64748b&quot;&gt;NUMERIC&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="fact_quotes">
+          <mxGeometry x="0" y="184" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="fact_quotes__policy_price" value="policy_price &lt;span style=&quot;color:#64748b&quot;&gt;NUMERIC&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="fact_quotes">
+          <mxGeometry x="0" y="206" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="fact_quotes__jitter" value="jitter &lt;span style=&quot;color:#64748b&quot;&gt;NUMERIC&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="fact_quotes">
+          <mxGeometry x="0" y="228" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="fact_quotes__propensity" value="propensity &lt;span style=&quot;color:#64748b&quot;&gt;NUMERIC&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="fact_quotes">
+          <mxGeometry x="0" y="250" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="fact_quotes__jitter_clipped" value="jitter_clipped &lt;span style=&quot;color:#64748b&quot;&gt;BOOLEAN&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="fact_quotes">
+          <mxGeometry x="0" y="272" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="fact_quotes__available" value="available &lt;span style=&quot;color:#64748b&quot;&gt;BOOLEAN&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="fact_quotes">
+          <mxGeometry x="0" y="294" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="fact_quotes__lead_group" value="lead_group &lt;span style=&quot;color:#64748b&quot;&gt;SMALLINT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="fact_quotes">
+          <mxGeometry x="0" y="316" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="fact_quotes__model_version" value="model_version &lt;span style=&quot;color:#64748b&quot;&gt;TEXT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="fact_quotes">
+          <mxGeometry x="0" y="338" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="fact_quotes__source" value="source &lt;span style=&quot;color:#64748b&quot;&gt;TEXT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="fact_quotes">
+          <mxGeometry x="0" y="360" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="labels_quote" value="labels_quote  &lt;span style=&quot;font-weight:normal;font-size:11px;color:#64748b&quot;&gt;[Thiết kế]&lt;/span&gt;" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;rounded=1;arcSize=3;fillColor=#e2e8f0;swimlaneFillColor=#f8fafc;strokeColor=#475569;dashed=1;fontStyle=1;fontSize=13;fontColor=#0f172a;align=left;spacingLeft=10;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="1">
+          <mxGeometry x="2670" y="1118" width="330" height="96" as="geometry" />
+        </mxCell>
+        <mxCell id="labels_quote__quote_id" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;span style=&quot;color:#2563eb;font-weight:bold&quot;&gt;FK&lt;/span&gt; &lt;u&gt;quote_id&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;BIGINT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="labels_quote">
+          <mxGeometry x="0" y="30" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="labels_quote__booked" value="booked &lt;span style=&quot;color:#64748b&quot;&gt;BOOLEAN&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="labels_quote">
+          <mxGeometry x="0" y="52" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="labels_quote__event_timestamp" value="event_timestamp &lt;span style=&quot;color:#64748b&quot;&gt;TIMESTAMP&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="labels_quote">
+          <mxGeometry x="0" y="74" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_policy_chunks" value="feat_policy_chunks  &lt;span style=&quot;font-weight:normal;font-size:11px;color:#64748b&quot;&gt;[Đã có]&lt;/span&gt;" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;rounded=1;arcSize=3;fillColor=#e2e8f0;swimlaneFillColor=#ffffff;strokeColor=#475569;dashed=0;fontStyle=1;fontSize=13;fontColor=#0f172a;align=left;spacingLeft=10;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="1">
+          <mxGeometry x="3090" y="150" width="330" height="162" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_policy_chunks__chunk_id" value="&lt;span style=&quot;color:#b45309;font-weight:bold&quot;&gt;PK&lt;/span&gt; &lt;u&gt;chunk_id&lt;/u&gt; &lt;span style=&quot;color:#64748b&quot;&gt;TEXT&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· source#i&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_policy_chunks">
+          <mxGeometry x="0" y="30" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_policy_chunks__source" value="source &lt;span style=&quot;color:#64748b&quot;&gt;TEXT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_policy_chunks">
+          <mxGeometry x="0" y="52" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_policy_chunks__text" value="text &lt;span style=&quot;color:#64748b&quot;&gt;TEXT&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_policy_chunks">
+          <mxGeometry x="0" y="74" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_policy_chunks__embedding" value="embedding &lt;span style=&quot;color:#64748b&quot;&gt;VECTOR(1024)&lt;/span&gt; &lt;span style=&quot;color:#94a3b8&quot;&gt;· bge-m3, pgvector&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_policy_chunks">
+          <mxGeometry x="0" y="96" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_policy_chunks__event_timestamp" value="event_timestamp &lt;span style=&quot;color:#64748b&quot;&gt;TIMESTAMP&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_policy_chunks">
+          <mxGeometry x="0" y="118" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_policy_chunks__created" value="created &lt;span style=&quot;color:#64748b&quot;&gt;TIMESTAMP&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;fontColor=#0f172a;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;" vertex="1" parent="feat_policy_chunks">
+          <mxGeometry x="0" y="140" width="330" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="fk0" style="edgeStyle=entityRelationEdgeStyle;html=1;endArrow=ERmandOne;startArrow=ERmany;endFill=0;startFill=0;strokeWidth=1.3;strokeColor=#64748b;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="raw_hotel_changes__hotel_id" target="raw_hotels__hotel_id">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk1" style="edgeStyle=entityRelationEdgeStyle;html=1;endArrow=ERmandOne;startArrow=ERmany;endFill=0;startFill=0;strokeWidth=1.3;strokeColor=#64748b;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="raw_bookings__hotel_id" target="raw_hotels__hotel_id">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk2" style="edgeStyle=entityRelationEdgeStyle;html=1;endArrow=ERmandOne;startArrow=ERmany;endFill=0;startFill=0;strokeWidth=1.3;strokeColor=#64748b;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="raw_bookings__customer_id" target="raw_customers__customer_id">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk3" style="edgeStyle=entityRelationEdgeStyle;html=1;endArrow=ERmandOne;startArrow=ERmany;endFill=0;startFill=0;strokeWidth=1.3;strokeColor=#64748b;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="raw_payments__booking_id" target="raw_bookings__booking_id">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk4" style="edgeStyle=entityRelationEdgeStyle;html=1;endArrow=ERmandOne;startArrow=ERmany;endFill=0;startFill=0;strokeWidth=1.3;strokeColor=#64748b;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="raw_booking_events__hotel_id" target="raw_hotels__hotel_id">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk5" style="edgeStyle=entityRelationEdgeStyle;html=1;endArrow=ERmandOne;startArrow=ERmany;endFill=0;startFill=0;strokeWidth=1.3;strokeColor=#64748b;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="raw_booking_events__customer_id" target="raw_customers__customer_id">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk6" style="edgeStyle=entityRelationEdgeStyle;html=1;endArrow=ERmandOne;startArrow=ERmany;endFill=0;startFill=0;strokeWidth=1.3;strokeColor=#64748b;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="raw_quotes__hotel_id" target="raw_hotels__hotel_id">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk7" style="edgeStyle=entityRelationEdgeStyle;html=1;endArrow=ERmandOne;startArrow=ERmany;endFill=0;startFill=0;strokeWidth=1.3;strokeColor=#64748b;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="raw_inventory__hotel_id" target="raw_hotels__hotel_id">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk8" style="edgeStyle=entityRelationEdgeStyle;html=1;endArrow=ERmandOne;startArrow=ERmany;endFill=0;startFill=0;strokeWidth=1.3;strokeColor=#334155;" edge="1" parent="1" source="fact_bookings__hotel_key" target="dim_hotel__hotel_key">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk9" style="edgeStyle=entityRelationEdgeStyle;html=1;endArrow=ERmandOne;startArrow=ERmany;endFill=0;startFill=0;strokeWidth=1.3;strokeColor=#334155;" edge="1" parent="1" source="fact_bookings__customer_key" target="dim_customer__customer_key">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk10" style="edgeStyle=entityRelationEdgeStyle;html=1;endArrow=ERmandOne;startArrow=ERmany;endFill=0;startFill=0;strokeWidth=1.3;strokeColor=#334155;" edge="1" parent="1" source="fact_quotes__hotel_key" target="dim_hotel__hotel_key">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk11" style="edgeStyle=entityRelationEdgeStyle;html=1;endArrow=ERmandOne;startArrow=ERmany;endFill=0;startFill=0;strokeWidth=1.3;strokeColor=#334155;" edge="1" parent="1" source="fact_quotes__event_key" target="dim_event__event_key">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk12" style="edgeStyle=entityRelationEdgeStyle;html=1;endArrow=ERmandOne;startArrow=ERmany;endFill=0;startFill=0;strokeWidth=1.3;strokeColor=#334155;" edge="1" parent="1" source="labels_cancel__booking_id" target="fact_bookings__booking_id">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk13" style="edgeStyle=entityRelationEdgeStyle;html=1;endArrow=ERmandOne;startArrow=ERmany;endFill=0;startFill=0;strokeWidth=1.3;strokeColor=#334155;" edge="1" parent="1" source="labels_quote__quote_id" target="fact_quotes__quote_id">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk14" style="edgeStyle=entityRelationEdgeStyle;html=1;endArrow=ERmandOne;startArrow=ERmany;endFill=0;startFill=0;strokeWidth=1.3;strokeColor=#64748b;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="train_cancel_segment__booking_id" target="fact_bookings__booking_id">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk15" style="edgeStyle=entityRelationEdgeStyle;html=1;endArrow=ERmandOne;startArrow=ERmany;endFill=0;startFill=0;strokeWidth=1.3;strokeColor=#64748b;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="rate_calendar__hotel_id" target="dim_hotel__hotel_id">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk16" style="edgeStyle=entityRelationEdgeStyle;html=1;endArrow=ERmandOne;startArrow=ERmany;endFill=0;startFill=0;strokeWidth=1.3;strokeColor=#64748b;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="feat_customer_booking_stats__customer_id" target="dim_customer__customer_id">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk17" style="edgeStyle=entityRelationEdgeStyle;html=1;endArrow=ERmandOne;startArrow=ERmany;endFill=0;startFill=0;strokeWidth=1.3;strokeColor=#64748b;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="feat_hotel_demand__hotel_id" target="dim_hotel__hotel_id">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk18" style="edgeStyle=entityRelationEdgeStyle;html=1;endArrow=ERmandOne;startArrow=ERmany;endFill=0;startFill=0;strokeWidth=1.3;strokeColor=#64748b;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="feat_hotel_realtime__hotel_id" target="dim_hotel__hotel_id">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk19" style="edgeStyle=entityRelationEdgeStyle;html=1;endArrow=ERmandOne;startArrow=ERmany;endFill=0;startFill=0;strokeWidth=1.3;strokeColor=#64748b;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="feat_hotel_occupancy__hotel_id" target="dim_hotel__hotel_id">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk20" style="edgeStyle=entityRelationEdgeStyle;html=1;endArrow=ERmandOne;startArrow=ERmany;endFill=0;startFill=0;strokeWidth=1.3;strokeColor=#64748b;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="feat_hotel_conversion_7d__hotel_id" target="dim_hotel__hotel_id">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
