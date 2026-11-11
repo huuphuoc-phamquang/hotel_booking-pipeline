@@ -43,6 +43,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** final · dòng 59 · 2 điểm · nhóm *Novel ideas*
 
-**Cách làm:** Idea 2 - A/B có doanh thu thật: so dashboard proxy (giá, guardrail, drift) với doanh thu thật generator tính cho từng version trên cùng ô.
+**Cách làm:** Idea 2 - A/B có doanh thu thật: so dashboard proxy (giá, guardrail, drift) với doanh thu kỳ vọng thật của từng version, tính bằng công thức từ hàm cầu đã biết Σ P·P(book|P)·(1 − p_cancel); không cần simulator khép kín.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
