@@ -14,7 +14,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document show ảnh pipeline đã chạy thành công trên KF Pipelines + link tới code pipeline
 
-**Cách làm:** [Đã có] cancel-risk KFP 4 step. [Đã có] nhãn chỉ lấy booking đã qua ngày nhận phòng (landing là ảnh chụp, status chưa phải kết cục cuối). [Cần sửa] fillna + cờ khách mới thay dropna; connection string từ Secret. [Pricing] tham số hoá danh sách feature để chạy thêm cancel-segment (không có customer_booking_stats); pipeline demand-model: load -> split theo thời gian -> ước lượng β bằng Poisson GLM có kiểm soát policy_price + train XGBoost cho mức cầu tại giá policy -> evaluate (regret + sai số β). Không dùng XGBoost cho cả đường cầu theo giá: ngoài dải jitter ±10% học sai β (prototype generator/demand.py: regret 32,6% so với 0,1%).
+**Cách làm:** [Đã có] cancel-risk KFP 4 step. [Đã có] dữ liệu theo cửa sổ [since, until); nhãn = left join cancellations, chỉ lấy booking có checkin < until. [Cần sửa] fillna + cờ khách mới thay dropna; connection string từ Secret. [Pricing] tham số hoá danh sách feature để chạy thêm cancel-segment (không có customer_booking_stats); pipeline demand-model: load -> split theo thời gian -> ước lượng β bằng Poisson GLM có kiểm soát policy_price + train XGBoost cho mức cầu tại giá policy -> evaluate (regret + sai số β). Không dùng XGBoost cho cả đường cầu theo giá: ngoài dải jitter ±10% học sai β (prototype generator/demand.py: regret 32,6% so với 0,1%).
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
