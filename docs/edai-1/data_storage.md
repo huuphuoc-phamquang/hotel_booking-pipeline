@@ -14,7 +14,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document show đoạn code và phân tích đã optimize được những gì so với chưa optimize
 
-**Cách làm:** [Đã có] optimize.sql: compaction (rewrite_data_files), sort order, expire snapshots. [Cần làm] số file / kích thước / thời gian query trước-sau; sửa mốc ngày viết cứng.
+**Cách làm:** [Đã có] optimize.sql: compaction (rewrite_data_files), sort order, expire snapshots. [Thiết kế] catalog lake = Iceberg JDBC catalog trên PostgreSQL (không thêm service). [Cần làm] số file / kích thước / thời gian query trước-sau; sửa mốc ngày viết cứng.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
