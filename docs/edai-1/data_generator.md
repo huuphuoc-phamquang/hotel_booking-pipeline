@@ -43,7 +43,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Store data after generating so that we can ingest to Bronze zone later (Ví dụ: Dùng MinIO/PostgreSQL để mô phỏng data đang ở department khác và mình cần kéo về)
 
-**Cách làm:** [Đã có] Parquet zstd lên MinIO landing dt=/shard= + manifest sha256. [Cần làm] config hiện ~25-30GB: thêm bảng quotes (10-30x bookings) hoặc tăng bookings_per_shard để >= 100GB; chụp `mc du`.
+**Cách làm:** [Đã có] Parquet zstd lên MinIO landing dt=/shard= + manifest sha256. [Cần làm] bookings giữ 20.000/shard (~117 triệu/năm, ~3,9 booking/khách) để feature theo khách không mạnh giả tạo; >= 100GB đến từ bảng quotes, không tăng bookings_per_shard; chụp `mc du`.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
