@@ -27,7 +27,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document show ảnh model đã được version và lưu trữ lại + Data tương ứng cũng được version
 
-**Cách làm:** [Đã có] log model/data/params, tag release=latest, alias production nếu AUC >= 0,70. [Pricing] demand-model chỉ lên production khi regret giảm so với bản cũ.
+**Cách làm:** [Đã có] log model/data/params, tag release=latest, alias production nếu đạt ngưỡng AUC theo trần lý thuyết từng model (cancel-risk 0,65, cancel-segment 0,62). [Pricing] demand-model chỉ lên production khi regret giảm so với bản cũ.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -79,7 +79,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Model đã được version và lưu trữ lại + Data tương ứng cũng được version theo cơ chế incremental
 
-**Cách làm:** [Đã có] MLflow registry, tag release=latest, alias production khi AUC ≥ 0,70. [Thiết kế] promote khi tốt hơn bản production.
+**Cách làm:** [Đã có] MLflow registry, tag release=latest, alias production khi đạt ngưỡng AUC theo trần lý thuyết từng model (cancel-risk 0,65, cancel-segment 0,62). [Thiết kế] promote khi tốt hơn bản production.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
