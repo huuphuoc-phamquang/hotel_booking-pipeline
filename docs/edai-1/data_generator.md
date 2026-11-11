@@ -54,7 +54,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Tương tự cái trên: - Dữ liệu nào late, late bao lâu - Tỷ lệ duplicate như nào...
 
-**Cách làm:** [Đã có] mobile offline 30% trễ 5-10 phút, payment webhook trễ 1-15 phút, channel manager 1% trễ 1-4 giờ. Stream dựng event từ chính các booking của gen_bookings ngày 365–394 (cùng booking_id, giá, checkin, nhãn huỷ); các ngày này cũng có trên landing như lô batch của ngày hôm sau. [Cần làm] bảng late theo nguồn + histogram (ingest_time - event_time).
+**Cách làm:** [Đã có] mobile offline 30% trễ 5-20 phút (một phần vượt watermark 10' + lateness 5' -> side output), payment webhook trễ 1-15 phút, 1% booking đến qua channel manager trễ 1-4 giờ. Replay chỉ phát event có ingest_time trong cửa sổ; lùi 150 ngày để có event huỷ của booking tạo trước cửa sổ; mỗi idempotency_key huỷ 1 lần. Stream dựng event từ chính các booking của gen_bookings ngày 365–394 (cùng booking_id, giá, checkin, nhãn huỷ); các ngày này cũng có trên landing như lô batch của ngày hôm sau. [Cần làm] bảng late theo nguồn + histogram (ingest_time - event_time).
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
