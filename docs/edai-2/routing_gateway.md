@@ -102,7 +102,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Service để coi log (ví dụ Kibana)
 
-**Cách làm:** [Đã có] k8s/ingress.yaml kibana.booking.local (EFK ở edai-2 mục 4.3). [Cần làm] chụp.
+**Cách làm:** [Đã có] k8s/ingress.yaml kibana.booking.local (EFK ở docs/edai-2/observability.md). [Cần làm] chụp.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 

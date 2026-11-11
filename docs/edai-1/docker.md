@@ -12,7 +12,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document cách optimizer Docker image, và kích thước sau khi optimize so với cái gốc thay đổi như nào
 
-**Cách làm:** [Đã có] docker-compose chạy MinIO, Kafka, generator, replayer. [Cần làm] thêm Spark, Flink, Airflow, Postgres, DataHub vào compose; chụp `docker compose ps` all healthy trong docs/Docker.md.
+**Cách làm:** [Đã có] docker-compose chạy MinIO, Kafka, generator, replayer. [Cần làm] thêm Spark, Flink, Airflow, Postgres, DataHub vào compose; chụp `docker compose ps` all healthy trong docs/edai-1/docker.md.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 

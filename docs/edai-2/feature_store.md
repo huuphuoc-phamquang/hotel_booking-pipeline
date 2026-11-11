@@ -73,6 +73,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** final · dòng 22 · 2 điểm · nhóm *Feature Store* › *Build materialize pipeline & jobs for push streaming data into feature stores*
 
-**Cách làm:** [Đã có] features.py: customer_booking_stats, hotel_demand 2 ngày (DP3 ghi mỗi ngày, chịu trễ 1 lần chạy); hotel_realtime 2 giờ; policy_chunks 365 ngày. [Thiết kế] hotel_occupancy 1 ngày. Lý do ghi trong docs/Feature_store.md.
+**Cách làm:** [Đã có] features.py: customer_booking_stats, hotel_demand 2 ngày (DP3 ghi mỗi ngày, chịu trễ 1 lần chạy); hotel_realtime 2 giờ; policy_chunks 365 ngày. [Thiết kế] hotel_occupancy 1 ngày. Lý do ghi trong docs/edai-2/feature_store.md.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_

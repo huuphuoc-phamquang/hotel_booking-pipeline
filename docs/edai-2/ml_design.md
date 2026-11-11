@@ -10,7 +10,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-2 · dòng 55 · 2 điểm · nhóm *Repository Design*
 
-**Cách làm:** [Cần làm] README theo ô A2: Repo Structure, TOC, docstring đầu file; dùng sơ đồ docs/architecture/booking-pricing.drawio (ảnh booking-pricing.png, trang components.html) thay booking-platform.html; link docs/booking-pricing-design.md.
+**Cách làm:** [Cần làm] README theo ô A2: Repo Structure, TOC, docstring đầu file; dùng sơ đồ docs/architecture/booking-pricing.drawio (ảnh booking-pricing.png); link docs/README.md (bảng tra rubric).
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 

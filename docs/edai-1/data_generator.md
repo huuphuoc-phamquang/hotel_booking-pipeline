@@ -12,7 +12,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document thể hiện data characteristics sau khi generate - Cột nào skew, tỉ lệ như thế nào - Cột nào có high cardinality (tỉ lệ số unique values/tổng số values trong cột) - Schema trước và sau evolution là gì - Tỉ lệ duplicate - Data volume là bao nhiêu
 
-**Cách làm:** [Đã có] Zipf hotel_zipf_a=1.2, 70% khách sạn ở 3 thành phố, peak Tết/30-4/hè. [Thiết kế] quotes và raw_inventory kế thừa skew này, lệch nặng ở cặp (hotel_id, stay_date) nóng. [Cần làm] docs/Data.md: tỉ trọng top 1% khách sạn và top cặp (hotel_id, stay_date) đo từ dữ liệu sinh, histogram, cardinality từng cột.
+**Cách làm:** [Đã có] Zipf hotel_zipf_a=1.2, 70% khách sạn ở 3 thành phố, peak Tết/30-4/hè. [Thiết kế] quotes và raw_inventory kế thừa skew này, lệch nặng ở cặp (hotel_id, stay_date) nóng. [Cần làm] docs/edai-1/data_generator.md: tỉ trọng top 1% khách sạn và top cặp (hotel_id, stay_date) đo từ dữ liệu sinh, histogram, cardinality từng cột.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 

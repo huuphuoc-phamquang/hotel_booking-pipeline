@@ -32,7 +32,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Setup agent gateway theo hướng dẫn và thiết lập security & policy phù hợp (trên này có rất nhiều doc để mn tham khảo)
 
-**Cách làm:** [Đã có] agentgateway: jwtAuth Keycloak, localRateLimit, mcpAuthorization theo tool + role. [Cần làm] docs/Gateway.md giải thích từng policy và vì sao chọn.
+**Cách làm:** [Đã có] agentgateway: jwtAuth Keycloak, localRateLimit, mcpAuthorization theo tool + role. [Cần làm] docs/edai-2/llm_inference_platform.md giải thích từng policy và vì sao chọn.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -41,6 +41,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-2 · dòng 6 · 2 điểm · nhóm *Deploy a LLM inference platform theo hướng dẫn này và set up gateway cho agent theo hướng dẫn này* › *Deploy LLM inference platform + setup custom model & agentgateway*
 
-**Cách làm:** [Đã có] arg tối ưu: prefix caching, max-model-len, gpu-memory-utilization. [Thiết kế] vllm bench serve / guidellm quét concurrency 1/4/16/64, workload có prefix chung; baseline -> bật prefix caching -> chỉnh gpu-memory-utilization / max-num-seqs -> routing prefix-aware của llm-d. [Cần làm] bảng throughput, TTFT, TPOT, E2E p50/p95/p99, lỗi trong docs/LLM.md.
+**Cách làm:** [Đã có] arg tối ưu: prefix caching, max-model-len, gpu-memory-utilization. [Thiết kế] vllm bench serve / guidellm quét concurrency 1/4/16/64, workload có prefix chung; baseline -> bật prefix caching -> chỉnh gpu-memory-utilization / max-num-seqs -> routing prefix-aware của llm-d. [Cần làm] bảng throughput, TTFT, TPOT, E2E p50/p95/p99, lỗi trong docs/edai-2/llm_inference_platform.md.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_

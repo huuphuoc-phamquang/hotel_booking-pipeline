@@ -14,7 +14,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document giải thích từng step optimize từ baseline như thế nào, dùng Spark UI như thế nào (với screenshots để thấy rõ vấn đề), và đã tích hợp vào Airflow pipeline ra sao
 
-**Cách làm:** [Đã có] run_baseline: AQE tắt, join thẳng hotels, không dedup. [Cần sửa] bỏ ép autoBroadcastJoinThreshold=-1 cho bookings ⋈ hotels (hotels ~1–2 MB, mặc định broadcast). [Thiết kế] baseline cho bài skew = stg_quotes ⋈ raw_inventory theo (hotel_id, room_type, stay_date) với (1) AQE + broadcast tắt và (2) mặc định Spark. [Cần làm] chạy trên >= 100GB, chụp Spark UI (straggler task), ghi thời gian vào docs/Spark.md.
+**Cách làm:** [Đã có] run_baseline: AQE tắt, join thẳng hotels, không dedup. [Cần sửa] bỏ ép autoBroadcastJoinThreshold=-1 cho bookings ⋈ hotels (hotels ~1–2 MB, mặc định broadcast). [Thiết kế] baseline cho bài skew = stg_quotes ⋈ raw_inventory theo (hotel_id, room_type, stay_date) với (1) AQE + broadcast tắt và (2) mặc định Spark. [Cần làm] chạy trên >= 100GB, chụp Spark UI (straggler task), ghi thời gian vào docs/edai-1/processing_jobs.md.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -94,6 +94,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document show đoạn code thể hiện khả năng xử lý Window trong Flink, và giải thích đoạn code đó làm gì
 
-**Cách làm:** [Đã có] tumbling window 1 phút theo hotel_id. [Cần sửa] đổi sang sliding window 1 giờ trượt 1 phút để ra đúng bookings_1h mà Feast và model dùng. [Pricing] window 5 phút theo hotel x stay_date: lượt search, look-to-book, tồn phòng; trích code + giải thích trong docs/Flink.md.
+**Cách làm:** [Đã có] tumbling window 1 phút theo hotel_id. [Cần sửa] đổi sang sliding window 1 giờ trượt 1 phút để ra đúng bookings_1h mà Feast và model dùng. [Pricing] window 5 phút theo hotel x stay_date: lượt search, look-to-book, tồn phòng; trích code + giải thích trong docs/edai-1/processing_jobs.md.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_

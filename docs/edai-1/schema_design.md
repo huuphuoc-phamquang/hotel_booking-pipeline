@@ -12,7 +12,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document capture màn hình thể hiện các bảng và quan hệ giữa chúng trên mỗi zone, giải thích từng bảng có nhiệm vụ gì
 
-**Cách làm:** [Cần làm] docs/Schema.md: ERD từng zone (raw_ / stg_ / gold), mỗi bảng 1 dòng mô tả nhiệm vụ.
+**Cách làm:** [Cần làm] docs/edai-1/schema_design.md: ERD từng zone (raw_ / stg_ / gold), mỗi bảng 1 dòng mô tả nhiệm vụ.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
