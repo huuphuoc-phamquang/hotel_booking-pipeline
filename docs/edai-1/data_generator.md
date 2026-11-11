@@ -12,7 +12,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document thể hiện data characteristics sau khi generate - Cột nào skew, tỉ lệ như thế nào - Cột nào có high cardinality (tỉ lệ số unique values/tổng số values trong cột) - Schema trước và sau evolution là gì - Tỉ lệ duplicate - Data volume là bao nhiêu
 
-**Cách làm:** [Đã có] Zipf hotel_zipf_a=1.2, 70% khách sạn ở 3 thành phố, peak Tết/30-4/hè. [Thiết kế] quotes và raw_inventory kế thừa skew này, lệch nặng ở cặp (hotel_id, stay_date) nóng. [Cần làm] docs/edai-1/data_generator.md: tỉ trọng top 1% khách sạn và top cặp (hotel_id, stay_date) đo từ dữ liệu sinh, histogram, cardinality từng cột.
+**Cách làm:** [Đã có] Zipf hotel_zipf_a=0.8 (top 1 ~2,6%, top 1% ~33% booking), 70% khách sạn ở 3 thành phố, peak Tết/30-4/hè. [Thiết kế] quotes và raw_inventory kế thừa skew này, lệch nặng ở cặp (hotel_id, stay_date) nóng. [Cần làm] docs/edai-1/data_generator.md: tỉ trọng top 1% khách sạn và top cặp (hotel_id, stay_date) đo từ dữ liệu sinh, histogram, cardinality từng cột.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -54,7 +54,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Tương tự cái trên: - Dữ liệu nào late, late bao lâu - Tỷ lệ duplicate như nào...
 
-**Cách làm:** [Đã có] mobile offline 30% trễ 5-10 phút, payment webhook trễ 1-15 phút, channel manager 1% trễ 1-4 giờ. [Cần làm] bảng late theo nguồn + histogram (ingest_time - event_time).
+**Cách làm:** [Đã có] mobile offline 30% trễ 5-10 phút, payment webhook trễ 1-15 phút, channel manager 1% trễ 1-4 giờ. Stream dựng event từ chính các booking của gen_bookings ngày 365–394 (cùng booking_id, giá, checkin, nhãn huỷ); các ngày này cũng có trên landing như lô batch của ngày hôm sau. [Cần làm] bảng late theo nguồn + histogram (ingest_time - event_time).
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
