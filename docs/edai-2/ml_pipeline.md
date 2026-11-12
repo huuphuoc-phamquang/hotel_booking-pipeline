@@ -14,7 +14,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document show ảnh pipeline đã chạy thành công trên KF Pipelines + link tới code pipeline
 
-**Cách làm:** [Đã có] cancel-risk KFP 4 step. [Đã có] dữ liệu theo cửa sổ [since, until); nhãn = left join cancellations, chỉ lấy booking có checkin < until. [Cần sửa] fillna + cờ khách mới thay dropna; connection string từ Secret. [Pricing] tham số hoá danh sách feature để chạy thêm cancel-segment (không có customer_booking_stats); pipeline demand-model: load -> split theo thời gian -> ước lượng β bằng Poisson GLM có kiểm soát policy_price + train XGBoost cho mức cầu tại giá policy -> evaluate (regret + sai số β). Không dùng XGBoost cho cả đường cầu theo giá: ngoài dải jitter ±10% học sai β (prototype generator/demand.py: regret 32,6% so với 0,1%).
+**Cách làm:** [Đã có] cancel-risk KFP 4 step. [Đã có] dữ liệu theo cửa sổ [since, until); nhãn = left join cancellations, chỉ lấy booking có checkin < until. [Cần sửa] fillna + cờ khách mới thay dropna; connection string từ Secret. [Pricing] tham số hoá danh sách feature để chạy thêm cancel-segment (không có customer_booking_stats); pipeline demand-model: load -> split theo thời gian -> ước lượng β bằng Poisson GLM có kiểm soát policy_price + train XGBoost cho mức cầu tại giá policy -> evaluate (regret + sai số β). Không dùng XGBoost cho cả đường cầu theo giá: ngoài dải jitter ±10% học sai β (prototype generator/demand.py: regret GBM 25,1% so với GLM có kiểm soát 0,16%; GLM phải dùng solver newton-cholesky).
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -27,7 +27,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document show ảnh model đã được version và lưu trữ lại + Data tương ứng cũng được version
 
-**Cách làm:** [Đã có] log model/data/params, tag release=latest, alias production qua cổng promote: AUC ≥ 0,65 (sàn; đo trên generator: có lịch sử khách 0,707, không lịch sử 0,699), lệch calibration ≤ 0,03, không kém bản production chấm trên cùng validation; bỏ scale_pos_weight (làm lệch xác suất). [Pricing] demand-model chỉ lên production khi regret giảm so với bản cũ.
+**Cách làm:** [Đã có] log model/data/params, tag release=latest, alias production qua cổng promote: AUC ≥ 0,60 (sàn chặn model hỏng, dưới trần đo bằng generator/profile_data), lệch calibration ≤ 0,03, không kém bản production chấm trên cùng validation; bỏ scale_pos_weight (làm lệch xác suất). [Pricing] demand-model chỉ lên production khi regret giảm so với bản cũ.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -79,7 +79,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Model đã được version và lưu trữ lại + Data tương ứng cũng được version theo cơ chế incremental
 
-**Cách làm:** [Đã có] MLflow registry, tag release=latest, alias production qua cổng promote: AUC ≥ 0,65 (sàn; đo trên generator: có lịch sử khách 0,707, không lịch sử 0,699), lệch calibration ≤ 0,03, không kém bản production chấm trên cùng validation; bỏ scale_pos_weight (làm lệch xác suất).
+**Cách làm:** [Đã có] MLflow registry, tag release=latest, alias production qua cổng promote: AUC ≥ 0,60 (sàn chặn model hỏng, dưới trần đo bằng generator/profile_data), lệch calibration ≤ 0,03, không kém bản production chấm trên cùng validation; bỏ scale_pos_weight (làm lệch xác suất).
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
