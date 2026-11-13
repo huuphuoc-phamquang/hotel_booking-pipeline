@@ -23,7 +23,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Capture màn hình thể hiện Design Pattern đã được sử dụng trong code
 
-**Cách làm:** [Thiết kế] Repository (FeatureRepository bọc Feast), Strategy (DemandModel v1/v2 cho A/B), Chain of Responsibility (GuardrailChain), Factory (ModelClientFactory theo alias MLflow).
+**Cách làm:** [Thiết kế] Repository (đọc Feast online qua một hàm _online duy nhất), Adapter (KServe V1 sau CancelRiskClient), Strategy (DriftDetector KS / PSI hoán đổi cho drift-api và drift_monitor), Factory (chọn model theo alias MLflow production).
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -36,26 +36,26 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document 5 key classes
 
-**Cách làm:** [Thiết kế] TrainingDataService, SplitService, DemandModel, PriceOptimizer, GuardrailChain.
+**Cách làm:** [Thiết kế] docs/edai-2/ml_design.md: TrainingDataService, SplitService, CancelRiskTrainer, CancelRiskClient, OverbookingPlanner.
 
 ```python
 class TrainingDataService:
-    def read_labels(self, start: date, end: date) -> DataFrame: ...       # labels_cancel, chỉ booking đã qua check-in
-    def join_features(self, labels: DataFrame) -> DataFrame: ...           # Feast get_historical_features
+    def read_labels(self, since: date, until: date) -> DataFrame: ...      # fact_bookings ⟕ cancellations, checkin < until
+    def join_features(self, labels: DataFrame) -> DataFrame: ...           # Feast get_historical_features, điền thiếu như serve
     def snapshot(self, df: DataFrame) -> int: ...                          # MERGE vào Iceberg, trả snapshot_id
 
 class SplitService:
     def split_by_time(self, df: DataFrame, cutoff: date) -> tuple[DataFrame, DataFrame]: ...
 
-class DemandModel:                                                         # Strategy: v1 / v2
-    def expected_demand(self, cell: PriceCell, grid: list[float]) -> list[list[float]]: ...  # D_k(P) [nhóm k][điểm lưới]
+class CancelRiskTrainer:
+    def fit(self, train: DataFrame) -> Model: ...                          # XGBoost trên MODEL_INPUTS, không scale_pos_weight
+    def gate(self, model: Model, valid: DataFrame, production: Model | None) -> bool: ...   # AUC sàn, calibration, so production
 
-class PriceOptimizer:                                                      # giải chung mọi nhóm k
-    def best_prices(self, cell: PriceCell, demand: list[list[float]], p_cancel: list[list[float]],
-                    capacity: float, cost: float) -> list[Quote]: ...
+class CancelRiskClient:                                                    # risk-api: feature theo booking_id + KServe
+    async def probability(self, booking_id: int) -> float: ...
 
-class GuardrailChain:
-    def apply(self, quote: Quote, yesterday: Quote | None) -> Quote: ...  # sàn/trần → ±15% → kỳ nghỉ dài
+class OverbookingPlanner:
+    def limit(self, probs: list[float], c_spoil: float, c_walk: float) -> int: ...   # K lớn nhất với P(N < K) ≤ c_spoil/(c_spoil+c_walk)
 ```
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_

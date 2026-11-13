@@ -78,7 +78,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Capture màn hình thể hiện các data đã được capture, có thể coi trên các dashboard
 
-**Cách làm:** [Thiết kế] prometheus-fastapi-instrumentator cho pricing-api và drift-api (req/s, số req, số lỗi, latency) + dashboard Grafana.
+**Cách làm:** [Thiết kế] prometheus-fastapi-instrumentator cho risk-api và drift-api (req/s, số req, số lỗi, latency) + dashboard Grafana.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -107,7 +107,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** final · dòng 49 · 2 điểm · nhóm *Observability* › *Computing telemetry data (such as CPU, RAM, disk, network, etc.)*
 
-**Cách làm:** [Thiết kế] OTel SDK cho pricing-api (FastAPI + httpx instrumentation) -> Jaeger; 1 trace qua Feast + KServe.
+**Cách làm:** [Thiết kế] OTel SDK cho risk-api (FastAPI + httpx instrumentation) -> Jaeger; 1 trace qua Feast + KServe.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 

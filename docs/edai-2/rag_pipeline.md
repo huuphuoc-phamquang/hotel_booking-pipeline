@@ -14,7 +14,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document show ảnh pipeline đã chạy thành công trên Airflow, và lineage thể hiện trên DataHub + link tới code pipeline
 
-**Cách làm:** [Đã có] rag_pipeline.py: chunk + bge-m3 -> Feast policy_chunks. [Pricing] thêm tài liệu chính sách giá / rate fence. [Cần sửa] bge-m3 ~2,2GB vượt limit 1Gi. Chụp Airflow run.
+**Cách làm:** [Đã có] rag_pipeline.py: chunk + bge-m3 -> Feast policy_chunks (tài liệu chính sách huỷ / hoàn tiền). [Cần sửa] bge-m3 ~2,2GB vượt limit 1Gi. Chụp Airflow run.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 

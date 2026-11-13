@@ -1,6 +1,6 @@
-# Agent thứ hai: pricing-agent
+# Agent thứ hai: policy-agent
 
-Agent có tool ML và RAG.
+Agent có tool ML (`predict_cancellation` qua risk-api) và RAG (`search_policy`).
 
 Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết kế (cột F của rubric);
 **Kết quả** điền khi đã chạy: số liệu, ảnh chụp (`docs/images/`), link code.
@@ -12,6 +12,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document tương tự bên trên
 
-**Cách làm:** [Đã có] policy-agent: predict_cancellation (ML) + search_policy (RAG). [Pricing] pricing-agent thay policy-agent: quote_price / explain_price / overbooking_limit (ML) + search_policy (RAG) + propose_price_change (requireApproval); bỏ quyết định cọc theo khách; làm đủ multi-replica, KEDA, Agent Substrate (sandbox), registry, chụp UI chat.
+**Cách làm:** [Đã có] policy-agent: predict_cancellation (ML, qua risk-api) + search_policy (RAG). [Thiết kế] tool propose_overbooking (K từ xác suất huỷ, requireApproval khi K vượt ngưỡng - Idea 2). [Cần làm] multi-replica, KEDA, Agent Substrate (sandbox), registry, chụp UI chat.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_

@@ -122,7 +122,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** final · dòng 41 · 2 điểm · nhóm *Routing & Gateway (NGINX Ingress Controller)* › *Các service cần được hide đằng sau gateway*
 
-**Cách làm:** [Thiết kế] thêm host api.booking.example.com -> pricing-api trong ingress.
+**Cách làm:** [Thiết kế] thêm host api.booking.example.com -> risk-api trong ingress.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -131,7 +131,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** final · dòng 42 · 2 điểm · nhóm *Routing & Gateway (NGINX Ingress Controller)* › *Basic authentication & rate limit ở gateway (username/password)*
 
-**Cách làm:** [Thiết kế] pricing-api: annotation auth-type basic + secret htpasswd, limit-rps; chụp 401 khi thiếu mật khẩu và 503 khi vượt limit.
+**Cách làm:** [Thiết kế] risk-api: annotation auth-type basic + secret htpasswd, limit-rps; chụp 401 khi thiếu mật khẩu và 503 khi vượt limit.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 

@@ -12,6 +12,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Tương tự bên trên
 
-**Cách làm:** [Một phần] A2A mới có route /a2a/data-agent. [Cần làm] thêm route /a2a/pricing-agent (thay policy-agent); coordinator gọi agent con qua gateway thay vì gọi thẳng (sơ đồ: B4 coord -> gateway, B5/B6 gateway -> pricing/data); chụp log gateway thấy request A2A.
+**Cách làm:** [Một phần] A2A mới có route /a2a/data-agent. [Cần làm] thêm route /a2a/policy-agent; coordinator gọi agent con qua gateway thay vì gọi thẳng; chụp log gateway thấy request A2A.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_

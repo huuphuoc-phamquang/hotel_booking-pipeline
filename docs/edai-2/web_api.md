@@ -1,6 +1,6 @@
-# Web API: pricing-api & drift-api
+# Web API: risk-api & drift-api
 
-Web API kéo dữ liệu, drift detection realtime, autoscale bằng KEDA.
+risk-api lấy feature theo `booking_id` rồi gọi KServe `cancel-risk`; drift-api phát hiện drift realtime; autoscale bằng KEDA.
 
 Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết kế (cột F của rubric);
 **Kết quả** điền khi đã chạy: số liệu, ảnh chụp (`docs/images/`), link code.
@@ -14,7 +14,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Capture màn hình cách mọi người handle rolling update và fall back
 
-**Cách làm:** [Thiết kế] pricing-api FastAPI POST /v1/quote {hotel_id, room_type, stay_date, rate_plan}, pydantic kiểm stay_date ≥ hôm nay, rate_plan hợp lệ; lấy feature online từ Feast theo hotel_id + stay_date rồi gọi KServe demand-model + cancel-segment; /healthz liveness, /readyz kiểm Feast + KServe. MCP quote_price gọi lại API này. [Cần làm] chụp rolling update + rollback.
+**Cách làm:** [Đã có] risk-api (edai2/risk_api/risk_api.py): FastAPI POST /v1/cancel-risk {booking_id} (pydantic, booking_id > 0) -> Feast booking_attributes + feature khách/khách sạn -> KServe cancel-risk; 404 khi booking chưa có trên online store; /healthz, /readyz. Tool MCP predict_cancellation gọi lại API này. [Cần làm] chụp rolling update + rollback.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -23,7 +23,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** final · dòng 4 · 2 điểm · nhóm *Web API kéo dữ liệu* › *Có sử dụng FastAPI + data validation (với pydantic)*
 
-**Cách làm:** [Thiết kế] handler async; Feast online read + 2 request KServe chạy song song bằng asyncio.gather + httpx.AsyncClient dùng chung.
+**Cách làm:** [Đã có] risk-api: handler async; đọc Feast online bằng get_online_features_async, gọi KServe bằng httpx.AsyncClient dùng chung.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -34,7 +34,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Deploy to k8s with helm + rollingupdate + auto fallback (see --atomic)
 
-**Cách làm:** [Đã có] chart helm/booking-mcp (RollingUpdate maxUnavailable 0, probe) dùng lại cho pricing-api; helm upgrade --install --atomic --timeout 5m. [Cần làm] deploy image lỗi -> chụp tự rollback (helm history).
+**Cách làm:** [Đã có] chart helm/booking-mcp (RollingUpdate maxUnavailable 0, probe). [Cần làm] chart cho risk-api cùng mẫu; helm upgrade --install --atomic --timeout 5m; deploy image lỗi -> chụp tự rollback (helm history).
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -45,7 +45,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Có sử dụng FastAPI + data validation (với pydantic) + healthcheck for k8s
 
-**Cách làm:** [Thiết kế] drift-api FastAPI nhận CloudEvent từ KNative Eventing (KServe logger của demand-model -> Broker -> Trigger), pydantic cho payload; alibi-detect KSDrift với reference = tập train của model production; trả is_drift, p_val, đẩy Prometheus; /healthz, /readyz.
+**Cách làm:** [Thiết kế] drift-api FastAPI nhận CloudEvent từ KNative Eventing (KServe logger của cancel-risk -> Broker -> Trigger), pydantic cho payload; alibi-detect KSDrift trên lead_days, nights, free_cancel với reference = tập train của model production (generator đổi lead time từ 2025-10-01 nên có drift để bắt); trả is_drift, p_val, đẩy Prometheus; /healthz, /readyz.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -65,7 +65,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Deploy to k8s with helm + rollingupdate + auto fallback (see --atomic)
 
-**Cách làm:** [Thiết kế] cùng chart, RollingUpdate + --atomic như pricing-api. [Cần làm] chụp rollback.
+**Cách làm:** [Thiết kế] cùng mẫu chart, RollingUpdate + --atomic như risk-api. [Cần làm] chụp rollback.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -76,7 +76,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Capture màn hình cách mọi người handle autoscale và demonstrate it worked!
 
-**Cách làm:** [Thiết kế] KEDA ScaledObject Prometheus scaler theo rate(http_requests_total[1m]) của pricing-api, min 2 max 10. [Cần làm] chụp scale khi locust.
+**Cách làm:** [Thiết kế] KEDA ScaledObject Prometheus scaler theo rate(http_requests_total[1m]) của risk-api, min 2 max 10. [Cần làm] chụp scale khi locust.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 

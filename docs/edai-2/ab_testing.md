@@ -12,7 +12,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document về A/B test được implement như thế nào, dashboard như thế nào
 
-**Cách làm:** [Thiết kế] 2 ModelConfig (v1/v2) cho 2 bản pricing-agent, agentgateway chia A2A 50/50; Grafana so latency, token, tỉ lệ tool lỗi, tỉ lệ đề xuất bị Reject. [Cần làm] dashboard.
+**Cách làm:** [Thiết kế] 2 ModelConfig (v1/v2) cho 2 bản policy-agent, agentgateway chia A2A 50/50; Grafana so latency, token, tỉ lệ tool lỗi, tỉ lệ đề xuất bị Reject. [Cần làm] dashboard.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -36,7 +36,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Capture màn hình thể hiện cách mọi người thực hiện A/B test và dashboard để đánh giá kết quả A/B test
 
-**Cách làm:** [Thiết kế] 2 InferenceService demand-model v1/v2; pricing-api chia 50/50 theo hash hotel_id × stay_date, ghi model_version vào quote; deploy bằng Jenkins.
+**Cách làm:** [Thiết kế] 2 InferenceService cancel-risk v1 (train tháng 1-6/2025) / v2 (retrain sau drift), chia traffic 50/50 bằng canaryTrafficPercent; deploy bằng Jenkins.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -47,6 +47,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Setup monitoring dashboard to monitor 2 versions. Assumption: we also don't have groundtruth to monitor drift here!
 
-**Cách làm:** [Thiết kế] Grafana theo model_version: latency, phân bố giá đề xuất, tỉ lệ chạm guardrail, drift p-value; thêm doanh thu thật từ generator để kiểm proxy.
+**Cách làm:** [Thiết kế] Grafana theo version: latency, phân bố xác suất dự báo, tỉ lệ huỷ dự báo, drift p-value; kèm Brier so với xác suất thật từ generator (Idea 2).
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_

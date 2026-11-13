@@ -14,7 +14,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document phải show được Agent đã có trên registry, được deploy với multi-replica, giới hạn quyền thông qua Sandbox và màn hình UI chat với Agent + link tới YAML file deploy Agent
 
-**Cách làm:** [Đã có] pydantic BookingRequest/BookingFeatures/CancelRisk, /healthz, /readyz. [Pricing] thêm QuoteRequest/Quote (không có customer_id), OverbookingRequest/OverbookingLimit.
+**Cách làm:** [Đã có] pydantic BookingFeatures / CancelRisk ở MCP, RiskRequest / CancelRisk ở risk-api; /healthz, /readyz.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -52,7 +52,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-2 · dòng 20 · 1 điểm · nhóm *Web API kéo dữ liệu user (đã lưu thông qua feature pipeline) và chunk (đã được lưu thông qua RAG pipeline)* › *Có sử dụng FastAPI + data validation (với pydantic)*
 
-**Cách làm:** [Thiết kế] Agent Substrate của kagent: agent chạy dạng SandboxAgent trong actor gVisor theo session (chart substrate >= 0.0.9, kagent >= 0.9.7, controller.substrate.enabled=true); thêm NetworkPolicy chỉ cho gọi agentgateway. Giới hạn: declarative runtime go. [Cần sửa] agents.yaml chưa khai runtime -> đặt runtime: go + substrate.workerPoolRef cho data-agent, pricing-agent, coordinator. [Cần làm] chụp agent trên View -> Substrate.
+**Cách làm:** [Thiết kế] Agent Substrate của kagent: agent chạy dạng SandboxAgent trong actor gVisor theo session (chart substrate >= 0.0.9, kagent >= 0.9.7, controller.substrate.enabled=true); thêm NetworkPolicy chỉ cho gọi agentgateway. Giới hạn: declarative runtime go. [Cần sửa] agents.yaml chưa khai runtime -> đặt runtime: go + substrate.workerPoolRef cho data-agent, policy-agent, coordinator. [Cần làm] chụp agent trên View -> Substrate.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 

@@ -74,7 +74,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Capture màn hình từng CI/CD pipeline đã run thành công
 
-**Cách làm:** [Thiết kế] Jenkinsfile pricing-api: test -> kéo model alias production từ MLflow -> build image -> helm --atomic.
+**Cách làm:** [Thiết kế] Jenkinsfile risk-api: test -> build image -> helm --atomic. risk-api không chứa model; model production được kéo ở stage KServe (dòng 34).
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -85,7 +85,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Inference Engine (ví dụ KServe)
 
-**Cách làm:** [Đã có] serving/kserve-cancel-risk.yaml. [Thiết kế] stage cập nhật storageUri theo version production của demand-model/cancel-segment rồi apply.
+**Cách làm:** [Đã có] serving/kserve-cancel-risk.yaml. [Thiết kế] stage kéo model alias production của cancel-risk từ MLflow, build image (model-inside-image) rồi apply InferenceService.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 

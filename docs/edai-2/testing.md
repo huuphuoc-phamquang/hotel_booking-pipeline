@@ -14,7 +14,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document show kết quả test + link tới các file code có dùng kỹ thuật này (nếu có nhiều file thì chỉ cần link tới 1 file là được)
 
-**Cách làm:** [Đã có] 25 test (sau khi bỏ test cọc), fixture + monkeypatch; coverage 95% đo trước lần sửa, cần chạy lại. [Pricing] test cho optimizer, guardrails; giữ > 90%.
+**Cách làm:** [Đã có] tests/test_server.py + tests/test_risk_api.py: 31 test, fixture + monkeypatch + respx; coverage server.py 94%, risk_api.py 95%.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -25,7 +25,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > PR Testing Có sử dụng kỹ thuật equivalence partitioning vs boundary value analysis khi thiết kế test cases để parametrize. (Cái này chưa được dạy, nhưng đơn giản lắm, cả nhà coi ở đây)
 
-**Cách làm:** [Đã có] đã bỏ DEPOSIT_THRESHOLD: parametrize biên xác suất [0, 1] của predict_cancellation và biên BookingRequest. [Cần làm] test biên overbooking (K tại ngưỡng c_spoil/(c_spoil+c_walk)). [Pricing] EP/BVA cho guardrails: sàn, trần, ±15%/ngày.
+**Cách làm:** [Đã có] parametrize biên xác suất [0, 1] (MCP và risk-api) và biên booking_id. [Thiết kế] test biên K của propose_overbooking tại ngưỡng c_spoil/(c_spoil+c_walk).
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -47,7 +47,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > PR Testing Idempotency testing sử dụng property-based testing (chuyên để tìm ra cái test case có thể tạo ra bug), ví dụ, để kiểm tra xem model prediction có generate ra kết quả consistent sau nhiều lần chạy không. You can use the library hypothesis for property-based testing, combine with crosshair backend to find bugs easier.
 
-**Cách làm:** [Đã có] hypothesis test_predict_idempotent. [Pricing] property: giá luôn trong [sàn, trần]; đổi customer_id thì giá không đổi.
+**Cách làm:** [Đã có] hypothesis test_predict_idempotent (MCP) và test_cancel_risk_idempotent (risk-api): cùng booking gọi 2 lần ra cùng kết quả.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -58,7 +58,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Local Testing Load test the Web API (cái Web API kéo dữ liệu) to understand throughput (req/s) and latency (generate a html file with locust as SLA)
 
-**Cách làm:** [Đã có] tests/locustfile.py. [Cần làm] chạy --html, chụp RPS / p95; [Pricing] kiểm ngân sách 30-50ms cho quote_price.
+**Cách làm:** [Đã có] tests/locustfile.py nhắm POST /v1/cancel-risk của risk-api. [Cần làm] chạy --html, chụp RPS / p95.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -73,7 +73,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Capture màn hình đã chạy test với test coverage thoả mãn yêu cầu
 
-**Cách làm:** [Thiết kế] pytest cho pricing-api và drift-api: fixture TestClient, mock Feast + KServe (respx/monkeypatch), coverage > 90% (test MCP hiện có đạt 95% làm mẫu). [Cần làm] chụp coverage.
+**Cách làm:** [Đã có] tests/test_risk_api.py: fixture TestClient, mock Feast (monkeypatch) + KServe (respx), coverage risk_api 95%. [Thiết kế] test tương tự cho drift-api. [Cần làm] chụp coverage.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -108,7 +108,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Idempotency testing sử dụng property-based testing (chuyên để tìm ra cái test case có thể tạo ra bug), ví dụ, để kiểm tra xem model prediction có generate ra kết quả consistent sau nhiều lần chạy không. You can use the library hypothesis for property-based testing, combine with crosshair backend to find bugs easier.
 
-**Cách làm:** [Đã có] hypothesis idempotency trong tests/test_server.py. [Thiết kế] thêm hypothesis-crosshair (settings(backend="crosshair")): cùng input gọi /v1/quote 2 lần ra cùng giá; giá luôn trong [sàn, trần]; đổi customer_id không đổi giá.
+**Cách làm:** [Đã có] hypothesis: test_cancel_risk_idempotent (risk-api) và test_predict_idempotent (MCP), cùng booking gọi 2 lần ra cùng kết quả. [Thiết kế] thêm backend crosshair (settings(backend="crosshair")).
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -121,6 +121,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Capture màn hình HTML output
 
-**Cách làm:** [Đã có] tests/locustfile.py. [Thiết kế] thêm task /v1/quote, chạy locust --headless --html docs/sla_pricing_api.html, SLA p95 ≤ 50ms. [Cần làm] chụp HTML.
+**Cách làm:** [Đã có] tests/locustfile.py nhắm POST /v1/cancel-risk của risk-api. [Cần làm] locust --headless --html docs/sla_risk_api.html, chụp HTML.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_

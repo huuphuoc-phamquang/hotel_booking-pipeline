@@ -14,7 +14,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document show ảnh pipeline đã chạy thành công trên KF Pipelines + link tới code pipeline
 
-**Cách làm:** [Đã có] cancel-risk KFP 4 step. [Đã có] dữ liệu theo cửa sổ [since, until); nhãn = left join cancellations, chỉ lấy booking có checkin < until. [Cần sửa] fillna + cờ khách mới thay dropna; connection string từ Secret. [Pricing] tham số hoá danh sách feature để chạy thêm cancel-segment (không có customer_booking_stats); pipeline demand-model: load -> split theo thời gian -> ước lượng β bằng Poisson GLM có kiểm soát policy_price + train XGBoost cho mức cầu tại giá policy -> evaluate (regret + sai số β). Không dùng XGBoost cho cả đường cầu theo giá: ngoài dải jitter ±10% học sai β (prototype generator/demand.py: regret GBM 25,1% so với GLM có kiểm soát 0,16%; GLM phải dùng solver newton-cholesky).
+**Cách làm:** [Đã có] cancel-risk KFP 4 step; dữ liệu theo cửa sổ [since, until) (v1: tháng 1-6/2025, v2: dữ liệu gần đây sau drift); nhãn = left join cancellations, chỉ booking có checkin < until; input có loyalty_tier và has_customer_history. [Cần sửa] connection string lấy từ Secret.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -27,7 +27,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document show ảnh model đã được version và lưu trữ lại + Data tương ứng cũng được version
 
-**Cách làm:** [Đã có] log model/data/params, tag release=latest, alias production qua cổng promote: AUC ≥ 0,60 (sàn chặn model hỏng, dưới trần đo bằng generator/profile_data), lệch calibration ≤ 0,03, không kém bản production chấm trên cùng validation; bỏ scale_pos_weight (làm lệch xác suất). [Pricing] demand-model chỉ lên production khi regret giảm so với bản cũ.
+**Cách làm:** [Đã có] log model/data/params, tag release=latest, alias production qua cổng promote: AUC ≥ 0,60 (sàn chặn model hỏng, dưới trần đo bằng generator/profile_data), lệch calibration ≤ 0,03, không kém bản production chấm trên cùng validation; bỏ scale_pos_weight (làm lệch xác suất).
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -42,7 +42,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document các step chính đã làm trong Jupyter notebook
 
-**Cách làm:** [Thiết kế] notebooks/cancel_segment.ipynb: Feast get_historical_features + join labels_cancel -> split theo thời gian -> XGBoost -> AUC, calibration, sai số so với tỷ lệ huỷ thật của ô (generator).
+**Cách làm:** [Thiết kế] notebooks/cancel_risk.ipynb: Feast get_historical_features + left join cancellations -> split theo thời gian -> XGBoost -> AUC, calibration, Brier so với xác suất huỷ thật của generator.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -90,6 +90,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Mỗi lần kéo dữ liệu từ Feast về để training, cần version lại DATA theo cơ chế incremental (ví dụ lần train thứ 2 data chỉ có 1 chút thay đổi thì chỉ lưu trữ lại phần thay đổi này thôi, tránh việc lưu full data của cả lần 1 và lần 2)
 
-**Cách làm:** [Thiết kế] tập train ghi Iceberg ml.train_cancel_segment bằng MERGE INTO ON booking_id (chỉ thêm file cho dòng mới/đổi); MLflow ghi snapshot_id, tái lập bằng VERSION AS OF. [Cần làm] chụp snapshot + số file thêm.
+**Cách làm:** [Thiết kế] tập train ghi Iceberg ml.train_cancel_risk bằng MERGE INTO ON booking_id (chỉ thêm file cho dòng mới/đổi); MLflow ghi snapshot_id, tái lập bằng VERSION AS OF. [Cần làm] chụp snapshot + số file thêm.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_

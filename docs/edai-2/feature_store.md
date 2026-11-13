@@ -27,7 +27,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document show ảnh các jobs đã chạy thành công, dữ liệu đã có + link tới code của các jobs
 
-**Cách làm:** [Cần làm] Flink chưa push vào Feast. [Thiết kế] sliding window 1 giờ trượt 1 phút ra bookings_1h; Job 1 sink JDBC vào gold.feat_hotel_realtime (offline), Job 2 feature-pusher store.push(..., to=PushMode.ONLINE) (online); tách 2 job vì chưa kiểm Feast push offline sang PostgreSQL. [Pricing] window 5 phút theo hotel x stay_date. [Cần làm] chụp 2 job chạy + feature online/offline có dữ liệu.
+**Cách làm:** [Đã có] Job 1: Flink sliding window 1 giờ upsert gold.feat_hotel_realtime (offline). [Thiết kế] Job 2 feature-pusher store.push(..., to=PushMode.ONLINE) (online); tách 2 job vì chưa kiểm Feast push offline sang PostgreSQL. [Cần làm] chụp 2 job chạy + feature online/offline có dữ liệu.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 

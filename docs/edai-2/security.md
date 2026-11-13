@@ -29,7 +29,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Capture màn hình thể hiện cách mọi người thực hiện centrailize secret management
 
-**Cách làm:** [Đã có] Jenkins lấy secret từ Vault. [Thiết kế] Vault Agent Injector cho pod (pricing-api, MCP, job) để dùng chung toàn hệ thống.
+**Cách làm:** [Đã có] Jenkins lấy secret từ Vault. [Thiết kế] Vault Agent Injector cho pod (risk-api, MCP, job) để dùng chung toàn hệ thống.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -40,6 +40,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Capture màn hình thể hiện cách mọi người thực hiện authorize service-to-service
 
-**Cách làm:** [Thiết kế] Istio: PeerAuthentication STRICT mTLS; AuthorizationPolicy chỉ cho SA pricing-api gọi InferenceService, chỉ KNative broker gọi drift-api. [Cần làm] chụp 403 từ pod khác.
+**Cách làm:** [Thiết kế] Istio: PeerAuthentication STRICT mTLS; AuthorizationPolicy chỉ cho SA risk-api gọi InferenceService cancel-risk, chỉ KNative broker gọi drift-api. [Cần làm] chụp 403 từ pod khác.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_

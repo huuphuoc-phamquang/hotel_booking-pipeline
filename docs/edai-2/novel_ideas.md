@@ -12,7 +12,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document idea + proof it worked!
 
-**Cách làm:** Idea 1 - Regret so với giá tối ưu thật P*: so giá cố định / giá policy lịch sử / model ngây thơ (β lệch về 0 do confounding) / XGBoost cả đường cầu / GLM có kiểm soát policy_price (prototype: 15,3% / 12,7% / 37,1% / 32,6% / 0,1%). Proof: bảng regret + assert optimizer lưới ~ nghiệm KKT beta/(beta-1)*(c + lambda), c = chi phí biên, lambda = giá bóng của phòng; IPS (propensity 1/5) để đánh giá off-policy. Thêm nếu còn thời gian: overbooking regret (K model vs K thật từ hàm huỷ của generator).
+**Cách làm:** Idea 1 - Calibration so với xác suất thật: generator biết xác suất huỷ thật p của từng booking (công thức nhãn); đo Brier / reliability so với p thật và sai số K bán vượt (K từ xác suất model so với K từ p thật), trước và sau retrain. Proof: reliability diagram + bảng sai số K.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -21,7 +21,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-2 · dòng 57 · 2 điểm · nhóm *Novel ideas*
 
-**Cách làm:** Idea 2 - Định giá công bằng có kiểm chứng + HITL: quote_price không nhận customer_id; model huỷ trong công thức giá ở cấp ô giá (cancel-segment); property test đổi customer_id giá và rate fence không đổi; đổi giá > 15% hoặc số phòng bán vượt quá ngưỡng đi qua tool propose_price_change có requireApproval (kagent HITL: Approve/Reject trên UI). Proof: test trong CI + trace phê duyệt; đối chiếu Luật 91/2025.
+**Cách làm:** Idea 2 - HITL cho K lớn: tool propose_overbooking của policy-agent tính K bán vượt cho hotel × stay_date (Poisson-binomial trên xác suất từ risk-api, ngưỡng c_spoil/(c_spoil+c_walk)); K vượt ngưỡng phải qua requireApproval của kagent (Approve/Reject trên UI). Proof: trace phê duyệt + test biên ngưỡng.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -43,6 +43,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** final · dòng 59 · 2 điểm · nhóm *Novel ideas*
 
-**Cách làm:** Idea 2 - A/B có doanh thu thật: so dashboard proxy (giá, guardrail, drift) với doanh thu kỳ vọng thật của từng version, tính bằng công thức từ hàm cầu đã biết Σ P·P(book|P)·(1 − p_cancel); không cần simulator khép kín.
+**Cách làm:** Idea 2 - A/B có Brier thật: generator biết xác suất huỷ thật p của từng booking; so v1 và v2 bằng Brier / log-loss so với p thật ngay khi có dự báo, không chờ nhãn sau ngày nhận phòng.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_

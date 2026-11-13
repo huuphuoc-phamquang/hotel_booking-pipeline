@@ -12,6 +12,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document phải show được setup agentgateway để làm MCP Gateway, show được các thiết lập về security và policy kèm giải thích tại sao dùng cái đó + link tới YAML chứa các setting
 
-**Cách làm:** [Đã có] route /mcp qua gateway, JWT, mcpAuthorization theo tool + role (RemoteMCPServer trỏ gateway, không trỏ thẳng MCP). [Pricing] thêm rule cho tool pricing.
+**Cách làm:** [Đã có] route /mcp qua gateway, JWT, mcpAuthorization theo tool + role (RemoteMCPServer trỏ gateway, không trỏ thẳng MCP).
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_

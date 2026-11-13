@@ -12,6 +12,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document show có pod KServe + link tới kserve YAML file + show ảnh đã gọi thử KServe thành công
 
-**Cách làm:** [Đã có] kserve-cancel-risk.yaml model-inside-image. [Cần làm] tương tự cho demand-model và cancel-segment; chụp pod + gọi V1 predict.
+**Cách làm:** [Đã có] kserve-cancel-risk.yaml model-inside-image. [Cần làm] chụp pod + gọi V1 predict.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_

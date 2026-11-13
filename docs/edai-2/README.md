@@ -36,30 +36,30 @@
 | 6 | 2 | Benchmark model server and optimize the platform | [llm_inference_platform.md](llm_inference_platform.md#edai-2-6) | Đã có · Thiết kế · Cần làm |
 | 7 | 2 | Deploy 1 global model config để các Agent có thể dùng follow tutorial này, config này sẽ… | [global_model_config.md](global_model_config.md#edai-2-7) | Đã có · Cần làm |
 | 8 | 2 | Deploy registry for agent theo tutorial này | [agent_registry.md](agent_registry.md#edai-2-8) | Thiết kế · Cần làm |
-| 9 | 2 | Build data pipeline với ít nhất các step sau: kéo dữ liệu từ text => chia chunk => lưu… | [rag_pipeline.md](rag_pipeline.md#edai-2-9) | Đã có · Pricing · Cần sửa |
+| 9 | 2 | Build data pipeline với ít nhất các step sau: kéo dữ liệu từ text => chia chunk => lưu… | [rag_pipeline.md](rag_pipeline.md#edai-2-9) | Đã có · Cần sửa |
 | 10 | 2 | Đảm bảo data governance cho pipeline | [rag_pipeline.md](rag_pipeline.md#edai-2-10) | Thiết kế · Cần làm |
 | 11 | 2 | Build data pipeline để incremental materialize dữ liệu mới nhất từ OFFLINE qua ONLINE… | [feature_store.md](feature_store.md#edai-2-11) | Đã có · Cần sửa · Cần làm |
-| 12 | 2 | Deploy các jobs chịu trách nhiệm push streaming feature vào OFFLINE & ONLINE store | [feature_store.md](feature_store.md#edai-2-12) | Cần làm · Thiết kế · Pricing |
-| 13 | 2 | Build 1 training pipeline với ít nhất 4 steps: load data từ offline feature store, data… | [ml_pipeline.md](ml_pipeline.md#edai-2-13) | Đã có · Cần sửa · Pricing |
-| 14 | 2 | Lưu model, data và các metadata liên quan khác ở mỗi training run lên MLFlow, tự động gắn… | [ml_pipeline.md](ml_pipeline.md#edai-2-14) | Đã có · Pricing |
+| 12 | 2 | Deploy các jobs chịu trách nhiệm push streaming feature vào OFFLINE & ONLINE store | [feature_store.md](feature_store.md#edai-2-12) | Đã có · Thiết kế · Cần làm |
+| 13 | 2 | Build 1 training pipeline với ít nhất 4 steps: load data từ offline feature store, data… | [ml_pipeline.md](ml_pipeline.md#edai-2-13) | Đã có · Cần sửa |
+| 14 | 2 | Lưu model, data và các metadata liên quan khác ở mỗi training run lên MLFlow, tự động gắn… | [ml_pipeline.md](ml_pipeline.md#edai-2-14) | Đã có |
 | 15 | 2 | Sử dụng KServe để serve model vừa train ở bên trên, dùng model-inside-image pattern | [ml_inference_service.md](ml_inference_service.md#edai-2-15) | Đã có · Cần làm |
-| 16 | 1 | Có sử dụng FastAPI + data validation + healthcheck for k8s | [mcp_server.md](mcp_server.md#edai-2-16) | Đã có · Pricing |
+| 16 | 1 | Có sử dụng FastAPI + data validation + healthcheck for k8s | [mcp_server.md](mcp_server.md#edai-2-16) | Đã có |
 | 17 | 1 | Sử dụng async cho concurrent processing | [mcp_server.md](mcp_server.md#edai-2-17) | Đã có |
 | 18 | 2 | Deploy in the form of MCP tool to k8s with helm + rollingupdate + auto fallback | [mcp_server.md](mcp_server.md#edai-2-18) | Đã có · Cần làm |
 | 19 | 2 | Deploy 1 Agent sử dụng MCP tool ở trên với multi-replica và auto-scale sử dụng cái này | [mcp_server.md](mcp_server.md#edai-2-19) | Đã có · Cần sửa · Cần làm |
 | 20 | 1 | Configure Agent chạy trong Sandbox để đảm bảo security | [mcp_server.md](mcp_server.md#edai-2-20) | Thiết kế · Cần sửa · Cần làm |
 | 21 | 1 | Publish Agent ở trên lên registry đã deploy để đảm bảo governance | [mcp_server.md](mcp_server.md#edai-2-21) | Cần làm |
-| 22 | 8 | Làm tương tự, thêm 1 Agent nhận dữ liệu từ Online Feature Store, và có 2 tools: | [second_agent.md](second_agent.md#edai-2-22) | Đã có · Pricing |
-| 23 | 2 | MCP Gateway | [mcp_gateway.md](mcp_gateway.md#edai-2-23) | Đã có · Pricing |
+| 22 | 8 | Làm tương tự, thêm 1 Agent nhận dữ liệu từ Online Feature Store, và có 2 tools: | [second_agent.md](second_agent.md#edai-2-22) | Đã có · Thiết kế · Cần làm |
+| 23 | 2 | MCP Gateway | [mcp_gateway.md](mcp_gateway.md#edai-2-23) | Đã có |
 | 24 | 2 | A2A Gateway | [a2a_gateway.md](a2a_gateway.md#edai-2-24) | Một phần · Cần làm |
 | 25 | 2 | Deploy 1 Coordinator Agent với multi-replica và auto-scale sử dụng cái này | [coordinator_agent.md](coordinator_agent.md#edai-2-25) | Đã có · Cần sửa · Cần làm |
 | 26 | 2 | Publish Agent ở này lên registry đã deploy để đảm bảo governance. | [coordinator_agent.md](coordinator_agent.md#edai-2-26) | Cần làm |
 | 27 | 2 | Cài đặt hệ thống ở chế độ Warm Up cho agent theo hướng dẫn sau để tối ưu chi phí, đồng… | [warm_up.md](warm_up.md#edai-2-27) | Thiết kế · Cần làm |
-| 28 | 1 | Unit test với Test Coverage > 90% | [testing.md](testing.md#edai-2-28) | Đã có · Pricing |
-| 29 | 2 | Có sử dụng kỹ thuật equivalence partitioning vs boundary value analysis khi thiết kế test… | [testing.md](testing.md#edai-2-29) | Đã có · Cần làm · Pricing |
+| 28 | 1 | Unit test với Test Coverage > 90% | [testing.md](testing.md#edai-2-28) | Đã có |
+| 29 | 2 | Có sử dụng kỹ thuật equivalence partitioning vs boundary value analysis khi thiết kế test… | [testing.md](testing.md#edai-2-29) | Đã có · Thiết kế |
 | 30 | 2 | Có sử dụng mutation testing để đánh giá hiệu quả của các test | [testing.md](testing.md#edai-2-30) | Đã có · Cần làm |
-| 31 | 2 | Idempotency testing sử dụng property-based testing | [testing.md](testing.md#edai-2-31) | Đã có · Pricing |
-| 32 | 2 | Load test the Web API to understand throughput and latency | [testing.md](testing.md#edai-2-32) | Đã có · Cần làm · Pricing |
+| 31 | 2 | Idempotency testing sử dụng property-based testing | [testing.md](testing.md#edai-2-31) | Đã có |
+| 32 | 2 | Load test the Web API to understand throughput and latency | [testing.md](testing.md#edai-2-32) | Đã có · Cần làm |
 | 33 | 2 | RAG Data Pipeline | [cicd.md](cicd.md#edai-2-33) | Thiết kế · Cần làm |
 | 34 | 2 | Agent kéo dữ liệu | [cicd.md](cicd.md#edai-2-34) | Đã có · Cần làm |
 | 35 | 2 | Agent để làm coordinator | [cicd.md](cicd.md#edai-2-35) | Thiết kế · Cần làm |
@@ -90,19 +90,19 @@
 
 | Dòng | Điểm | Mục | Tài liệu | Trạng thái |
 |---|---|---|---|---|
-| 3 | 2 | Có sử dụng FastAPI + data validation + healthcheck for k8s | [web_api.md](web_api.md#final-3) | Thiết kế · Cần làm |
-| 4 | 2 | Sử dụng async | [web_api.md](web_api.md#final-4) | Thiết kế |
+| 3 | 2 | Có sử dụng FastAPI + data validation + healthcheck for k8s | [web_api.md](web_api.md#final-3) | Đã có · Cần làm |
+| 4 | 2 | Sử dụng async | [web_api.md](web_api.md#final-4) | Đã có |
 | 5 | 2 | Deploy to k8s with helm + rollingupdate + auto fallback | [web_api.md](web_api.md#final-5) | Đã có · Cần làm |
 | 6 | 2 | Có sử dụng FastAPI + data validation + healthcheck for k8s | [web_api.md](web_api.md#final-6) | Thiết kế |
 | 7 | 2 | Sử dụng async | [web_api.md](web_api.md#final-7) | Thiết kế |
 | 8 | 2 | Deploy to k8s with helm + rollingupdate + auto fallback | [web_api.md](web_api.md#final-8) | Thiết kế · Cần làm |
 | 9 | 2 | Web API kéo dữ liệu | [web_api.md](web_api.md#final-9) | Thiết kế · Cần làm |
 | 10 | 2 | Web API cho drift detection | [web_api.md](web_api.md#final-10) | Thiết kế · Cần làm |
-| 11 | 2 | Unit test với Test Coverage > 90% | [testing.md](testing.md#final-11) | Thiết kế · Cần làm |
+| 11 | 2 | Unit test với Test Coverage > 90% | [testing.md](testing.md#final-11) | Đã có · Thiết kế · Cần làm |
 | 12 | 2 | Có sử dụng kỹ thuật equivalence partitioning vs boundary value analysis khi thiết kế test… | [testing.md](testing.md#final-12) | Thiết kế |
 | 13 | 2 | Có sử dụng mutation testing để đánh giá hiệu quả của các test | [testing.md](testing.md#final-13) | Đã có · Cần làm |
 | 14 | 2 | Idempotency testing sử dụng property-based testing | [testing.md](testing.md#final-14) | Đã có · Thiết kế |
-| 15 | 2 | Load test the Web API to understand throughput and latency | [testing.md](testing.md#final-15) | Đã có · Thiết kế · Cần làm |
+| 15 | 2 | Load test the Web API to understand throughput and latency | [testing.md](testing.md#final-15) | Đã có · Cần làm |
 | 19 | 2 | Build data pipeline để incremental materialize dữ liệu mới nhất từ offline qua online… | [feature_store.md](feature_store.md#final-19) | Đã có · Thiết kế · Cần làm |
 | 20 | 1 | Deploy job chịu trách nhiệm push streaming feature vào OFFLINE store | [feature_store.md](feature_store.md#final-20) | Thiết kế |
 | 21 | 1 | Deploy job chịu trách nhiệm push streaming feature vào ONLINE store | [feature_store.md](feature_store.md#final-21) | Đã có · Thiết kế |
@@ -110,7 +110,7 @@
 | 23 | 2 | Jupyter notebook để kéo dữ liệu từ offline store để tạo ra model. | [ml_pipeline.md](ml_pipeline.md#final-23) | Thiết kế |
 | 24 | 2 | Chuyển đổi code từ Jupyter notebook thành training pipeline với số lượng step giống ở… | [ml_pipeline.md](ml_pipeline.md#final-24) | Đã có · Cần làm |
 | 25 | 2 | Trong training pipeline, ở step train, thay bằng distributed training | [ml_pipeline.md](ml_pipeline.md#final-25) | Thiết kế · Cần làm |
-| 26 | 2 | Khi training pipeline hoàn tất, thông tin của MODEL cần được lưu trữ lại ở Model Registry | [ml_pipeline.md](ml_pipeline.md#final-26) | Đã có · Thiết kế |
+| 26 | 2 | Khi training pipeline hoàn tất, thông tin của MODEL cần được lưu trữ lại ở Model Registry | [ml_pipeline.md](ml_pipeline.md#final-26) | Đã có |
 | 27 | 2 | Mỗi lần kéo dữ liệu từ Feast về để training, cần version lại DATA theo cơ chế incremental | [ml_pipeline.md](ml_pipeline.md#final-27) | Thiết kế · Cần làm |
 | 28 | 2 | Materialize Pipeline | [cicd.md](cicd.md#final-28) | Thiết kế · Cần làm |
 | 29 | 2 | Training Pipeline | [cicd.md](cicd.md#final-29) | Thiết kế · Cần làm |
