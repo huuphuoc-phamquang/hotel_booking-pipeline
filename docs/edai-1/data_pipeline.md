@@ -48,7 +48,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-1 · dòng 26 · 2 điểm · nhóm *Data Pipeline Orchestration* › *Pipeline to compute offline feature table (DP3) (Ví dụ: f_customer_total_orders_90d)*
 
-**Cách làm:** [Cần làm] DAG dp3 chạy Spark job: feat_customer_booking_stats, feat_hotel_demand; [Pricing] feat_hotel_occupancy, feat_hotel_conversion_7d, rate_calendar. Ghi qua bảng staging rồi đổi tên trong 1 transaction; event_timestamp = thời điểm tính; outlets Airflow Dataset đặt ở task validate để kích hoạt materialize.
+**Cách làm:** [Cần làm] DAG dp3 chạy Spark job: feat_customer_booking_stats, feat_hotel_demand. Ghi qua bảng staging rồi đổi tên trong 1 transaction; event_timestamp = thời điểm tính; outlets Airflow Dataset đặt ở task validate để kích hoạt materialize.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 

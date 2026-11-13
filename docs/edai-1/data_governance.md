@@ -48,7 +48,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-1 · dòng 32 · 2 điểm · nhóm *Data Governance* › *DP3 linked with related tables*
 
-**Cách làm:** [Đã có] PIPELINES khai báo DP3 (feat_customer_booking_stats). [Cần làm] thêm các feat_ pricing; chụp lineage.
+**Cách làm:** [Đã có] PIPELINES khai báo DP3 (feat_customer_booking_stats). [Cần làm] thêm feat_hotel_demand; chụp lineage.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 

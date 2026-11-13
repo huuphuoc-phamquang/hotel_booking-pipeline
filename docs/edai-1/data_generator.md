@@ -9,48 +9,50 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 Sinh bằng `python -m generator.profile_data` (thư mục `edai1/`), mẫu đủ 16 shard của 4 ngày, ngoại suy ra cả năm. Đổi `config.yaml` thì chạy lại và thay bảng này; không ghi số đo vào config hay comment.
 
-Mẫu: ngày [10, 100, 200, 300], đủ 16 shard; số cả năm = mẫu × 91. config_sha256 36e83719aa87
+Mẫu: ngày [10, 100, 200, 300], đủ 16 shard; số cả năm = mẫu × 91. config_sha256 82e9faf5b5b5
 
 | Bảng | Dòng / ngày | Byte / dòng (Parquet zstd) | Dòng / năm | Dung lượng / năm |
 |---|---|---|---|---|
-| quotes | 26,812,643 | 10.1 | 9.79 tỉ | 98.6 GB |
-| bookings | 343,958 | 24.4 | 0.13 tỉ | 3.1 GB |
-| cancellations | 119,119 | 15.2 | 0.04 tỉ | 0.7 GB |
-| **tổng** | | | | **102.4 GB** |
+| quotes | 31,310,058 | 8.5 | 11.43 tỉ | 96.6 GB |
+| bookings | 395,130 | 24.2 | 0.14 tỉ | 3.5 GB |
+| cancellations | 140,546 | 15.2 | 0.05 tỉ | 0.8 GB |
+| **tổng** | | | | **100.8 GB** |
 
 | Phễu và lỗi dữ liệu | Giá trị |
 |---|---|
-| Đặt / lượt xem (look-to-book) | 1.26% |
-| Lượt xem gặp hết phòng | 4.59% |
-| Double submit (dòng thừa / booking) | 1.99% |
+| Đặt / lượt xem (look-to-book) | 1.24% |
+| Lượt xem gặp hết phòng | 4.70% |
+| Double submit (dòng thừa / booking) | 2.01% |
 | Tỉ lệ huỷ trước drift | 32.8% |
-| Tỉ lệ huỷ sau drift | 43.6% |
-| Booking schema v1 / v2 trong mẫu | 686,336 / 689,496 |
+| Lead time trung bình trước drift (covariate drift) | 18.3 ngày |
+| Tỉ lệ huỷ sau drift | 47.5% |
+| Lead time trung bình sau drift (covariate drift) | 28.6 ngày |
+| Booking schema v1 / v2 trong mẫu | 787,518 / 793,000 |
 
 | Skew theo khách sạn (mỗi ngày, trung bình mẫu) | Lượt xem | Booking |
 |---|---|---|
 | Top 1 khách sạn | 2.6% | 2.7% |
-| Top 10 khách sạn | 9.1% | 9.1% |
+| Top 10 khách sạn | 9.1% | 9.0% |
 | Top 1% khách sạn | 33.0% | 33.0% |
-| Khách sạn trung vị (dòng / ngày) | 208 | 2.8 |
+| Khách sạn trung vị (dòng / ngày) | 243 | 3.2 |
 
 | Khách (1 năm) | Giá trị |
 |---|---|
-| Booking / khách (trung bình) | 4.1 |
-| Khách không đặt trong năm | 24% |
-| Khách có đặt: trung vị / p99 | 3 / 38 |
+| Booking / khách (trung bình) | 4.7 |
+| Khách không đặt trong năm | 21% |
+| Khách có đặt: trung vị / p99 | 3 / 43 |
 
 | Trần AUC (điểm = công thức nhãn thật) | Trước drift | Sau drift |
 |---|---|---|
-| oracle (biết propensity ẩn) | 0.736 | 0.745 |
-| lead + policy + loyalty | 0.683 | 0.697 |
-| lead + policy (cancel-segment, MODEL_INPUTS không có loyalty) | 0.649 | 0.669 |
+| oracle (biết propensity ẩn) | 0.735 | 0.744 |
+| lead + policy + loyalty (input của cancel-risk, chưa tính lịch sử khách) | 0.681 | 0.697 |
+| lead + policy (bỏ loyalty) | 0.648 | 0.669 |
 
 | Event trễ (booking_created, 1 shard) | Tỉ lệ |
 |---|---|
-| Trễ 10–15 phút (vào lại qua allowed lateness) | 5.80% |
-| Trễ > 15 phút (side output) | 6.84% |
-| Qua channel manager (trễ 1–4 giờ) | 0.99% |
+| Trễ 10–15 phút (vào lại qua allowed lateness) | 5.64% |
+| Trễ > 15 phút (side output) | 6.83% |
+| Qua channel manager (trễ 1–4 giờ) | 0.93% |
 
 <a id="edai-1-5"></a>
 ## Simulate skew
@@ -112,7 +114,7 @@ Mẫu: ngày [10, 100, 200, 300], đủ 16 shard; số cả năm = mẫu × 91. 
 
 > Simulate another streaming data problem (Ví dụ: 1.5% duplicate rate)
 
-**Cách làm:** [Đã có] callback thanh toán trùng 1,5% (at-least-once). [Pricing] thêm event search/quote để Flink tính cầu realtime; ghi tỉ lệ trùng đo được.
+**Cách làm:** [Đã có] callback thanh toán trùng 1,5% (at-least-once), Flink khử theo event_id. Tỉ lệ đo được in bằng generator/profile_data.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -143,6 +145,6 @@ Mẫu: ngày [10, 100, 200, 300], đủ 16 shard; số cả năm = mẫu × 91. 
 
 **Rubric:** final · dòng 18 · 2 điểm · nhóm *Improve the Data Generator*
 
-**Cách làm:** [Đã có] nhãn huỷ = bảng cancellations(booking_id, cancelled_at) trên landing, nhãn = left join + checkin < ngày chạy; nhãn đặt phòng = quotes.booked (quote_id, booked). [Cần làm] chụp bảng sau khi join với feature (get_historical_features).
+**Cách làm:** [Đã có] nhãn huỷ = bảng cancellations(booking_id, cancelled_at) trên landing; nhãn = left join + checkin < ngày chạy. [Cần làm] chụp bảng sau khi join với feature (get_historical_features).
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_

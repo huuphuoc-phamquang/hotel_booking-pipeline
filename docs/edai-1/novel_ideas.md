@@ -21,6 +21,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-1 · dòng 40 · 10 điểm · nhóm *Novel ideas*
 
-**Cách làm:** Idea 2 - Độ trễ phản ứng giá khi sự kiện được công bố: generator cài sự kiện có announce_date. Proof: biểu đồ giá theo ngày, số ngày trễ của baseline batch (booking pace) vs tín hiệu search 5 phút từ Flink. Không cần simulator khép kín: quotes tăng từ announce_date, chạy lại pipeline giá theo ngày. (Dự phòng: Paimon partial-update cho trạng thái booking.)
+**Cách làm:** Idea 2 - Đối soát batch-stream có ground truth: generator biết đúng mọi event; số Flink đếm cộng side output bằng đúng số dòng landing trong cửa sổ, tách theo loại lỗi (trễ, trùng, channel manager). Proof: bảng đối soát Flink / landing / Silver; test bất biến stream = landing.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_

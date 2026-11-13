@@ -94,6 +94,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document show đoạn code thể hiện khả năng xử lý Window trong Flink, và giải thích đoạn code đó làm gì
 
-**Cách làm:** [Đã có] tumbling window 1 phút theo hotel_id. [Cần sửa] đổi sang sliding window 1 giờ trượt 1 phút để ra đúng bookings_1h mà Feast và model dùng. [Pricing] window 5 phút theo hotel x stay_date: lượt search, look-to-book, tồn phòng; trích code + giải thích trong docs/edai-1/processing_jobs.md.
+**Cách làm:** [Đã có] sliding window 1 giờ trượt 1 phút theo hotel_id (SlidingEventTimeWindows) ra bookings_1h, upsert gold.feat_hotel_realtime; trích code + giải thích trong docs/edai-1/processing_jobs.md.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_

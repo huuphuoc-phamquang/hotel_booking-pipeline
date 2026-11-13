@@ -34,7 +34,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Feature tables (feat_ tables) with 2 columns event_timestamp and created
 
-**Cách làm:** [Đã có] feat_customer_booking_stats, feat_hotel_demand có event_timestamp + created. [Pricing] thêm feat_hotel_occupancy cùng 2 cột này.
+**Cách làm:** [Đã có] feat_customer_booking_stats, feat_hotel_demand, feat_hotel_realtime có event_timestamp + created.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
