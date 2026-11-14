@@ -28,25 +28,25 @@
 | 12 | 3 | Handle skew with explanation | [processing_jobs.md](processing_jobs.md#edai-1-12) | Đã có · Thiết kế · Cần làm |
 | 13 | 3 | Handle schema evolution with explanation | [processing_jobs.md](processing_jobs.md#edai-1-13) | Đã có · Cần làm |
 | 14 | 3 | Handle other offline data problem with explanation | [processing_jobs.md](processing_jobs.md#edai-1-14) | Đã có · Cần làm |
-| 15 | 2 | Spark job được tích hợp vào các data pipeline | [processing_jobs.md](processing_jobs.md#edai-1-15) | Cần làm |
+| 15 | 2 | Spark job được tích hợp vào các data pipeline | [processing_jobs.md](processing_jobs.md#edai-1-15) | Đã có · Cần làm |
 | 16 | 2 | Baseline | [processing_jobs.md](processing_jobs.md#edai-1-16) | Đã có · Cần làm |
 | 17 | 3 | Handle late arrival with explanation | [processing_jobs.md](processing_jobs.md#edai-1-17) | Đã có · Cần làm |
 | 18 | 3 | Handle other streaming problem with explanation | [processing_jobs.md](processing_jobs.md#edai-1-18) | Đã có · Cần làm |
-| 19 | 2 | Window processing | [processing_jobs.md](processing_jobs.md#edai-1-19) | Đã có |
+| 19 | 2 | Window processing | [processing_jobs.md](processing_jobs.md#edai-1-19) | Đã có · Cần làm |
 | 20 | 3 | Lakehouse | [data_storage.md](data_storage.md#edai-1-20) | Đã có · Thiết kế · Cần làm |
-| 21 | 3 | Datawarehouse | [data_storage.md](data_storage.md#edai-1-21) | Cần làm |
+| 21 | 3 | Datawarehouse | [data_storage.md](data_storage.md#edai-1-21) | Đã có · Cần làm |
 | 22 | 2 | Ingest stage | [data_pipeline.md](data_pipeline.md#edai-1-22) | Đã có · Cần sửa |
 | 23 | 2 | Validate stage | [data_pipeline.md](data_pipeline.md#edai-1-23) | Đã có · Cần sửa |
-| 24 | 2 | Ingest stage | [data_pipeline.md](data_pipeline.md#edai-1-24) | Cần làm |
+| 24 | 2 | Ingest stage | [data_pipeline.md](data_pipeline.md#edai-1-24) | Đã có · Cần làm |
 | 25 | 2 | Validate stage | [data_pipeline.md](data_pipeline.md#edai-1-25) | Cần làm |
-| 26 | 2 | Ingest stage | [data_pipeline.md](data_pipeline.md#edai-1-26) | Cần làm |
+| 26 | 2 | Ingest stage | [data_pipeline.md](data_pipeline.md#edai-1-26) | Đã có · Cần làm |
 | 27 | 2 | Validate stage | [data_pipeline.md](data_pipeline.md#edai-1-27) | Cần làm |
 | 28 | 2 | Lineage between the pipeline and tables | [data_governance.md](data_governance.md#edai-1-28) | Đã có · Cần làm |
 | 29 | 2 | Data validation | [data_governance.md](data_governance.md#edai-1-29) | Đã có · Cần làm |
 | 30 | 2 | Lineage between the pipeline and tables | [data_governance.md](data_governance.md#edai-1-30) | Đã có · Cần làm |
-| 31 | 2 | Data validation | [data_governance.md](data_governance.md#edai-1-31) | Cần làm |
+| 31 | 2 | Data validation | [data_governance.md](data_governance.md#edai-1-31) | Đã có · Cần làm |
 | 32 | 2 | Lineage between the pipeline and tables | [data_governance.md](data_governance.md#edai-1-32) | Đã có · Cần làm |
-| 33 | 2 | Data validation | [data_governance.md](data_governance.md#edai-1-33) | Cần làm |
+| 33 | 2 | Data validation | [data_governance.md](data_governance.md#edai-1-33) | Đã có · Cần làm |
 | 34 | 2 | Visualize tables on all zones | [schema_design.md](schema_design.md#edai-1-34) | Cần làm |
 | 35 | 2 | Dim table with SCD 2 | [schema_design.md](schema_design.md#edai-1-35) | Đã có · Cần làm |
 | 36 | 2 | Feature tables with 2 columns event_timestamp and created | [schema_design.md](schema_design.md#edai-1-36) | Đã có |
@@ -59,9 +59,9 @@
 
 | Dòng | Điểm | Mục | Tài liệu | Trạng thái |
 |---|---|---|---|---|
-| 16 | 2 | Simulate data drift | [data_generator.md](data_generator.md#final-16) | Đã có · Thiết kế |
+| 16 | 2 | Simulate data drift | [data_generator.md](data_generator.md#final-16) | Đã có · Cần làm |
 | 17 | 2 | Using generator configuration | [data_generator.md](data_generator.md#final-17) | Đã có · Cần làm |
 | 18 | 2 | Tạo bảng label có 2 cột id và label | [data_generator.md](data_generator.md#final-18) | Đã có · Cần làm |
 | 30 | 2 | DP 1 | [cicd.md](cicd.md#final-30) | Thiết kế |
-| 31 | 2 | DP 2 | [cicd.md](cicd.md#final-31) | Thiết kế |
-| 32 | 2 | DP 3 | [cicd.md](cicd.md#final-32) | Thiết kế |
+| 31 | 2 | DP 2 | [cicd.md](cicd.md#final-31) | Thiết kế · Cần làm |
+| 32 | 2 | DP 3 | [cicd.md](cicd.md#final-32) | Thiết kế · Cần làm |
