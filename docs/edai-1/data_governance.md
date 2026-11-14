@@ -30,7 +30,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-1 · dòng 30 · 2 điểm · nhóm *Data Governance* › *DP2 linked with related tables*
 
-**Cách làm:** [Đã có] PIPELINES khai báo DP2. [Cần làm] sau khi có DAG dp2, tên dataset phải khớp inlets/outlets; chụp lineage stg_bookings -> fact_bookings.
+**Cách làm:** [Đã có] PIPELINES khai báo dp2_bronze_to_gold (silver_bookings, stage_gold, upsert_gold) khớp inlets/outlets của DAG. [Cần làm] chụp lineage raw_bookings -> stg_bookings -> fact_bookings.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -39,7 +39,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-1 · dòng 31 · 2 điểm · nhóm *Data Governance* › *DP2 linked with related tables*
 
-**Cách làm:** [Cần làm] đẩy kết quả GX của DP2 (idempotency_key unique...) lên tab Validation của Silver/Gold.
+**Cách làm:** [Đã có] validate_gold: 5 check SQL (có dòng cho ngày ds, staging nào cũng vào được fact, amount > 0, mỗi khách sạn đúng 1 phiên bản hiện hành, huỷ sau ngày đặt) đẩy AssertionRunEvent lên DataHub (governance.validate_sql). [Cần làm] chụp tab Validation.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -48,7 +48,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-1 · dòng 32 · 2 điểm · nhóm *Data Governance* › *DP3 linked with related tables*
 
-**Cách làm:** [Đã có] PIPELINES khai báo DP3 (feat_customer_booking_stats). [Cần làm] thêm feat_hotel_demand; chụp lineage.
+**Cách làm:** [Đã có] PIPELINES khai báo dp3_offline_features.build_features: fact_bookings, dim_hotel -> feat_customer_booking_stats, feat_hotel_demand. [Cần làm] chụp lineage.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -57,6 +57,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-1 · dòng 33 · 2 điểm · nhóm *Data Governance* › *DP3 linked with related tables*
 
-**Cách làm:** [Cần làm] đẩy kết quả GX của DP3 lên tab Validation của từng feat_.
+**Cách làm:** [Đã có] validate_features: có dòng cho ngày ds, tỉ lệ trong [0, 1], event_timestamp <= created; đẩy lên DataHub. [Cần làm] chụp tab Validation của từng feat_.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_

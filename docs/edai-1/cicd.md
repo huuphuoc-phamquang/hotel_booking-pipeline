@@ -25,7 +25,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > DP 2 (xem ở sheet mini-coursework)
 
-**Cách làm:** [Thiết kế] như DP1 cho dp2_bronze_to_gold (Spark Silver/Gold + SCD2).
+**Cách làm:** [Thiết kế] Jenkinsfile cho dp2_bronze_to_gold: test import DAG + build image Spark (k8s/spark.Dockerfile) -> sync DAG + sql/. [Cần làm] chụp run.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -36,6 +36,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > DP 3 (xem ở sheet mini-coursework)
 
-**Cách làm:** [Thiết kế] như DP1 cho DAG DP3 (feature Gold, outlets Dataset).
+**Cách làm:** [Thiết kế] Jenkinsfile cho dp3_offline_features: test import DAG -> sync DAG + sql/dp3_features.sql. [Cần làm] chụp run.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_

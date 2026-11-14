@@ -21,6 +21,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-1 · dòng 40 · 10 điểm · nhóm *Novel ideas*
 
-**Cách làm:** Idea 2 - Đối soát batch-stream có ground truth: generator biết đúng mọi event; số Flink đếm cộng side output bằng đúng số dòng landing trong cửa sổ, tách theo loại lỗi (trễ, trùng, channel manager). Proof: bảng đối soát Flink / landing / Silver; test bất biến stream = landing.
+**Cách làm:** Idea 2 - Đối soát batch-stream có ground truth: generator biết đúng mọi event; mỗi giờ sum(gold.stream_bookings_1m) (nhánh tumbling 1 phút) + count(gold.stream_late_bookings) (side output) bằng đúng số booking landing (dedup idempotency_key), tách theo loại trễ (mobile, channel manager). Proof: bảng đối soát Flink / landing / Silver; test bất biến stream = landing.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_

@@ -30,7 +30,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-1 · dòng 24 · 2 điểm · nhóm *Data Pipeline Orchestration* › *Pipeline to ingest data from bronze zone into silver and gold zone (or bronze -> gold only) (DP2)*
 
-**Cách làm:** [Cần làm] DAG dp2: Bronze -> Silver (Spark) -> Gold (SQL SCD2 dim_hotel, fact_bookings, fact_quotes).
+**Cách làm:** [Đã có] DAG dp2_bronze_to_gold: đợi DP1 cùng ngày (ExternalTaskSensor) -> silver_bookings (Spark) -> stage_gold (Spark -> staging) -> upsert_gold (sql/dp2_upsert_gold.sql, 1 transaction: dim_customer, dim_hotel SCD2, fact_bookings join khoảng theo phiên bản dim). [Cần làm] fact_quotes; chụp graph + run.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -48,7 +48,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-1 · dòng 26 · 2 điểm · nhóm *Data Pipeline Orchestration* › *Pipeline to compute offline feature table (DP3) (Ví dụ: f_customer_total_orders_90d)*
 
-**Cách làm:** [Cần làm] DAG dp3 chạy Spark job: feat_customer_booking_stats, feat_hotel_demand. Ghi qua bảng staging rồi đổi tên trong 1 transaction; event_timestamp = thời điểm tính; outlets Airflow Dataset đặt ở task validate để kích hoạt materialize.
+**Cách làm:** [Đã có] DAG dp3_offline_features: sql/dp3_features.sql ghi feat_customer_booking_stats, feat_hotel_demand thẳng trên Gold (upsert, 1 transaction); event_timestamp = hết ngày ds, không phải giờ máy, nên backfill sinh đủ lịch sử point-in-time cho training; task validate bắn Airflow Dataset kích hoạt materialize. [Cần làm] chụp graph + run.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 

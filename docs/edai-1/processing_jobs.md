@@ -52,7 +52,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-1 · dòng 15 · 2 điểm · nhóm *Processing Jobs* › *Spark job to handle offline data problems*
 
-**Cách làm:** [Cần làm] DAG DP2 gọi SparkSubmitOperator silver_bookings.py (+ build Gold); chụp Airflow graph + log Spark.
+**Cách làm:** [Đã có] DAG dp2_bronze_to_gold gọi SparkSubmitOperator silver_bookings.py rồi stage_gold.py (Silver -> staging Gold qua JDBC); image Spark có Iceberg + s3a + JDBC (k8s/spark.Dockerfile). [Cần làm] chụp Airflow graph + log Spark.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -74,7 +74,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-1 · dòng 17 · 3 điểm · nhóm *Processing Jobs* › *Flink job to handle streaming data problems (later in final coursework, we will merge this streaming pipeline into the feature store)*
 
-**Cách làm:** [Đã có] watermark 10 phút + allowed lateness 5 phút + side output. [Cần làm] bảng số event bị bỏ baseline vs tối ưu theo từng nguồn trễ; giải thích chọn 10 phút.
+**Cách làm:** [Đã có] watermark 10 phút + allowed lateness 5 phút + side output ở nhánh đối soát tumbling 1 phút (cửa sổ trượt 1 giờ chỉ đẩy event ra side output khi trễ > 1h15'), ghi gold.stream_late_bookings. [Cần làm] bảng số event vào side output baseline vs tối ưu theo từng nguồn trễ; giải thích chọn 10 phút.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -94,6 +94,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document show đoạn code thể hiện khả năng xử lý Window trong Flink, và giải thích đoạn code đó làm gì
 
-**Cách làm:** [Đã có] sliding window 1 giờ trượt 1 phút theo hotel_id (SlidingEventTimeWindows) ra bookings_1h, upsert gold.feat_hotel_realtime; trích code + giải thích trong docs/edai-1/processing_jobs.md.
+**Cách làm:** [Đã có] sliding window 1 giờ trượt 5 phút theo hotel_id (SlidingEventTimeWindows) ra bookings_1h, upsert gold.feat_hotel_realtime; tumbling 1 phút (TumblingEventTimeWindows) ra gold.stream_bookings_1m để đối soát. [Cần làm] trích code + giải thích trong docs/edai-1/processing_jobs.md.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_

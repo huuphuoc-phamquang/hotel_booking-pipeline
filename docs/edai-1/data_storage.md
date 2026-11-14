@@ -25,6 +25,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Datawarehouse (ví dụ indexing)
 
-**Cách làm:** [Cần làm] chưa có index: thêm index fact_bookings(hotel_key, booking_date), feat_* (entity, event_timestamp), fact_quotes(hotel_id, stay_date); EXPLAIN ANALYZE trước/sau.
+**Cách làm:** [Đã có] schema/gold_schema.sql: index fact_bookings(customer_key, booking_date), (hotel_key, booking_date), (checkin_date), booking_risk(hotel_id, stay_date, scored_date), partial unique dim_hotel(hotel_id) WHERE is_current; feat_* dùng PK (entity, event_timestamp). [Cần làm] fact_quotes(hotel_id, stay_date); EXPLAIN ANALYZE trước/sau.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
