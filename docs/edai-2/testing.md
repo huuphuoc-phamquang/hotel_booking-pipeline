@@ -25,7 +25,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > PR Testing Có sử dụng kỹ thuật equivalence partitioning vs boundary value analysis khi thiết kế test cases để parametrize. (Cái này chưa được dạy, nhưng đơn giản lắm, cả nhà coi ở đây)
 
-**Cách làm:** [Đã có] parametrize biên xác suất [0, 1] (MCP và risk-api) và biên booking_id. [Thiết kế] test biên K của propose_overbooking tại ngưỡng c_spoil/(c_spoil+c_walk).
+**Cách làm:** [Đã có] parametrize biên xác suất [0, 1] (MCP và risk-api), biên booking_id, biên K (p = 0 / 1, không có booking, chi phí <= 0) và K so với định nghĩa trực tiếp qua hypothesis (tests/test_overbooking.py).
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -36,7 +36,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > PR Testing Có sử dụng mutation testing để đánh giá hiệu quả của các test (cái này đã dạy ở lớp rồi nha cả nhà, là cái https://mutmut.readthedocs.io/). Note that you mutate only code changed, not the whole code base everytime you push your commit! Mutation score > 80%.
 
-**Cách làm:** [Đã có] mutmut chỉ trên file thay đổi trong Jenkins. [Cần làm] ci/check_mutation_score.py chưa có; chụp score > 80%.
+**Cách làm:** [Đã có] mutmut chỉ trên file thay đổi trong Jenkins + ci/check_mutation_score.py chặn khi < 80%. [Cần làm] chụp score > 80%.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -73,7 +73,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Capture màn hình đã chạy test với test coverage thoả mãn yêu cầu
 
-**Cách làm:** [Đã có] tests/test_risk_api.py: fixture TestClient, mock Feast (monkeypatch) + KServe (respx), coverage risk_api 95%. [Thiết kế] test tương tự cho drift-api. [Cần làm] chụp coverage.
+**Cách làm:** [Đã có] tests/test_risk_api.py (risk_api 97%) và tests/test_drift_api.py (drift_api 100%, KSDrift thật trên lead time gamma như generator): fixture TestClient, mock Feast (monkeypatch) + KServe (respx). [Cần làm] chụp coverage.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -86,7 +86,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Capture màn hình để thể hiện đã sử dụng các kỹ thuật này
 
-**Cách làm:** [Thiết kế] parametrize theo lớp: stay_date hôm qua/hôm nay/+365/+366, rate_plan hợp lệ/lạ, giá đúng sàn/trần, đổi giá 14,9%/15%/15,1%; drift-api: p_val 0,049/0,05/0,051.
+**Cách làm:** [Đã có] risk-api: biên booking_id, xác suất [0, 1], kích thước lô 0/1/1000/1001; drift-api: WINDOW-1 / WINDOW dòng, số cột sai, body rỗng; drift_monitor: lệch calibration đúng bằng ngưỡng 0,03. [Cần làm] chụp kết quả test.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -97,7 +97,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Có sử dụng mutation testing để đánh giá hiệu quả của các test (cái này đã dạy ở lớp rồi nha cả nhà, là cái https://mutmut.readthedocs.io/). Note that you mutate only code changed, not the whole code base everytime you push your commit! Mutation score > 80%.
 
-**Cách làm:** [Đã có] Jenkinsfile chạy mutmut cho file đổi. [Cần làm] ci/check_mutation_score.py (chưa có) chặn khi score < 80%; mutate theo git diff --name-only.
+**Cách làm:** [Đã có] Jenkinsfile chạy mutmut chỉ cho file đổi (git diff --name-only), ci/check_mutation_score.py chặn khi score < 80%. [Cần làm] chụp score.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 

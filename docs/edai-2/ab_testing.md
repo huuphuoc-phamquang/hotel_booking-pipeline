@@ -36,7 +36,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Capture màn hình thể hiện cách mọi người thực hiện A/B test và dashboard để đánh giá kết quả A/B test
 
-**Cách làm:** [Thiết kế] 2 InferenceService cancel-risk v1 (train tháng 1-6/2025) / v2 (retrain sau drift), chia traffic 50/50 bằng canaryTrafficPercent; deploy bằng Jenkins.
+**Cách làm:** [Thiết kế] 1 InferenceService cancel-risk: Jenkins apply image v2 (retrain sau drift) với canaryTrafficPercent: 50, KServe giữ revision v1 (train tháng 1-6/2025) làm stable và chia 50/50 giữa 2 revision; promote = bỏ canaryTrafficPercent, rollback = đặt 0.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -47,6 +47,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Setup monitoring dashboard to monitor 2 versions. Assumption: we also don't have groundtruth to monitor drift here!
 
-**Cách làm:** [Thiết kế] Grafana theo version: latency, phân bố xác suất dự báo, tỉ lệ huỷ dự báo, drift p-value; kèm Brier so với xác suất thật từ generator (Idea 2).
+**Cách làm:** [Thiết kế] Grafana theo revision của InferenceService cancel-risk: latency, phân bố xác suất dự báo, tỉ lệ huỷ dự báo, drift p-value; kèm Brier so với xác suất thật (bucket truth của generator, join gold.booking_risk) (Idea 2).
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_

@@ -40,6 +40,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Capture màn hình thể hiện cách mọi người thực hiện authorize service-to-service
 
-**Cách làm:** [Thiết kế] Istio: PeerAuthentication STRICT mTLS; AuthorizationPolicy chỉ cho SA risk-api gọi InferenceService cancel-risk, chỉ KNative broker gọi drift-api. [Cần làm] chụp 403 từ pod khác.
+**Cách làm:** [Đã có] k8s/istio-authz.yaml: PeerAuthentication STRICT mTLS; AuthorizationPolicy chỉ cho SA risk-api gọi InferenceService cancel-risk, chỉ namespace knative-eventing gọi drift-api (mỗi API có ServiceAccount riêng trong helm/api). [Cần làm] chụp 403 từ pod khác.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_

@@ -12,7 +12,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document idea + proof it worked!
 
-**Cách làm:** Idea 1 - Calibration so với xác suất thật: generator biết xác suất huỷ thật p của từng booking (công thức nhãn); đo Brier / reliability so với p thật và sai số K bán vượt (K từ xác suất model so với K từ p thật), trước và sau retrain. Proof: reliability diagram + bảng sai số K.
+**Cách làm:** Idea 1 - Calibration so với xác suất thật: generator ghi xác suất huỷ thật p của từng booking vào bucket truth (ngoài landing); join với gold.booking_risk để đo Brier / reliability so với p thật và sai số K bán vượt (K từ xác suất model so với K từ p thật), trước và sau retrain. Proof: reliability diagram + bảng sai số K.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -21,7 +21,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-2 · dòng 57 · 2 điểm · nhóm *Novel ideas*
 
-**Cách làm:** Idea 2 - HITL cho K lớn: tool propose_overbooking của policy-agent tính K bán vượt cho hotel × stay_date (Poisson-binomial trên xác suất từ risk-api, ngưỡng c_spoil/(c_spoil+c_walk)); K vượt ngưỡng phải qua requireApproval của kagent (Approve/Reject trên UI). Proof: trace phê duyệt + test biên ngưỡng.
+**Cách làm:** Idea 2 - HITL cho bán vượt: tool propose_overbooking tính K cho hotel × stay_date (Poisson-binomial chính xác trên xác suất trong gold.booking_risk, ngưỡng c_spoil/(c_spoil+c_walk)); ghi K bằng apply_overbooking phải qua requireApproval của kagent (Approve/Reject trên UI). Proof: trace phê duyệt + test biên.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 

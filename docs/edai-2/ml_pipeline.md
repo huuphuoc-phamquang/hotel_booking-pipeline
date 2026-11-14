@@ -14,7 +14,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document show ảnh pipeline đã chạy thành công trên KF Pipelines + link tới code pipeline
 
-**Cách làm:** [Đã có] cancel-risk KFP 4 step; dữ liệu theo cửa sổ [since, until) (v1: tháng 1-6/2025, v2: dữ liệu gần đây sau drift); nhãn = left join cancellations, chỉ booking có checkin < until; input có loyalty_tier và has_customer_history. [Cần sửa] connection string lấy từ Secret.
+**Cách làm:** [Đã có] cancel-risk KFP 4 step; dữ liệu theo cửa sổ [since, until) (v1: tháng 1-6/2025, v2: dữ liệu gần đây sau drift), lấy mẫu sample_pct theo booking_id; nhãn từ view gold.labels_cancel, chỉ booking có checkin < until; input có loyalty_tier và has_customer_history. [Cần sửa] connection string lấy từ Secret.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 

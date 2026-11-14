@@ -34,7 +34,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Deploy to k8s with helm + rollingupdate + auto fallback (see --atomic)
 
-**Cách làm:** [Đã có] chart helm/booking-mcp (RollingUpdate maxUnavailable 0, probe). [Cần làm] chart cho risk-api cùng mẫu; helm upgrade --install --atomic --timeout 5m; deploy image lỗi -> chụp tự rollback (helm history).
+**Cách làm:** [Đã có] chart chung helm/api (values-risk-api.yaml, values-drift-api.yaml, values-booking-mcp.yaml): RollingUpdate maxUnavailable 0, probe; Jenkins helm upgrade --install --atomic --timeout 5m. [Cần làm] deploy image lỗi -> chụp tự rollback (helm history).
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -45,7 +45,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Có sử dụng FastAPI + data validation (với pydantic) + healthcheck for k8s
 
-**Cách làm:** [Thiết kế] drift-api FastAPI nhận CloudEvent từ KNative Eventing (KServe logger của cancel-risk -> Broker -> Trigger), pydantic cho payload; alibi-detect KSDrift trên lead_days, nights, free_cancel với reference = tập train của model production (generator đổi lead time từ 2025-10-01 nên có drift để bắt); trả is_drift, p_val, đẩy Prometheus; /healthz, /readyz.
+**Cách làm:** [Đã có] drift_api/drift_api.py: FastAPI nhận CloudEvent từ KNative Eventing (KServe logger của cancel-risk -> Broker -> Trigger, k8s/drift-eventing.yaml), pydantic cho payload; gom 500 dòng rồi alibi-detect KSDrift chỉ trên lead_days với reference = tập train của model production (artifact MLflow); trả is_drift, p_val, đẩy Prometheus; /healthz, /readyz. [Cần làm] chụp p_value trước/sau 2025-10-01.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -54,7 +54,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** final · dòng 7 · 2 điểm · nhóm *Web API cho Real-time Drift Detection* › *Có sử dụng FastAPI + data validation (với pydantic)*
 
-**Cách làm:** [Thiết kế] handler async; detector chạy trong threadpool (run_in_threadpool) để không chặn event loop.
+**Cách làm:** [Đã có] handler async; KSDrift chạy trong threadpool (run_in_threadpool) để không chặn event loop.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
