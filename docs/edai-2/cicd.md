@@ -21,7 +21,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-2 · dòng 34 · 2 điểm · nhóm *CI/CD* › *CI/CD cho các MCP Servers & Agents ở trên (Build & package xong MCP Servers => Deploy Agent with the corresponding MCP Servers) (Agent cần sử dụng System Prompt từ một Prompt Management tool như Langfuse)*
 
-**Cách làm:** [Đã có] Jenkinsfile test -> build (Vault) -> helm -> Langfuse prompt -> deploy agents. [Cần làm] ci/render_agents.py, ci/pod-template.yaml chưa có.
+**Cách làm:** [Đã có] Jenkinsfile test -> build (Vault) -> helm -> ci/render_agents.py (prompt Langfuse) -> deploy agents; ci/pod-template.yaml + ci/tools.Dockerfile. [Cần làm] chụp run.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -39,7 +39,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-2 · dòng 36 · 2 điểm · nhóm *CI/CD*
 
-**Cách làm:** [Thiết kế] Jenkinsfile build image Flink job + feature-pusher -> apply FlinkDeployment / Deployment (push offline + online). [Cần làm] chụp run.
+**Cách làm:** [Thiết kế] Jenkinsfile build image Flink job -> apply FlinkDeployment (offline); Job 2 online là DAG feast_materialize_realtime, deploy cùng pipeline DAG. [Cần làm] chụp run.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -74,7 +74,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Capture màn hình từng CI/CD pipeline đã run thành công
 
-**Cách làm:** [Thiết kế] Jenkinsfile risk-api: test -> build image -> helm --atomic. risk-api không chứa model; model production được kéo ở stage KServe (dòng 34).
+**Cách làm:** [Đã có] ci/Jenkinsfile: test -> build image risk-api (docker/api.Dockerfile, Artifact Registry) -> helm --atomic. risk-api không chứa model; model production nằm trong image KServe. [Cần làm] chụp run.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -96,7 +96,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Cho real-time drift detection Web API (sử dụng KNative Eventing kết hợp với KServe)
 
-**Cách làm:** [Thiết kế] Jenkinsfile drift-api: build image + reference set của model production -> apply KNative Broker/Trigger + Deployment.
+**Cách làm:** [Đã có] ci/Jenkinsfile: tải reference_lead_days.npy của model production từ MLflow -> build image drift-api -> helm --atomic (MODEL_VERSION theo model); k8s/drift-eventing.yaml (Broker + Trigger). [Cần làm] chụp run.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -114,6 +114,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** final · dòng 37 · 1 điểm · nhóm *CI/CD* › *CI/CD cho jobs*
 
-**Cách làm:** [Thiết kế] Jenkinsfile Job 2: build image feature-pusher -> helm --atomic.
+**Cách làm:** [Thiết kế] Job 2 là DAG feast_materialize_realtime: Jenkinsfile test import DAG -> sync DAG lên Airflow (cùng pipeline materialize). [Cần làm] chụp run.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_

@@ -12,7 +12,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document phải show hình ảnh Terraform và Ansible code đã chạy
 
-**Cách làm:** [Đã có] iac/gke/main.tf: cluster + node pool CPU/GPU. [Cần làm] tách folder theo service; chụp terraform apply.
+**Cách làm:** [Đã có] iac/modules/{network,gke,registry,budget} + iac/envs/dev: VPC + Cloud NAT, GKE private node, pool CPU spot và GPU L4 (min 0), Artifact Registry, budget alert. [Cần làm] chụp terraform apply.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 

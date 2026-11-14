@@ -34,7 +34,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Deploy in the form of MCP tool to k8s with helm + rollingupdate + auto fallback (see here) Remember, your MCP tool is not like normal API deployment, check it our how to deploy here.
 
-**Cách làm:** [Đã có] helm booking-mcp RollingUpdate maxUnavailable 0 + Jenkins --atomic. [Cần làm] chụp helm history khi rollback tự động.
+**Cách làm:** [Đã có] chart chung helm/api (values-booking-mcp.yaml): RollingUpdate maxUnavailable 0 + Jenkins --atomic. [Cần làm] chụp helm history khi rollback tự động.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -61,6 +61,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-2 · dòng 21 · 1 điểm · nhóm *Web API kéo dữ liệu user (đã lưu thông qua feature pipeline) và chunk (đã được lưu thông qua RAG pipeline)* › *Có sử dụng FastAPI + data validation (với pydantic)*
 
-**Cách làm:** [Cần làm] script ci/publish_agent_card.py được Jenkins gọi nhưng chưa có; publish data-agent, chụp registry UI.
+**Cách làm:** [Đã có] ci/publish_agent_card.py (Jenkins gọi sau rollout từng agent). [Cần làm] publish data-agent, chụp registry UI.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
