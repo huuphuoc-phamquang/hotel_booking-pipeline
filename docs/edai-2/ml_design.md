@@ -10,7 +10,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-2 · dòng 55 · 2 điểm · nhóm *Repository Design*
 
-**Cách làm:** [Cần làm] README theo ô A2: Repo Structure, TOC, docstring đầu file; dùng sơ đồ docs/architecture/booking-pricing.drawio (ảnh booking-pricing.png); link docs/README.md (bảng tra rubric).
+**Cách làm:** [Đã có] examples/booking/README.md (cấu trúc, luồng, thứ tự chạy, test); docstring đầu mọi file. [Cần làm] README của repo nộp theo ô A2: Repo Structure, TOC, sơ đồ booking-pricing.png, link docs/README.md.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -23,7 +23,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Capture màn hình thể hiện Design Pattern đã được sử dụng trong code
 
-**Cách làm:** [Thiết kế] Repository (đọc Feast online qua một hàm _online duy nhất), Adapter (KServe V1 sau CancelRiskClient), Strategy (DriftDetector KS / PSI hoán đổi cho drift-api và drift_monitor), Factory (chọn model theo alias MLflow production).
+**Cách làm:** [Đã có] Repository (risk_api._online + model_rows giấu Feast sau 1 chỗ đọc), Adapter (risk_api._predict đổi response KServe V1 [[p0, p1]] thành xác suất), Facade (tool MCP gói risk-api, Postgres, Feast cho agent), Strategy (dsl.If chọn train 1 node hay TrainJob phân tán, cùng output Model). [Cần làm] chụp code từng pattern.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -36,7 +36,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document 5 key classes
 
-**Cách làm:** [Thiết kế] docs/edai-2/ml_design.md: TrainingDataService, SplitService, CancelRiskTrainer, CancelRiskClient, OverbookingPlanner.
+**Cách làm:** [Đã có] docs/edai-2/ml_design.md: 5 class đề xuất ứng với code hiện có: TrainingDataService (load_from_feast + data_version), SplitService (split_by_time), CancelRiskTrainer (train / train_distributed + evaluate_and_register), CancelRiskClient (risk_api model_rows + _predict), OverbookingPlanner (overbooking.limit).
 
 ```python
 class TrainingDataService:

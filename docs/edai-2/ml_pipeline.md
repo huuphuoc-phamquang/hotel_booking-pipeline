@@ -42,7 +42,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document các step chính đã làm trong Jupyter notebook
 
-**Cách làm:** [Thiết kế] notebooks/cancel_risk.ipynb: Feast get_historical_features + left join cancellations -> split theo thời gian -> XGBoost -> AUC, calibration, Brier so với xác suất huỷ thật của generator.
+**Cách làm:** [Đã có] notebooks/cancel_risk.ipynb (chạy cục bộ, có output): dữ liệu từ generator, split theo thời gian, XGBoost, AUC so với trần của nhãn, reliability theo decile so với p thật, Brier vs p thật, sai số K bán vượt (overbooking.limit), drift làm lệch calibration và retrain trên cửa sổ sau drift sửa được.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -66,7 +66,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Trong training pipeline, ở step train, thay bằng distributed training, ví dụ nếu mọi người dùng model XGBoost thì có thể coi tutorial này.
 
-**Cách làm:** [Thiết kế] step train tạo Kubeflow Trainer TrainJob runtime XGBoost 2 worker (xgboost.collective) theo tutorial; evaluate đọc model từ artifact. [Cần làm] chụp 2 pod worker.
+**Cách làm:** [Đã có] ml/train_xgb_dist.py (xgboost.collective, mỗi worker 1 phần dữ liệu) + component train_distributed tạo Kubeflow Trainer TrainJob runtime xgboost-distributed 2 node (distributed=True mặc định, dsl.If/OneOf với bản 1 node); tests/test_train_xgb_dist.py chạy 2 worker với RabitTracker cục bộ, AUC lệch < 0,01 so với 1 node. [Cần làm] chụp 2 pod worker.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -90,6 +90,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Mỗi lần kéo dữ liệu từ Feast về để training, cần version lại DATA theo cơ chế incremental (ví dụ lần train thứ 2 data chỉ có 1 chút thay đổi thì chỉ lưu trữ lại phần thay đổi này thôi, tránh việc lưu full data của cả lần 1 và lần 2)
 
-**Cách làm:** [Thiết kế] tập train ghi Iceberg ml.train_cancel_risk bằng MERGE INTO ON booking_id (chỉ thêm file cho dòng mới/đổi); MLflow ghi snapshot_id, tái lập bằng VERSION AS OF. [Cần làm] chụp snapshot + số file thêm.
+**Cách làm:** [Đã có] ml/data_version.py: tập train upsert vào Iceberg ml.train_cancel_risk theo booking_id (pyiceberg), load_from_feast trả snapshot_id, MLflow log train_snapshot_id; tests/test_data_version.py: chỉ ghi phần thay đổi, dữ liệu giống hệt không tạo snapshot mới, time travel trả đúng tập cũ. [Cần làm] chụp snapshot trên cluster.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_

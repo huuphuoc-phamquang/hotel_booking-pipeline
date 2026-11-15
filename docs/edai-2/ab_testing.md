@@ -12,7 +12,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document về A/B test được implement như thế nào, dashboard như thế nào
 
-**Cách làm:** [Thiết kế] 2 ModelConfig (v1/v2) cho 2 bản policy-agent, agentgateway chia A2A 50/50; Grafana so latency, token, tỉ lệ tool lỗi, tỉ lệ đề xuất bị Reject. [Cần làm] dashboard.
+**Cách làm:** [Đã có] agents.yaml: policy-agent-v2 dùng ModelConfig model-config-v2 (route /llm-v2 chỉ tới qwen-v2) + prompt riêng; agentgateway chia /a2a/policy-agent 50/50. [Cần làm] dashboard so latency, token, tỉ lệ tool lỗi, tỉ lệ đề xuất bị Reject.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -21,7 +21,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-2 · dòng 53 · 1 điểm · nhóm *A/B Testing* › *When you deploy a new model, don't replace the old one directly, you should do A/B test, monitor it, and deploy.*
 
-**Cách làm:** [Đã có] agentgateway chia weight 90/10 qwen v1 / v2. [Cần làm] dashboard latency / token / lỗi theo version.
+**Cách làm:** [Đã có] agentgateway chia weight 90/10 qwen v1 / v2; dashboard observability/dashboards/llm-agents.json (token, TTFT, round-trip theo model). [Cần làm] chụp dashboard.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -47,6 +47,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Setup monitoring dashboard to monitor 2 versions. Assumption: we also don't have groundtruth to monitor drift here!
 
-**Cách làm:** [Thiết kế] Grafana theo revision của InferenceService cancel-risk: latency, phân bố xác suất dự báo, tỉ lệ huỷ dự báo, drift p-value; kèm Brier so với xác suất thật (bucket truth của generator, join gold.booking_risk) (Idea 2).
+**Cách làm:** [Đã có] observability/dashboards/cancel-risk-ml.json: drift p-value, PSI, lệch calibration, request / latency p95 / lỗi theo revision của InferenceService cancel-risk (A/B canary). Đã nạp thử trong Grafana 12.2. [Cần làm] Brier so với xác suất thật theo version (cần model_version trong booking_risk); chụp dashboard.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
