@@ -21,7 +21,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-2 · dòng 4 · 2 điểm · nhóm *Deploy a LLM inference platform theo hướng dẫn này và set up gateway cho agent theo hướng dẫn này* › *Deploy LLM inference platform + setup custom model & agentgateway*
 
-**Cách làm:** [Cần làm] fine-tune (LoRA) Qwen2.5-1.5B trên hội thoại revenue manager / chính sách giá, upload MinIO s3://models/qwen2.5-1.5b-booking-sft/ (YAML đang giả định model đã có).
+**Cách làm:** [Đã có] llm_platform/finetune: build_dataset.py (429 hội thoại từ policies/*.md + K từ overbooking.limit + từ chối PII, có test) và train_lora.py (LoRA r=16 Qwen2.5-1.5B-Instruct, bf16, vừa GPU 8GB, gộp adapter cho vLLM). [Cần làm] chạy fine-tune, upload s3://models/qwen2.5-1.5b-booking-sft/.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 

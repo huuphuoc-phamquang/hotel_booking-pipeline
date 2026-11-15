@@ -14,7 +14,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document show ảnh pipeline đã chạy thành công trên Airflow, và lineage thể hiện trên DataHub + link tới code pipeline
 
-**Cách làm:** [Đã có] rag_pipeline.py: chunk + bge-m3 -> Feast policy_chunks (tài liệu chính sách huỷ / hoàn tiền). [Cần sửa] bge-m3 ~2,2GB vượt limit 1Gi. Chụp Airflow run.
+**Cách làm:** [Đã có] rag_pipeline.py: chunk + bge-m3 -> Feast policy_chunks; tài liệu chính sách ở policies/*.md; task embed chạy pod riêng 4-6Gi (executor_config) và chart booking-mcp nâng limit 4Gi. [Cần làm] chụp Airflow run.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -25,6 +25,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Đảm bảo data governance cho pipeline (tương tự mini-coursework)
 
-**Cách làm:** [Thiết kế] inlets/outlets -> DataHub lineage docs/policies -> policy_chunks; validate số chunk > 0, chunk_id unique, embedding đúng 1024 chiều; ghi version tài liệu + model embedding. [Cần làm] chụp lineage + tab Validation.
+**Cách làm:** [Đã có] inlets/outlets -> DataHub lineage docs/policies -> policy_chunks; validate số chunk > 0, chunk_id unique, embedding đúng 1024 chiều; mỗi chunk ghi doc_sha256 (version tài liệu) + embed_model. [Cần làm] chụp lineage + tab Validation.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_

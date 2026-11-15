@@ -21,7 +21,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-2 · dòng 45 · 1 điểm · nhóm *IaC*
 
-**Cách làm:** [Cần làm] chưa có Ansible: roles cho VM (vd Jenkins, Vault); chụp playbook chạy.
+**Cách làm:** [Đã có] iac/ansible: site.yml + role common, docker, vault, jenkins (container); syntax-check + ansible-lint production sạch. [Cần làm] chạy trên VM, chụp playbook.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -34,7 +34,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Capture màn hình thể hiện từng setup đã chạy thành công
 
-**Cách làm:** [Đã có] iac/gke/main.tf (GKE + node pool CPU/GPU). [Thiết kế] tách iac/modules/{network,gke,gcs} + iac/envs/dev.
+**Cách làm:** [Đã có] iac/modules/{network,gke,registry,budget} + iac/envs/dev (state GCS), terraform validate sạch. [Cần làm] chụp terraform apply.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -43,6 +43,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** final · dòng 45 · 2 điểm · nhóm *IaC*
 
-**Cách làm:** [Thiết kế] VM Jenkins + Vault, role common, docker, jenkins, vault (như edai-2). [Cần làm] chụp playbook.
+**Cách làm:** [Đã có] iac/ansible: site.yml + role common (ufw), docker, vault (container + vault.hcl), jenkins; ansible-playbook --syntax-check và ansible-lint (profile production) sạch. [Cần làm] chạy trên VM, chụp playbook.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_

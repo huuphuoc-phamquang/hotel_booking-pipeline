@@ -12,7 +12,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document show các CICD pipelines đã chạy và từng step trong component làm gì + link tới các Jenkinsfile tương ứng
 
-**Cách làm:** [Thiết kế] Jenkinsfile RAG: test chunk/validate -> build image (secret từ Vault) -> deploy DAG lên Airflow. [Cần làm] chụp run + giải thích từng stage.
+**Cách làm:** [Đã có] ci/Jenkinsfile.data: DAG integrity test (gồm rag_data_pipeline) trong image Airflow -> deploy DAG qua git-sync, đợi parse không lỗi. [Cần làm] chụp run + giải thích từng stage.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -30,7 +30,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-2 · dòng 35 · 2 điểm · nhóm *CI/CD* › *CI/CD cho các MCP Servers & Agents ở trên (Build & package xong MCP Servers => Deploy Agent with the corresponding MCP Servers) (Agent cần sử dụng System Prompt từ một Prompt Management tool như Langfuse)*
 
-**Cách làm:** [Thiết kế] stage deploy coordinator-agent (prompt từ Langfuse) -> rollout status -> publish lên registry. [Cần làm] chụp run.
+**Cách làm:** [Đã có] ci/Jenkinsfile: render_agents.py lấy prompt Langfuse -> apply agents -> rollout status từng agent (gồm coordinator) -> publish_agent_card.py. [Cần làm] chụp run.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -39,7 +39,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-2 · dòng 36 · 2 điểm · nhóm *CI/CD*
 
-**Cách làm:** [Thiết kế] Jenkinsfile build image Flink job -> apply FlinkDeployment (offline); Job 2 online là DAG feast_materialize_realtime, deploy cùng pipeline DAG. [Cần làm] chụp run.
+**Cách làm:** [Đã có] ci/Jenkinsfile.data: build image Flink -> e2e stream trên Docker (Kafka -> Flink -> Postgres) -> apply FlinkDeployment (offline); Job 2 online là DAG feast_materialize_realtime, deploy cùng DAG. [Cần làm] chụp run.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -52,7 +52,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Capture màn hình từng CI/CD pipeline đã run thành công
 
-**Cách làm:** [Thiết kế] Jenkinsfile: test import DAG -> sync DAG materialize lên Airflow; secret từ Jenkins Credentials + Vault. [Cần làm] chụp run.
+**Cách làm:** [Đã có] ci/Jenkinsfile.data: test (DAG integrity trong image Airflow) -> deploy DAG qua git-sync, đợi Airflow parse không lỗi (list-import-errors rỗng); 2 DAG materialize đi cùng. [Cần làm] chụp run.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -61,7 +61,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** final · dòng 29 · 2 điểm · nhóm *CI/CD* › *CI/CD cho pipelines*
 
-**Cách làm:** [Thiết kế] Jenkinsfile: test component -> build image train -> compile KFP -> upload + tạo run qua KFP API. [Cần làm] chụp run.
+**Cách làm:** [Đã có] ci/Jenkinsfile.ml: test component (data versioning, train phân tán) -> build image train-base (ml/Dockerfile) -> ci/kfp_run.py compile + upload version + tạo run qua KFP API. [Cần làm] chụp run.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -85,7 +85,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Inference Engine (ví dụ KServe)
 
-**Cách làm:** [Đã có] serving/kserve-cancel-risk.yaml. [Thiết kế] stage kéo model alias production của cancel-risk từ MLflow, build image (model-inside-image) rồi apply InferenceService.
+**Cách làm:** [Đã có] serving/Dockerfile (sklearnserver + xgboost 3.2.0, model trong /mnt/models) + ci/fetch_model.py kéo alias production từ MLflow; ci/Jenkinsfile.ml build image tag = version MLflow. Đã build và gọi :predict cục bộ, trả [[P(không huỷ), P(huỷ)]] như risk-api đọc. [Cần làm] chụp apply trên cluster.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -105,7 +105,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** final · dòng 36 · 1 điểm · nhóm *CI/CD* › *CI/CD cho jobs*
 
-**Cách làm:** [Thiết kế] Jenkinsfile Job 1: build image Flink -> apply FlinkDeployment.
+**Cách làm:** [Đã có] ci/Jenkinsfile.data: build image Flink (k8s/flink.Dockerfile) -> e2e stream trên Docker -> apply FlinkDeployment, đợi STABLE. [Cần làm] chụp run.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
