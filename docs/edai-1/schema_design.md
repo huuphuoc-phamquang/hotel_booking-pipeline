@@ -23,7 +23,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Dim table with SCD 2 (valid_from_ts, valid_to_ts, is_current)
 
-**Cách làm:** [Đã có] dim_hotel valid_from_ts / valid_to_ts / is_current + SQL đóng-mở dòng. [Cần làm] demo 1 khách sạn đổi giá 2 lần -> 3 dòng.
+**Cách làm:** [Đã có] dim_hotel valid_from_ts / valid_to_ts / is_current + sql/dp2_upsert_gold.sql; tests/test_gold_sql.py chạy 40 ngày trên Postgres thật: mỗi khách sạn có 1 + số lần đổi giá phiên bản (có khách sạn >= 3 phiên bản), đúng 1 bản hiện hành, fact trỏ đúng phiên bản lúc đặt, chạy lại cùng ngày không đổi. [Cần làm] chụp 1 khách sạn 3 dòng.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 

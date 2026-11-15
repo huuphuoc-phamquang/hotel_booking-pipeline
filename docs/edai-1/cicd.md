@@ -14,7 +14,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Capture màn hình từng CI/CD pipeline đã run thành công
 
-**Cách làm:** [Thiết kế] Jenkinsfile: test DAG + GX suite -> build image Spark job -> sync dp1_ingest_bronze.py.
+**Cách làm:** [Đã có] ci/Jenkinsfile.data: test generator + GX + Spark + SQL + DAG integrity -> build image generator/Spark/Flink -> e2e stream -> deploy DAG (dp1_ingest_bronze cùng các DAG khác). [Cần làm] chụp run.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -25,7 +25,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > DP 2 (xem ở sheet mini-coursework)
 
-**Cách làm:** [Thiết kế] Jenkinsfile cho dp2_bronze_to_gold: test import DAG + build image Spark (k8s/spark.Dockerfile) -> sync DAG + sql/. [Cần làm] chụp run.
+**Cách làm:** [Đã có] ci/Jenkinsfile.data cho dp2_bronze_to_gold: test Spark (pyspark) + SQL DP2 trên Postgres thật -> build image Spark -> deploy DAG + sql/. [Cần làm] chụp run.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -36,6 +36,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > DP 3 (xem ở sheet mini-coursework)
 
-**Cách làm:** [Thiết kế] Jenkinsfile cho dp3_offline_features: test import DAG -> sync DAG + sql/dp3_features.sql. [Cần làm] chụp run.
+**Cách làm:** [Đã có] ci/Jenkinsfile.data cho dp3_offline_features: test SQL DP3 + check validate trên Postgres thật -> deploy DAG + sql/dp3_features.sql. [Cần làm] chụp run.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
