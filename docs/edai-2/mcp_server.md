@@ -43,7 +43,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-2 · dòng 19 · 2 điểm · nhóm *Web API kéo dữ liệu user (đã lưu thông qua feature pipeline) và chunk (đã được lưu thông qua RAG pipeline)* › *Có sử dụng FastAPI + data validation (với pydantic)*
 
-**Cách làm:** [Đã có] data-agent replicas 2. [Cần sửa] rubric dẫn KEDA: ScaledObject cho data-agent (Prometheus scaler theo request/s qua agentgateway, min 2). [Cần làm] chụp scale khi chạy locust.
+**Cách làm:** [Đã có] k8s/keda.yaml: ScaledObject data-agent theo request/s của route a2a-data-agent qua agentgateway, min 2; HPA CPU đã bỏ khỏi agents.yaml. [Cần làm] chụp scale khi chạy locust.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -52,7 +52,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-2 · dòng 20 · 1 điểm · nhóm *Web API kéo dữ liệu user (đã lưu thông qua feature pipeline) và chunk (đã được lưu thông qua RAG pipeline)* › *Có sử dụng FastAPI + data validation (với pydantic)*
 
-**Cách làm:** [Thiết kế] Agent Substrate của kagent: agent chạy dạng SandboxAgent trong actor gVisor theo session (chart substrate >= 0.0.9, kagent >= 0.9.7, controller.substrate.enabled=true); thêm NetworkPolicy chỉ cho gọi agentgateway. Giới hạn: declarative runtime go. [Cần sửa] agents.yaml chưa khai runtime -> đặt runtime: go + substrate.workerPoolRef cho data-agent, policy-agent, coordinator. [Cần làm] chụp agent trên View -> Substrate.
+**Cách làm:** [Thiết kế] k8s/agent-substrate.yaml: WorkerPool gVisor + SandboxAgent runtime go cho data-agent + NetworkPolicy chỉ cho agent gọi agentgateway và DNS (field substrate cần kiểm bằng kubectl explain với bản đã cài). [Cần làm] chụp agent chạy trong sandbox.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 

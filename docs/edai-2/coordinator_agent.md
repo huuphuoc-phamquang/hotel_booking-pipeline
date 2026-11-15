@@ -12,7 +12,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** + Document phải show được Agent đã có trên registry, được deploy với multi-replica, có khả năng scale (có hình ảnh thể hiện đã test thử) + Document show KAgent UI chat với Agent
 
-**Cách làm:** [Đã có] coordinator 2 replica + HPA 2-6 theo CPU 60%. [Cần sửa] HPA là trạng thái mẫu; đổi sang KEDA ScaledObject theo request/s như agent con và xoá HPA (KEDA tự tạo HPA, không để 2 HPA cùng target); cần kiểm kagent có ghi đè replicas không. [Cần làm] chụp scale khi load test + kagent UI chat.
+**Cách làm:** [Đã có] coordinator: KEDA ScaledObject theo request/s qua agentgateway + trigger cpu 60% (k8s/keda.yaml), đã xoá HPA trong agents.yaml. [Cần làm] kiểm kagent có ghi đè replicas không; chụp scale.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -21,6 +21,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-2 · dòng 26 · 2 điểm · nhóm *Deploy 1 Coordinator Agent* › *Điều phối 2 Agent ở trên*
 
-**Cách làm:** [Cần làm] publish coordinator lên registry (Jenkins hiện chỉ publish data-agent).
+**Cách làm:** [Đã có] ci/Jenkinsfile publish data-agent, policy-agent, policy-agent-v2, coordinator-agent lên registry sau rollout. [Cần làm] chụp registry.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_

@@ -12,6 +12,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** + Document link tới code setup Substrate + hình ảnh thể hiện hệ thống có khả năng handle nhiều agent với số worker ít ỏi
 
-**Cách làm:** [Thiết kế] Agent Substrate: WorkerPool giữ sẵn worker (warm), mỗi worker chứa nhiều actor, actor snapshot khi rảnh và khôi phục khi có session; HPA trên scale subresource của WorkerPool. [Cần làm] chụp nhiều agent chạy trên ít worker (View -> Substrate, kubectl get pods -n ate-system).
+**Cách làm:** [Thiết kế] k8s/agent-substrate.yaml: WorkerPool giữ 2 worker warm, actor snapshot khi rảnh; HPA trên scale subresource của WorkerPool khi cần. [Cần làm] chụp nhiều agent chạy trên ít worker.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_

@@ -12,6 +12,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Tương tự bên trên
 
-**Cách làm:** [Một phần] A2A mới có route /a2a/data-agent. [Cần làm] thêm route /a2a/policy-agent; coordinator gọi agent con qua gateway thay vì gọi thẳng; chụp log gateway thấy request A2A.
+**Cách làm:** [Đã có] gateway/agentgateway.yaml: route /a2a/data-agent, /a2a/policy-agent (chia 50/50 v1/v2), /a2a/coordinator-agent; mcpAuthorization thêm propose_overbooking, apply_overbooking cho policy-agent. [Cần làm] coordinator gọi agent con qua gateway (kagent v1alpha2 chỉ tham chiếu agent trong cluster); chụp log gateway.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
