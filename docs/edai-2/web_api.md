@@ -65,7 +65,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Deploy to k8s with helm + rollingupdate + auto fallback (see --atomic)
 
-**Cách làm:** [Thiết kế] cùng mẫu chart, RollingUpdate + --atomic như risk-api. [Cần làm] chụp rollback.
+**Cách làm:** [Đã có] drift-api dùng chung chart helm/api (values-drift-api.yaml): RollingUpdate maxUnavailable 0, probe, --atomic. [Cần làm] chụp rollback.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -76,7 +76,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Capture màn hình cách mọi người handle autoscale và demonstrate it worked!
 
-**Cách làm:** [Thiết kế] KEDA ScaledObject Prometheus scaler theo rate(http_requests_total[1m]) của risk-api, min 2 max 10. [Cần làm] chụp scale khi locust.
+**Cách làm:** [Đã có] k8s/keda.yaml: ScaledObject risk-api theo rate(http_requests_total) (prometheus-fastapi-instrumentator), min 2 max 10; chart bỏ replicas khi autoscaled để helm không ghi đè KEDA. [Cần làm] chụp scale khi locust.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -85,6 +85,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** final · dòng 10 · 2 điểm · nhóm *Autoscale* › *Autoscale Web API kéo dữ liệu và drift detection (ví dụ dùng với KEDA để scale theo req)*
 
-**Cách làm:** [Thiết kế] KEDA ScaledObject theo số CloudEvent/s vào drift-api, min 2 max 10. [Cần làm] chụp scale.
+**Cách làm:** [Đã có] k8s/keda.yaml cho drift-api theo drift_events_total; giữ 1 replica vì buffer cửa sổ KS nằm trong bộ nhớ pod (shortcut ghi trong file). [Cần làm] chụp.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_

@@ -29,7 +29,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Capture màn hình thể hiện cách mọi người thực hiện centrailize secret management
 
-**Cách làm:** [Đã có] Jenkins lấy secret từ Vault. [Thiết kế] Vault Agent Injector cho pod (risk-api, MCP, job) để dùng chung toàn hệ thống.
+**Cách làm:** [Đã có] Jenkins lấy secret từ Vault; helm/api có Vault Agent Injector (values vault.role + path: sidecar export secret thành biến môi trường) cho risk-api và booking-mcp. [Cần làm] chụp pod có sidecar vault-agent.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 

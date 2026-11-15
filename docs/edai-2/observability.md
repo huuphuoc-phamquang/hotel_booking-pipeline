@@ -12,7 +12,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document show được các telemetry
 
-**Cách làm:** [Thiết kế] prometheus-fastapi-instrumentator cho booking-mcp (req/s, số req, số lỗi) + dashboard Grafana. [Cần làm] chụp dashboard.
+**Cách làm:** [Đã có] prometheus-fastapi-instrumentator cho booking-mcp (req/s, số req, lỗi) + mcp_tool_calls/failures; dashboard observability/dashboards/booking-apis.json. [Cần làm] chụp dashboard.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -23,7 +23,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Collect và visualize metrics với Prometheus + Grafana (hoặc tool tương tự)
 
-**Cách làm:** [Thiết kế] kube-prometheus-stack: CPU/RAM/disk/network theo node và pod, Grafana qua ingress. [Cần làm] chụp dashboard.
+**Cách làm:** [Đã có] observability/stack/kube-prometheus-stack.yaml: CPU/RAM/disk/network theo node và pod (node-exporter, kube-state-metrics), Grafana qua ingress grafana.booking.local. [Cần làm] chụp dashboard.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -32,7 +32,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-2 · dòng 48 · 1 điểm · nhóm *Observability* › *Computing telemetry data (such as CPU, RAM, disk, network, etc.)*
 
-**Cách làm:** [Thiết kế] EFK (Fluent Bit -> Elasticsearch -> Kibana) thu log pod; Kibana qua ingress. [Cần làm] chụp.
+**Cách làm:** [Đã có] observability/stack/efk.yaml (Fluent Bit -> Elasticsearch -> Kibana), Kibana qua ingress. [Cần làm] chụp.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -41,7 +41,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-2 · dòng 49 · 1 điểm · nhóm *Observability* › *Computing telemetry data (such as CPU, RAM, disk, network, etc.)*
 
-**Cách làm:** [Thiết kế] OTel SDK cho booking-mcp + tracing agentgateway -> Jaeger; Jaeger qua ingress. [Cần làm] chụp 1 trace A2A -> MCP -> KServe.
+**Cách làm:** [Đã có] observability/stack/jaeger.yaml (OTLP gRPC 4317, UI qua ingress); risk-api gửi trace. [Cần làm] OTel cho booking-mcp và tracing agentgateway; chụp 1 trace A2A -> MCP -> KServe.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -52,7 +52,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Đảm bảo ít nhất các metrics + token metrics (count of input tokens, output tokens and total tokens per req) + total round-trip time for a generation + TTFT + Frequencies of prompts caught by safety of PII
 
-**Cách làm:** [Đã có] llm_metrics.py: token in/out/total, round-trip, TTFT, PII bị chặn. [Cần sửa] regex thẻ khớp nhầm booking_id 13 chữ số: chỉ chặn khi qua kiểm Luhn, hiển thị mã booking dạng BK-<id> và bỏ qua số sau BK-; test booking_id không bị chặn, thẻ test 4111... bị chặn. [Cần làm] dashboard Grafana.
+**Cách làm:** [Đã có] llm_metrics.py: token in/out/total, round-trip, TTFT, PII bị chặn; số thẻ chỉ tính là PII khi qua Luhn và không đứng sau BK-; tests/test_llm_metrics.py (11 test, coverage 100%): BK-<id> không bị chặn, 4111 1111 1111 1111 bị chặn.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -63,7 +63,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Đảm bảo ít nhất các metrics + total num of times each agent is called + total num of times each MCP tool is called + total failures cho mỗi lượt call tool
 
-**Cách làm:** [Đã có] agent_calls_total, mcp_tool_calls_total, mcp_tool_failures_total. [Cần làm] dashboard; agent_calls chỉ đếm khi gọi qua chat() -> đếm ở gateway cho kagent.
+**Cách làm:** [Đã có] agent_calls_total, mcp_tool_calls_total, mcp_tool_failures_total + dashboard observability/dashboards/llm-agents.json (gồm request A2A theo route qua agentgateway). [Cần làm] chụp dashboard.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -78,7 +78,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Capture màn hình thể hiện các data đã được capture, có thể coi trên các dashboard
 
-**Cách làm:** [Thiết kế] prometheus-fastapi-instrumentator cho risk-api và drift-api (req/s, số req, số lỗi, latency) + dashboard Grafana.
+**Cách làm:** [Đã có] prometheus-fastapi-instrumentator cho risk-api, drift-api, booking-mcp (http_requests_total, http_request_duration_seconds) + ServiceMonitor trong helm/api + dashboard observability/dashboards/booking-apis.json (req/s, 5xx, p95, replica). [Cần làm] chụp dashboard.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -89,7 +89,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Collect và visualize metrics với Prometheus + Grafana (hoặc tool tương tự)
 
-**Cách làm:** [Thiết kế] kube-prometheus-stack (node-exporter, kube-state-metrics) + Grafana.
+**Cách làm:** [Đã có] observability/stack/kube-prometheus-stack.yaml (node-exporter, kube-state-metrics, Grafana sidecar nạp dashboard, scrape PushGateway + queue-proxy theo revision). [Cần làm] chụp dashboard.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -98,7 +98,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** final · dòng 48 · 2 điểm · nhóm *Observability* › *Computing telemetry data (such as CPU, RAM, disk, network, etc.)*
 
-**Cách làm:** [Thiết kế] EFK: Fluent Bit -> Elasticsearch -> Kibana.
+**Cách làm:** [Đã có] observability/stack/efk.yaml: Fluent Bit (DaemonSet) -> Elasticsearch -> Kibana, lệnh cài trong file. [Cần làm] chụp Kibana.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -107,7 +107,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** final · dòng 49 · 2 điểm · nhóm *Observability* › *Computing telemetry data (such as CPU, RAM, disk, network, etc.)*
 
-**Cách làm:** [Thiết kế] OTel SDK cho risk-api (FastAPI + httpx instrumentation) -> Jaeger; 1 trace qua Feast + KServe.
+**Cách làm:** [Đã có] risk-api: OTel FastAPI + httpx instrumentation + span feast.online, OTLP -> Jaeger (observability/stack/jaeger.yaml), bật bằng OTEL_EXPORTER_OTLP_ENDPOINT. [Cần làm] chụp 1 trace qua Feast + KServe.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
