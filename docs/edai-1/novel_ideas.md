@@ -12,7 +12,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document idea + proof it worked!
 
-**Cách làm:** Idea 1 - Data contract + DLQ có lỗi cài sẵn: contract JSON Schema trong repo (không Schema Registry), Flink kiểm từng event và route bản ghi sai sang topic booking_events_dlq kèm lý do. Proof: số bản ghi DLQ khớp đúng số lỗi generator cài (~0,5%), pipeline không sập.
+**Cách làm:** Idea 1 - Data contract + DLQ có lỗi cài sẵn: contract JSON Schema schema/contracts/booking_event.json (không Schema Registry); generator thêm 0,5% bản sao lỗi (giá âm / hotel_id = 0 / thiếu event_time, nhãn violation trong event log); Flink ContractCheck route event sai sang topic booking_events_dlq kèm reason = trường vi phạm. Proof: tests/test_stream_gen.py (contract bắt đúng từng bản lỗi, không chặn event thật) + tests/test_stream_e2e.py (số event trên DLQ theo reason = số lỗi cài).
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -21,6 +21,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-1 · dòng 40 · 10 điểm · nhóm *Novel ideas*
 
-**Cách làm:** Idea 2 - Đối soát batch-stream có ground truth: generator biết đúng mọi event; mỗi giờ sum(gold.stream_bookings_1m) (nhánh tumbling 1 phút) + count(gold.stream_late_bookings) (side output) bằng đúng số booking landing (dedup idempotency_key), tách theo loại trễ (mobile, channel manager). Proof: bảng đối soát Flink / landing / Silver; test bất biến stream = landing.
+**Cách làm:** Idea 2 - Đối soát batch-stream có ground truth: generator biết đúng mọi event; mỗi phút sum(gold.stream_bookings_1m) (nhánh tumbling 1 phút) + count(gold.stream_late_bookings) (side output) bằng đúng số booking (đúng contract, dedup idempotency_key) có event_time trong phút đó. Proof: tests/test_stream_e2e.py chạy replayer -> Kafka -> Flink (image k8s/flink.Dockerfile) -> Postgres trên Docker, khớp từng phút (919 phút), cùng DLQ theo loại lỗi; test bất biến stream = landing (tests/test_stream_gen.py). [Cần làm] chạy cùng phép đối soát trên GKE, chụp bảng.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
