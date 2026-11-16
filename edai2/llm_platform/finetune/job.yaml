@@ -1,0 +1,89 @@
+# Rubric edai-2 › Setup a custom LLM model: dựng dữ liệu → LoRA SFT → gộp adapter → đẩy lên s3://models/<NAME>/
+# (llm_platform/llm-inference.yaml trỏ tới đây). Chạy ở namespace data để dùng chung secret MinIO data-secrets.
+# Hai Job: v1 Qwen2.5-1.5B và v2 Qwen2.5-3B (A/B LLM). Pool gpu-l4 tối đa 1 node nên v2 chờ v1 xong mới chạy.
+# Node spot bị thu hồi thì Job chạy lại từ đầu (backoffLimit); mỗi lần train chỉ vài phút trên L4.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: qwen-booking-sft-v1
+  namespace: data
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 86400
+  template:
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        cloud.google.com/gke-accelerator: nvidia-l4
+      tolerations:
+        - { key: nvidia.com/gpu, operator: Exists, effect: NoSchedule }
+      containers:
+        - name: train
+          image: REGISTRY/llm/finetune:TAG
+          command: ["sh", "-c"]
+          args:
+            - |
+              set -e
+              python build_dataset.py /work/booking_sft.jsonl
+              python train_lora.py --base "$BASE" --data /work/booking_sft.jsonl --out /work/model
+              python upload.py /work/model "$NAME"
+          env:
+            - { name: BASE, value: Qwen/Qwen2.5-1.5B-Instruct }
+            - { name: NAME, value: qwen2.5-1.5b-booking-sft }
+            - { name: HF_HOME, value: /work/hf }
+            - { name: MINIO_ENDPOINT, value: minio.data.svc.cluster.local:9000 }
+            - name: MINIO_ACCESS_KEY
+              valueFrom: { secretKeyRef: { name: data-secrets, key: MINIO_ACCESS_KEY } }
+            - name: MINIO_SECRET_KEY
+              valueFrom: { secretKeyRef: { name: data-secrets, key: MINIO_SECRET_KEY } }
+          resources:
+            requests: { cpu: "6", memory: 20Gi }
+            limits: { nvidia.com/gpu: "1", memory: 26Gi }   # g2-standard-8: 32GB RAM, 1 × L4 24GB
+          volumeMounts:
+            - { name: work, mountPath: /work }
+      volumes:
+        - name: work
+          emptyDir: { sizeLimit: 60Gi }   # cache HF + checkpoint + model gộp (3B ≈ 6GB)
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: qwen-booking-sft-v2
+  namespace: data
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 86400
+  template:
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        cloud.google.com/gke-accelerator: nvidia-l4
+      tolerations:
+        - { key: nvidia.com/gpu, operator: Exists, effect: NoSchedule }
+      containers:
+        - name: train
+          image: REGISTRY/llm/finetune:TAG
+          command: ["sh", "-c"]
+          args:
+            - |
+              set -e
+              python build_dataset.py /work/booking_sft.jsonl
+              python train_lora.py --base "$BASE" --data /work/booking_sft.jsonl --out /work/model
+              python upload.py /work/model "$NAME"
+          env:
+            - { name: BASE, value: Qwen/Qwen2.5-3B-Instruct }
+            - { name: NAME, value: qwen2.5-3b-booking-sft }
+            - { name: HF_HOME, value: /work/hf }
+            - { name: MINIO_ENDPOINT, value: minio.data.svc.cluster.local:9000 }
+            - name: MINIO_ACCESS_KEY
+              valueFrom: { secretKeyRef: { name: data-secrets, key: MINIO_ACCESS_KEY } }
+            - name: MINIO_SECRET_KEY
+              valueFrom: { secretKeyRef: { name: data-secrets, key: MINIO_SECRET_KEY } }
+          resources:
+            requests: { cpu: "6", memory: 20Gi }
+            limits: { nvidia.com/gpu: "1", memory: 26Gi }
+          volumeMounts:
+            - { name: work, mountPath: /work }
+      volumes:
+        - name: work
+          emptyDir: { sizeLimit: 60Gi }
