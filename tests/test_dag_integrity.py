@@ -31,7 +31,7 @@ def upstream(dag, task_id):
 def test_all_dags_present(dags):
     assert set(dags) == {"dp1_ingest_bronze", "dp1_load_dims", "dp2_bronze_to_gold", "dp3_offline_features",
                          "rag_data_pipeline", "feast_materialize_incremental", "feast_materialize_realtime",
-                         "score_bookings", "drift_monitor"}
+                         "score_bookings", "rescore_active", "drift_monitor"}
 
 
 def test_dp_structure(dags):

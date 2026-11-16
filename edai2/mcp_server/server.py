@@ -31,10 +31,13 @@ WAREHOUSE_DSN = os.environ.get("WAREHOUSE_DSN", "postgresql://mcp@postgres/wareh
 # Chi phí theo đơn vị giá phòng: phòng trống mất 1 đêm, chuyển khách sang khách sạn khác tốn ~3 đêm (đền bù + uy tín)
 C_SPOIL = float(os.environ.get("OVERBOOK_C_SPOIL", "1.0"))
 C_WALK = float(os.environ.get("OVERBOOK_C_WALK", "3.0"))
-# Mỗi booking chấm 1 lần lúc tạo (score_bookings); chỉ cộng booking chưa huỷ tính tới lần chấm mới nhất (as_of)
-RISK_SQL = """SELECT r.probability, r.scored_date FROM gold.booking_risk r JOIN gold.fact_bookings f USING (booking_id)
+# Booking chấm lúc tạo (score_bookings) và chấm lại khi promote (rescore_active): lấy lần chấm mới nhất của mỗi
+# booking; chỉ cộng booking chưa huỷ tính tới lần chấm mới nhất của cả bảng (as_of)
+RISK_SQL = """SELECT DISTINCT ON (r.booking_id) r.probability, r.scored_date
+FROM gold.booking_risk r JOIN gold.fact_bookings f USING (booking_id)
 WHERE r.hotel_id = %s AND r.stay_date = %s
-  AND (f.cancelled_at IS NULL OR f.cancelled_at >= (SELECT max(scored_date) FROM gold.booking_risk))"""
+  AND (f.cancelled_at IS NULL OR f.cancelled_at >= (SELECT max(scored_date) FROM gold.booking_risk))
+ORDER BY r.booking_id, r.scored_date DESC"""
 ROOMS_SQL = "SELECT rooms FROM gold.hotel_rooms WHERE hotel_id = %s AND stay_date = %s"
 APPLY_SQL = """INSERT INTO gold.overbooking_limits (hotel_id, stay_date, k) VALUES (%s, %s, %s)
 ON CONFLICT (hotel_id, stay_date) DO UPDATE SET k = EXCLUDED.k, approved_at = now()"""
