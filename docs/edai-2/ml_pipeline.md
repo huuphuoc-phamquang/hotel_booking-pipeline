@@ -44,7 +44,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cách làm:** [Đã có] notebooks/cancel_risk.ipynb (chạy cục bộ, có output): dữ liệu từ generator, split theo thời gian, XGBoost, AUC so với trần của nhãn, reliability theo decile so với p thật, Brier vs p thật, sai số K bán vượt (overbooking.limit), drift (2025-06-01) làm lệch calibration 0,127 và retrain trên cửa sổ sau drift kéo về 0,0008, sai số K 1,62 -> 0,36. Notebook dùng nhãn generator ngay; pipeline thật phải chờ nhãn chín (drift_stats.retrain_window).
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** chạy cục bộ, pass (2026-11-16): `notebooks/cancel_risk.ipynb`. _Chưa có ảnh chụp trên cluster._
 
 <a id="final-24"></a>
 ### Chuyển đổi code từ Jupyter notebook thành training pipeline với số lượng step giống ở…
@@ -68,7 +68,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cách làm:** [Đã có] ml/train_xgb_dist.py (xgboost.collective, mỗi worker 1 phần dữ liệu) + component train_distributed tạo Kubeflow Trainer TrainJob runtime xgboost-distributed 2 node (distributed=True mặc định, dsl.If/OneOf với bản 1 node); tests/test_train_xgb_dist.py chạy 2 worker với RabitTracker cục bộ, AUC lệch < 0,01 so với 1 node. [Cần làm] chụp 2 pod worker.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** chạy cục bộ, pass (2026-11-16): `edai2/tests/test_train_xgb_dist.py`. _Chưa có ảnh chụp trên cluster._
 
 <a id="final-26"></a>
 ### Khi training pipeline hoàn tất, thông tin của MODEL cần được lưu trữ lại ở Model Registry
@@ -92,4 +92,4 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cách làm:** [Đã có] ml/data_version.py: tập train upsert vào Iceberg ml.train_cancel_risk theo booking_id (pyiceberg), load_from_feast trả snapshot_id, MLflow log train_snapshot_id; tests/test_data_version.py: chỉ ghi phần thay đổi, dữ liệu giống hệt không tạo snapshot mới, time travel trả đúng tập cũ. [Cần làm] chụp snapshot trên cluster.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** chạy cục bộ, pass (2026-11-16): `edai2/tests/test_data_version.py`. _Chưa có ảnh chụp trên cluster._

@@ -10,7 +10,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-2 · dòng 55 · 2 điểm · nhóm *Repository Design*
 
-**Cách làm:** [Đã có] README.md ở gốc repo: bài toán (dự báo huỷ để gợi ý số phòng bán vượt), sơ đồ docs/architecture/booking-pricing.png, mục lục, cấu trúc repo, luồng dữ liệu, thứ tự chạy trên GKE, lệnh test cục bộ, link docs/README.md; docstring đầu mọi file. [Cần làm] cập nhật sơ đồ (event-replayer, drift-api còn ghi thiết kế).
+**Cách làm:** [Đã có] README.md ở gốc repo: bài toán (dự báo cancellation để overbooking, human-in-the-loop), sơ đồ docs/architecture/booking-overbooking.png (nguồn .drawio), mục lục, cấu trúc repo, luồng dữ liệu theo ngày, link docs/README.md; docstring đầu mọi file. [Cần làm] xuất lại booking-overbooking.png từ file .drawio (đã bỏ nhãn thiết kế ở event-replayer, drift-api).
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 

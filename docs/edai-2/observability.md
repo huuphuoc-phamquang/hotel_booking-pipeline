@@ -54,7 +54,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cách làm:** [Đã có] llm_metrics.py: token in/out/total, round-trip, TTFT, PII bị chặn; số thẻ chỉ tính là PII khi qua Luhn và không đứng sau BK-; tests/test_llm_metrics.py (11 test, coverage 100%): BK-<id> không bị chặn, 4111 1111 1111 1111 bị chặn.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** chạy cục bộ, pass (2026-11-16): `edai2/tests/test_llm_metrics.py`. _Chưa có ảnh chụp trên cluster._
 
 <a id="edai-2-51"></a>
 ## Đảm bảo ít nhất các metrics · Agent-related telemetry data

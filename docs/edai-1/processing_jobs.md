@@ -16,7 +16,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cách làm:** [Đã có] silver_quotes baseline: AQE tắt + broadcast tắt (không tối ưu); build_spark không còn ép autoBroadcastJoinThreshold=-1 nên join hotels (~1-2 MB) tự broadcast. tests/test_silver_quotes.py chạy pyspark cục bộ: 4 chế độ cho đúng cùng kết quả. [Cần làm] chạy trên >= 100GB, chụp Spark UI (straggler task), ghi thời gian vào docs/edai-1/processing_jobs.md.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** chạy cục bộ, pass (2026-11-16): `edai1/tests/test_silver_quotes.py`. _Chưa có ảnh chụp trên cluster._
 
 <a id="edai-1-12"></a>
 ## Handle skew with explanation
@@ -36,7 +36,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cách làm:** [Đã có] mergeSchema + coalesce room_category; tests/test_silver_bookings.py (pyspark cục bộ, Bronze qua mốc 2025-07-01): không mất dòng nào, room_category không null, channel null đúng ở partition v1. [Cần làm] chụp kết quả trên dữ liệu thật.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** chạy cục bộ, pass (2026-11-16): `edai1/tests/test_silver_bookings.py`. _Chưa có ảnh chụp trên cluster._
 
 <a id="edai-1-14"></a>
 ## Handle other offline data problem with explanation
@@ -45,7 +45,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cách làm:** [Đã có] dedup theo idempotency_key (row_number theo created_at); tests/test_silver_bookings.py: sau dedup mỗi idempotency_key 1 dòng và status khớp kết cục generator. [Cần làm] số dòng trước/sau trên dữ liệu thật.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** chạy cục bộ, pass (2026-11-16): `edai1/tests/test_silver_bookings.py`. _Chưa có ảnh chụp trên cluster._
 
 <a id="edai-1-15"></a>
 ## Spark job được tích hợp vào các data pipeline
@@ -54,7 +54,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cách làm:** [Đã có] DAG dp2_bronze_to_gold gọi SparkSubmitOperator silver_bookings.py chế độ incr (chỉ đọc partition dt=ds, MERGE vào Iceberg; điều kiện created_at để Iceberg cắt partition; tests/test_silver_bookings.py chạy MERGE thật trên Iceberg trong image Spark, khớp dựng lại cả bảng) rồi stage_gold.py (Silver -> staging Gold qua JDBC); image Spark có Iceberg + s3a + JDBC (k8s/spark.Dockerfile). [Cần làm] chụp Airflow graph + log Spark.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** chạy cục bộ, pass (2026-11-16): `edai1/tests/test_silver_bookings.py`. _Chưa có ảnh chụp trên cluster._
 
 <a id="edai-1-16"></a>
 ## Baseline · Flink job to handle streaming data problems

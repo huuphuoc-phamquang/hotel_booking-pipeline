@@ -16,7 +16,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cách làm:** [Đã có] tests/test_server.py + tests/test_risk_api.py: 31 test, fixture + monkeypatch + respx; coverage server.py 94%, risk_api.py 95%.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** chạy cục bộ, pass (2026-11-16): `edai2/tests/test_server.py`, `edai2/tests/test_risk_api.py`. _Chưa có ảnh chụp trên cluster._
 
 <a id="edai-2-29"></a>
 ## Có sử dụng kỹ thuật equivalence partitioning vs boundary value analysis khi thiết kế test… · edai-2 · Validation & Verification
@@ -27,7 +27,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cách làm:** [Đã có] parametrize biên xác suất [0, 1] (MCP và risk-api), biên booking_id, biên K (p = 0 / 1, không có booking, chi phí <= 0) và K so với định nghĩa trực tiếp qua hypothesis (tests/test_overbooking.py).
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** chạy cục bộ, pass (2026-11-16): `edai2/tests/test_overbooking.py`. _Chưa có ảnh chụp trên cluster._
 
 <a id="edai-2-30"></a>
 ## Có sử dụng mutation testing để đánh giá hiệu quả của các test · edai-2 · Validation & Verification
@@ -75,7 +75,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cách làm:** [Đã có] tests/test_risk_api.py (risk_api 97%) và tests/test_drift_api.py (drift_api 100%, KSDrift thật trên lead time gamma như generator): fixture TestClient, mock Feast (monkeypatch) + KServe (respx). [Cần làm] chụp coverage.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** chạy cục bộ, pass (2026-11-16): `edai2/tests/test_risk_api.py`, `edai2/tests/test_drift_api.py`. _Chưa có ảnh chụp trên cluster._
 
 <a id="final-12"></a>
 ### Có sử dụng kỹ thuật equivalence partitioning vs boundary value analysis khi thiết kế test… · final · Validation & Verification

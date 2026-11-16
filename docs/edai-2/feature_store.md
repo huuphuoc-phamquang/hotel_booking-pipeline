@@ -55,7 +55,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cách làm:** [Đã có] Job 1: Flink booking_events_window (sliding 1 giờ trượt 5 phút) sink JDBC upsert gold.feat_hotel_realtime (offline store PostgreSQL); tests/test_stream_e2e.py chạy Kafka -> Flink -> Postgres trên Docker, bảng có dữ liệu. Tách khỏi Feast push vì push offline sang PostgreSQL chưa kiểm. [Cần làm] chụp FlinkDeployment trên cluster.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** chạy cục bộ, pass (2026-11-16): `edai1/tests/test_stream_e2e.py`. _Chưa có ảnh chụp trên cluster._
 
 <a id="final-21"></a>
 ### Deploy job chịu trách nhiệm push streaming feature vào ONLINE store
