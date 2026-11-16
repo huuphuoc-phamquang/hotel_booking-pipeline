@@ -83,7 +83,7 @@
 | 53 | 1 | Perform A/B test for different LLM versions on the LLM inference platform | [ab_testing.md](ab_testing.md#edai-2-53) | Đã có · Cần làm |
 | 54 | 1 | Centralize secret management via Hashi Corp Vault so it will be used across the whole… | [security.md](security.md#edai-2-54) | Đã có · Cần làm |
 | 55 | 2 | README.md và documentation follow rule ở ô A2 | [ml_design.md](ml_design.md#edai-2-55) | Đã có · Cần làm |
-| 56 | 2 | Idea 1 | [novel_ideas.md](novel_ideas.md#edai-2-56) | — |
+| 56 | 2 | Idea 1 | [novel_ideas.md](novel_ideas.md#edai-2-56) | Cần làm |
 | 57 | 2 | Idea 2 | [novel_ideas.md](novel_ideas.md#edai-2-57) | — |
 
 ## Dòng rubric final
@@ -104,7 +104,7 @@
 | 14 | 2 | Idempotency testing sử dụng property-based testing | [testing.md](testing.md#final-14) | Đã có · Thiết kế |
 | 15 | 2 | Load test the Web API to understand throughput and latency | [testing.md](testing.md#final-15) | Đã có · Cần làm |
 | 19 | 2 | Build data pipeline để incremental materialize dữ liệu mới nhất từ offline qua online… | [feature_store.md](feature_store.md#final-19) | Đã có · Cần làm |
-| 20 | 1 | Deploy job chịu trách nhiệm push streaming feature vào OFFLINE store | [feature_store.md](feature_store.md#final-20) | Thiết kế |
+| 20 | 1 | Deploy job chịu trách nhiệm push streaming feature vào OFFLINE store | [feature_store.md](feature_store.md#final-20) | Đã có · Cần làm |
 | 21 | 1 | Deploy job chịu trách nhiệm push streaming feature vào ONLINE store | [feature_store.md](feature_store.md#final-21) | Đã có · Cần làm |
 | 22 | 2 | Define TTL cho từng bảng feature, giải thích tại sao chọn TTL như thế | [feature_store.md](feature_store.md#final-22) | Đã có · Cần làm |
 | 23 | 2 | Jupyter notebook để kéo dữ liệu từ offline store để tạo ra model. | [ml_pipeline.md](ml_pipeline.md#final-23) | Đã có |
@@ -118,7 +118,7 @@
 | 34 | 1 | Inference Engine | [cicd.md](cicd.md#final-34) | Đã có · Cần làm |
 | 35 | 1 | Cho real-time drift detection Web API | [cicd.md](cicd.md#final-35) | Đã có · Cần làm |
 | 36 | 1 | Job 1: Push stream feature to OFFLINE store | [cicd.md](cicd.md#final-36) | Đã có · Cần làm |
-| 37 | 1 | Job 2: Push stream feature to ONLINE store | [cicd.md](cicd.md#final-37) | Thiết kế · Cần làm |
+| 37 | 1 | Job 2: Push stream feature to ONLINE store | [cicd.md](cicd.md#final-37) | Đã có · Cần làm |
 | 38 | 2 | Service để coi metric | [routing_gateway.md](routing_gateway.md#final-38) | Đã có · Cần làm |
 | 39 | 2 | Service để coi log | [routing_gateway.md](routing_gateway.md#final-39) | Đã có · Cần làm |
 | 40 | 2 | Service để coi trace | [routing_gateway.md](routing_gateway.md#final-40) | Đã có · Cần làm |
@@ -133,7 +133,7 @@
 | 49 | 2 | Tương tự cho traces | [observability.md](observability.md#final-49) | Đã có · Cần làm |
 | 50 | 1 | Airflow data drift pipeline to periodically pull data from offline feature store and… | [observability.md](observability.md#final-50) | Đã có · Cần làm |
 | 51 | 1 | Trigger retrain by calling Kubeflow API | [observability.md](observability.md#final-51) | Đã có · Cần làm |
-| 52 | 1 | Perform A/B traffic split for 2 versions of inference service | [ab_testing.md](ab_testing.md#final-52) | Thiết kế |
+| 52 | 1 | Perform A/B traffic split for 2 versions of inference service | [ab_testing.md](ab_testing.md#final-52) | Đã có |
 | 53 | 1 | Setup monitoring dashboard to monitor 2 versions. | [ab_testing.md](ab_testing.md#final-53) | Đã có · Cần làm |
 | 54 | 1 | Centralize secret management via Hashi Corp Vault so it will be used across the whole… | [security.md](security.md#final-54) | Đã có · Cần làm |
 | 55 | 1 | Using service mesh to authorize access from service to service | [security.md](security.md#final-55) | Đã có · Cần làm |

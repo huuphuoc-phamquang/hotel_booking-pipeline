@@ -108,7 +108,7 @@ Bảng dưới tra ngược từ dòng rubric (file `EDAI K11.xlsx`) sang mục 
 | 53 | 1 | Perform A/B test for different LLM versions on the LLM inference platform | [edai-2/ab_testing.md](edai-2/ab_testing.md#edai-2-53) | Đã có · Cần làm |
 | 54 | 1 | Centralize secret management via Hashi Corp Vault so it will be used across the whole… | [edai-2/security.md](edai-2/security.md#edai-2-54) | Đã có · Cần làm |
 | 55 | 2 | README.md và documentation follow rule ở ô A2 | [edai-2/ml_design.md](edai-2/ml_design.md#edai-2-55) | Đã có · Cần làm |
-| 56 | 2 | Idea 1 | [edai-2/novel_ideas.md](edai-2/novel_ideas.md#edai-2-56) | — |
+| 56 | 2 | Idea 1 | [edai-2/novel_ideas.md](edai-2/novel_ideas.md#edai-2-56) | Cần làm |
 | 57 | 2 | Idea 2 | [edai-2/novel_ideas.md](edai-2/novel_ideas.md#edai-2-57) | — |
 
 ## final
@@ -132,7 +132,7 @@ Bảng dưới tra ngược từ dòng rubric (file `EDAI K11.xlsx`) sang mục 
 | 17 | 2 | Using generator configuration | [edai-1/data_generator.md](edai-1/data_generator.md#final-17) | Đã có · Cần làm |
 | 18 | 2 | Tạo bảng label có 2 cột id và label | [edai-1/data_generator.md](edai-1/data_generator.md#final-18) | Đã có · Cần làm |
 | 19 | 2 | Build data pipeline để incremental materialize dữ liệu mới nhất từ offline qua online… | [edai-2/feature_store.md](edai-2/feature_store.md#final-19) | Đã có · Cần làm |
-| 20 | 1 | Deploy job chịu trách nhiệm push streaming feature vào OFFLINE store | [edai-2/feature_store.md](edai-2/feature_store.md#final-20) | Thiết kế |
+| 20 | 1 | Deploy job chịu trách nhiệm push streaming feature vào OFFLINE store | [edai-2/feature_store.md](edai-2/feature_store.md#final-20) | Đã có · Cần làm |
 | 21 | 1 | Deploy job chịu trách nhiệm push streaming feature vào ONLINE store | [edai-2/feature_store.md](edai-2/feature_store.md#final-21) | Đã có · Cần làm |
 | 22 | 2 | Define TTL cho từng bảng feature, giải thích tại sao chọn TTL như thế | [edai-2/feature_store.md](edai-2/feature_store.md#final-22) | Đã có · Cần làm |
 | 23 | 2 | Jupyter notebook để kéo dữ liệu từ offline store để tạo ra model. | [edai-2/ml_pipeline.md](edai-2/ml_pipeline.md#final-23) | Đã có |
@@ -149,7 +149,7 @@ Bảng dưới tra ngược từ dòng rubric (file `EDAI K11.xlsx`) sang mục 
 | 34 | 1 | Inference Engine | [edai-2/cicd.md](edai-2/cicd.md#final-34) | Đã có · Cần làm |
 | 35 | 1 | Cho real-time drift detection Web API | [edai-2/cicd.md](edai-2/cicd.md#final-35) | Đã có · Cần làm |
 | 36 | 1 | Job 1: Push stream feature to OFFLINE store | [edai-2/cicd.md](edai-2/cicd.md#final-36) | Đã có · Cần làm |
-| 37 | 1 | Job 2: Push stream feature to ONLINE store | [edai-2/cicd.md](edai-2/cicd.md#final-37) | Thiết kế · Cần làm |
+| 37 | 1 | Job 2: Push stream feature to ONLINE store | [edai-2/cicd.md](edai-2/cicd.md#final-37) | Đã có · Cần làm |
 | 38 | 2 | Service để coi metric | [edai-2/routing_gateway.md](edai-2/routing_gateway.md#final-38) | Đã có · Cần làm |
 | 39 | 2 | Service để coi log | [edai-2/routing_gateway.md](edai-2/routing_gateway.md#final-39) | Đã có · Cần làm |
 | 40 | 2 | Service để coi trace | [edai-2/routing_gateway.md](edai-2/routing_gateway.md#final-40) | Đã có · Cần làm |
@@ -164,7 +164,7 @@ Bảng dưới tra ngược từ dòng rubric (file `EDAI K11.xlsx`) sang mục 
 | 49 | 2 | Tương tự cho traces | [edai-2/observability.md](edai-2/observability.md#final-49) | Đã có · Cần làm |
 | 50 | 1 | Airflow data drift pipeline to periodically pull data from offline feature store and… | [edai-2/observability.md](edai-2/observability.md#final-50) | Đã có · Cần làm |
 | 51 | 1 | Trigger retrain by calling Kubeflow API | [edai-2/observability.md](edai-2/observability.md#final-51) | Đã có · Cần làm |
-| 52 | 1 | Perform A/B traffic split for 2 versions of inference service | [edai-2/ab_testing.md](edai-2/ab_testing.md#final-52) | Thiết kế |
+| 52 | 1 | Perform A/B traffic split for 2 versions of inference service | [edai-2/ab_testing.md](edai-2/ab_testing.md#final-52) | Đã có |
 | 53 | 1 | Setup monitoring dashboard to monitor 2 versions. | [edai-2/ab_testing.md](edai-2/ab_testing.md#final-53) | Đã có · Cần làm |
 | 54 | 1 | Centralize secret management via Hashi Corp Vault so it will be used across the whole… | [edai-2/security.md](edai-2/security.md#final-54) | Đã có · Cần làm |
 | 55 | 1 | Using service mesh to authorize access from service to service | [edai-2/security.md](edai-2/security.md#final-55) | Đã có · Cần làm |
