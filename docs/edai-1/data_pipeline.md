@@ -30,7 +30,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-1 · dòng 24 · 2 điểm · nhóm *Data Pipeline Orchestration* › *Pipeline to ingest data from bronze zone into silver and gold zone (or bronze -> gold only) (DP2)*
 
-**Cách làm:** [Đã có] DAG dp2_bronze_to_gold: đợi DP1 cùng ngày (ExternalTaskSensor) -> silver_bookings (Spark) -> stage_gold (Spark -> staging) -> upsert_gold (sql/dp2_upsert_gold.sql, 1 transaction: dim_customer, dim_hotel SCD2, fact_bookings join khoảng theo phiên bản dim). [Cần làm] fact_quotes; chụp graph + run.
+**Cách làm:** [Đã có] DAG dp2_bronze_to_gold: đợi DP1 cùng ngày (ExternalTaskSensor) -> silver_bookings (Spark, incr theo dt=ds) -> stage_gold (Spark -> staging + gold.hotel_rooms) -> upsert_gold (sql/dp2_upsert_gold.sql, 1 transaction: dim_customer, dim_hotel SCD2, fact_bookings join khoảng theo phiên bản dim). [Cần làm] fact_quotes; chụp graph + run.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 

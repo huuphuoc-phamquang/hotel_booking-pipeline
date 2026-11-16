@@ -52,7 +52,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** edai-1 · dòng 15 · 2 điểm · nhóm *Processing Jobs* › *Spark job to handle offline data problems*
 
-**Cách làm:** [Đã có] DAG dp2_bronze_to_gold gọi SparkSubmitOperator silver_bookings.py rồi stage_gold.py (Silver -> staging Gold qua JDBC); image Spark có Iceberg + s3a + JDBC (k8s/spark.Dockerfile). [Cần làm] chụp Airflow graph + log Spark.
+**Cách làm:** [Đã có] DAG dp2_bronze_to_gold gọi SparkSubmitOperator silver_bookings.py chế độ incr (chỉ đọc partition dt=ds, MERGE vào Iceberg; tests/test_silver_bookings.py so với dựng lại cả bảng) rồi stage_gold.py (Silver -> staging Gold qua JDBC); image Spark có Iceberg + s3a + JDBC (k8s/spark.Dockerfile). [Cần làm] chụp Airflow graph + log Spark.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
