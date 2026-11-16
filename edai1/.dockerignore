@@ -1,0 +1,9 @@
+# Context build chỉ cần generator/, spark_jobs/, flink_jobs/, schema/, requirements.txt
+.git
+**/__pycache__
+**/*.pyc
+.pytest_cache
+tests/
+docker/.env
+*.parquet
+data/

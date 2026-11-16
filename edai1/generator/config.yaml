@@ -1,0 +1,71 @@
+# Cấu hình duy nhất của generator booking. Đổi bất kỳ giá trị nào -> config_sha256 trong manifest đổi.
+version: 1
+seed: 20251101
+start_date: 2025-01-01
+offline_days: 365            # batch lịch sử ghi lên MinIO landing
+shards_per_day: 16
+
+dims:
+  hotels: 50000
+  customers: 30000000
+
+customer_activity_sigma: 1.2 # mức hay đi của khách ~ lognormal: đa số đặt 1-2 lần, nhóm nhỏ khách công tác đặt rất nhiều
+
+skew:
+  hotel_zipf_a: 0.8          # vẫn đủ lệch cho bài salting; a lớn hơn dồn gần hết booking vào vài khách sạn
+  hot_city_share: 0.7        # 70% khách sạn nằm ở 3 thành phố đầu danh sách CITIES
+  peak_periods:              # hệ số mùa theo STAY_DATE: nhân lượt xem giá của các đêm này
+    - {from: 2025-01-25, to: 2025-02-05, factor: 2.5}   # Tết 2025
+    - {from: 2025-04-28, to: 2025-05-03, factor: 2.0}   # 30/4 - 1/5
+    - {from: 2025-06-15, to: 2025-08-15, factor: 1.6}   # hè
+    - {from: 2026-02-12, to: 2026-02-22, factor: 2.5}   # Tết 2026
+    - {from: 2026-04-28, to: 2026-05-03, factor: 2.0}
+    - {from: 2026-06-15, to: 2026-08-15, factor: 1.6}
+
+events:                      # sự kiện: lượt xem cho các đêm from..to ở city nhân factor, CHỈ từ announce trở đi
+  - {city: Ha Noi, from: 2025-09-20, to: 2025-09-21, announce: 2025-08-25, factor: 3.0}    # trong batch (train)
+  - {city: Da Nang, from: 2026-01-24, to: 2026-01-25, announce: 2026-01-08, factor: 3.0}   # trong cửa sổ stream (demo)
+
+anomalies:
+  double_submit_rate: 0.02   # bấm "Đặt" 2 lần: cùng idempotency_key
+  schema_v2_date: 2025-07-01 # bookings thêm cột channel, đổi room_type -> room_category (không đụng cột của nhãn)
+  contract_violation_share: 0.005   # stream: thêm bản sao lỗi của booking_created (giá âm / hotel_id lạ / thiếu event_time)
+
+cancel_lookback_days: 150    # stream lùi lại để có event huỷ của booking tạo trước cửa sổ (lead time dài nhất < 150 ngày)
+
+stream:                      # = bảng landing (quotes, bookings, cancellations) lọc theo cửa sổ thời gian, đủ mọi shard
+  mobile_share: 0.6          # channel của booking: mobile / web / channel_manager (share ở late.channel_manager)
+  late:
+    mobile_offline: {share: 0.30, min_s: 300, max_s: 1200}   # 5-20 phút: một phần vượt watermark 10' + lateness 5'
+    payment_webhook: {min_s: 60, max_s: 900}
+    channel_manager: {share: 0.01, min_s: 3600, max_s: 14400}  # 1% booking đến qua channel manager, trễ 1-4 giờ
+  callback_dup_rate: 0.015   # webhook thanh toán gửi lại (at-least-once)
+
+label:                       # ground truth của nhãn huỷ phòng
+  intercept: -2.0
+  coef: {lead_time: 0.8, free_cancel: 1.2, propensity: 0.6, loyalty: -0.5}
+  drift: {date: 2025-06-01, coef: {lead_time: 1.4}}   # concept drift: đổi hệ số nhãn (giữa năm: còn đủ ngày cho nhãn sau drift chín)
+
+covariate_drift: {date: 2025-06-01, lead_scale: 1.5}  # cùng ngày: lead time dài ra -> KS/PSI trên feature bắt được
+
+demand:                      # ground truth của hàm cầu (generator/demand.py); giá tính theo P/P̄
+  quotes_per_cell: 580       # lượt xem giá kỳ vọng / (hotel × stay_date) ở khách sạn phổ biến trung bình, ngày thường;
+                             # quyết định volume quotes (mốc 100GB) và số booking; chỉnh theo byte/dòng đo bằng profile_data
+  lead_share: [0.6, 0.4]     # nhóm lead time: [đặt sớm, đặt muộn]; gamma(2, 10) ngày cho đúng tỉ lệ này
+  early_lead_days: 14        # ranh giới nhóm đặt sớm
+  room_share: [0.7, 0.25, 0.05]     # standard / deluxe / suite
+  room_mult: [1.0, 1.4, 2.2]        # P̄ của loại phòng so với standard
+  rate_plan_share: [0.6, 0.4]       # flexible / non_refundable
+  rate_plan_mult: [1.0, 0.9]        # non_refundable rẻ hơn 10% (rate fence)
+  conversion: 0.01267         # look-to-book khi P = P̄, cầu ẩn u = 1 (cùng quotes_per_cell quyết định số booking)
+  beta:                      # độ co giãn [đặt sớm, đặt muộn]; cần β > 1 để có giá tối ưu
+    - [2.6, 2.2]             # budget (1-2 sao)
+    - [2.2, 1.8]             # mid (3 sao)
+    - [1.8, 1.5]             # luxury (4-5 sao)
+  cost_frac: 0.45            # chi phí biên / đêm (dọn phòng + hoa hồng OTA) theo P̄
+  target_occupancy: 0.75     # sức chứa chỉnh để ngày thường lấp ~75% ở giá tối ưu
+  latent_sigma: 0.3          # cầu ẩn u ~ lognormal, model không thấy
+  kappa: 1.0                 # u làm tăng cả tỉ lệ chuyển đổi (nguồn confounding)
+  policy: {season_pass: 0.3, latent_pass: 0.6}   # giá = P̄ · season^a · u^b
+  grid: [0.7, 2.0, 131]      # lưới giá optimizer quét: [min, max, số điểm] theo P̄
+# Số đo thực tế của dữ liệu sinh ra (skew, booking/khách, tỉ lệ huỷ, byte/dòng...) không ghi ở đây: chạy python -m generator.profile_data.

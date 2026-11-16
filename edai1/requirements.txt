@@ -1,0 +1,8 @@
+# Dependency của image generator (docker/Dockerfile): offline_gen, stream_gen, profile_data.
+# Ghim đúng bản đã chạy test tests/test_stream_gen.py: đổi bản (nhất là pyarrow) có thể đổi byte Parquet -> sha256 manifest.
+numpy==2.5.4
+pandas==3.1.1
+pyarrow==26.0.1
+PyYAML==6.0.3
+minio==7.2.20
+kafka-python==3.0.13

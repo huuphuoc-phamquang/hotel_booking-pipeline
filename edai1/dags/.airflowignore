@@ -1,0 +1,2 @@
+# module phụ trợ, không phải DAG (Airflow bỏ qua khi parse)
+gold_checks\.py

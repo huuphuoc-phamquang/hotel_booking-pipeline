@@ -1,0 +1,68 @@
+# Kafka trên GKE bằng Strimzi (KRaft, 1 broker đủ cho demo; topic 6 partition để Flink song song theo hotel_id).
+# Cài operator: helm install strimzi oci://quay.io/strimzi-helm/strimzi-kafka-operator -n data
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaNodePool
+metadata:
+  name: dual
+  namespace: data
+  labels: { strimzi.io/cluster: booking }
+spec:
+  replicas: 1
+  roles: [controller, broker]
+  storage:
+    type: persistent-claim
+    size: 100Gi
+    class: standard-rwo
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+  name: booking
+  namespace: data
+  annotations:
+    strimzi.io/node-pools: enabled
+    strimzi.io/kraft: enabled
+spec:
+  kafka:
+    listeners:
+      - { name: plain, port: 9092, type: internal, tls: false }
+    config:
+      offsets.topic.replication.factor: 1
+      transaction.state.log.replication.factor: 1
+      transaction.state.log.min.isr: 1
+  entityOperator:
+    topicOperator: {}
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: booking-events
+  namespace: data
+  labels: { strimzi.io/cluster: booking }
+spec:
+  topicName: booking_events
+  partitions: 6
+  replicas: 1
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: booking-events-dlq
+  namespace: data
+  labels: { strimzi.io/cluster: booking }
+spec:
+  topicName: booking_events_dlq        # event sai data contract (flink_jobs/contract.py), giữ 30 ngày để đối soát
+  partitions: 1
+  replicas: 1
+  # LogAppendTime: Flink gửi kèm event time (có thể là 0 khi thiếu event_time); để timestamp đó thì retention xoá ngay
+  config: { retention.ms: 2592000000, message.timestamp.type: LogAppendTime }
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: quotes
+  namespace: data
+  labels: { strimzi.io/cluster: booking }
+spec:
+  partitions: 6
+  replicas: 1

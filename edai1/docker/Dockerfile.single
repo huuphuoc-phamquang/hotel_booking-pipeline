@@ -1,0 +1,8 @@
+# Bản 1 stage để so kích thước với docker/Dockerfile (multistage): python:3.12 đầy đủ + build-essential sẵn trong image.
+# docker build -f docker/Dockerfile.single -t booking-generator:single .
+FROM python:3.12
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY generator/ ./generator/
+ENTRYPOINT ["python", "-m", "generator.offline_gen"]

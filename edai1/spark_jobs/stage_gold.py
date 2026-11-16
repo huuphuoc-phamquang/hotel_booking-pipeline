@@ -1,0 +1,58 @@
+"""DP2 Silver -> staging Gold (PostgreSQL): chỉ những gì ngày ds làm thay đổi, rồi sql/dp2_upsert_gold.sql upsert vào dim/fact.
+
+Gọi từ dags/dp2_bronze_to_gold.py: spark-submit stage_gold.py --ds 2025-03-01
+  - gold.stg_bookings      : booking tạo trong ngày ds + booking huỷ trong ngày ds (cập nhật status của booking cũ)
+  - gold.stg_customers     : khách của các booking trên (dim_customer chỉ nạp khách đã từng đặt, không nạp cả 30 triệu)
+  - gold.stg_hotel_changes : mọi lần đổi giá có hiệu lực tới hết ngày ds; SCD2 chỉ áp lần đổi mới hơn bản đã có
+  - gold.hotel_rooms       : số phòng mở bán (tổng các loại phòng) của 30 đêm sau ds, cho propose_overbooking
+Postgres không đọc được Iceberg nên Spark ghi qua JDBC; truncate giữ nguyên DDL của bảng staging (gold_schema.sql).
+JDBC lấy từ biến môi trường WAREHOUSE_JDBC_* (Secret của Spark job).
+"""
+import argparse
+import os
+
+from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql import functions as F
+
+ROOM_HORIZON_DAYS = 30                       # = cửa sổ đêm revenue manager xét bán vượt
+BOOKING_COLS = ["booking_id", "customer_id", "hotel_id", "created_at", "checkin", "nights", "price",
+                "cancellation_policy", "channel", "status", "cancelled_at"]
+
+
+def to_postgres(df: DataFrame, table: str) -> None:
+    (df.write.mode("overwrite").option("truncate", "true").format("jdbc")
+     .option("url", os.environ["WAREHOUSE_JDBC_URL"]).option("dbtable", table)
+     .option("user", os.environ["WAREHOUSE_JDBC_USER"]).option("password", os.environ["WAREHOUSE_JDBC_PASSWORD"])
+     .option("driver", "org.postgresql.Driver").save())
+
+
+def rooms_ahead(inventory: DataFrame, ds: str) -> DataFrame:
+    """Tổng phòng mở bán theo hotel × đêm cho các đêm (ds, ds + ROOM_HORIZON_DAYS]."""
+    stay = F.to_date("stay_date")
+    day = F.to_date(F.lit(ds))
+    return (inventory.filter((stay > day) & (stay <= F.date_add(day, ROOM_HORIZON_DAYS)))
+            .groupBy("hotel_id", stay.alias("stay_date")).agg(F.sum("rooms").cast("int").alias("rooms")))
+
+
+def changed_bookings(silver: DataFrame, ds: str) -> DataFrame:
+    """Booking tạo hoặc huỷ trong ngày ds; partition theo created_at nên phần tạo mới chỉ đọc 1 partition."""
+    day = F.to_date(F.lit(ds))
+    return silver.filter((F.to_date("created_at") == day) | (F.to_date("cancelled_at") == day)).select(*BOOKING_COLS)
+
+
+if __name__ == "__main__":
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--ds", required=True)
+    ap.add_argument("--bronze", default="s3a://lake/bronze")
+    a = ap.parse_args()
+    spark = SparkSession.builder.appName(f"stage_gold_{a.ds}").getOrCreate()
+    bookings = changed_bookings(spark.table("lake.silver.stg_bookings"), a.ds).cache()
+    to_postgres(bookings, "gold.stg_bookings")
+    customers = spark.read.parquet(f"{a.bronze}/raw_customers").select("customer_id", "home_city", "loyalty_tier")
+    to_postgres(customers.join(bookings.select("customer_id").distinct(), "customer_id"), "gold.stg_customers")
+    hotels = spark.read.parquet(f"{a.bronze}/raw_hotels").select("hotel_id", "city", "stars")
+    changes = spark.read.parquet(f"{a.bronze}/raw_hotel_changes") \
+                   .filter(F.to_date("valid_from") <= F.to_date(F.lit(a.ds)))   # lần đổi tương lai chưa xảy ra
+    to_postgres(changes.join(hotels, "hotel_id").select("hotel_id", "city", "stars", "price", "valid_from"),
+                "gold.stg_hotel_changes")
+    to_postgres(rooms_ahead(spark.read.parquet(f"{a.bronze}/raw_inventory"), a.ds), "gold.hotel_rooms")

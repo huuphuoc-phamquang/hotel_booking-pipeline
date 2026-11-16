@@ -1,0 +1,70 @@
+# Sinh landing ~110GB trên GKE: Indexed Job, mỗi pod 1 khoảng ngày (partition độc lập, sinh lại ra đúng byte).
+# 395 ngày / 8 pod ≈ 50 ngày / pod (~1,5 giờ). Mỗi pod ghi manifest của khoảng mình; DP1 gộp các manifest liền nhau.
+# Dims sinh tất định nên pod nào cũng ghi đè đúng cùng file.
+# Image: docker build -f docker/Dockerfile -t REGISTRY/data/generator:TAG . (từ thư mục edai1)
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: offline-generator
+  namespace: data
+spec:
+  completionMode: Indexed
+  completions: 8
+  parallelism: 8
+  backoffLimit: 16                          # spot node bị thu hồi -> pod chạy lại, ghi đè đúng partition
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: gen
+          image: REGISTRY/data/generator:TAG
+          command: ["sh", "-c"]
+          # khoảng [first, last) của pod thứ JOB_COMPLETION_INDEX trong [0, 395)
+          args:
+            - first=$((JOB_COMPLETION_INDEX * 50)); last=$((first + 50)); [ $last -gt 395 ] && last=395;
+              exec python -m generator.offline_gen $first $last
+          env:
+            - { name: MINIO_ENDPOINT, value: minio.data.svc.cluster.local:9000 }
+            - name: MINIO_ACCESS_KEY
+              valueFrom: { secretKeyRef: { name: data-secrets, key: MINIO_ACCESS_KEY } }
+            - name: MINIO_SECRET_KEY
+              valueFrom: { secretKeyRef: { name: data-secrets, key: MINIO_SECRET_KEY } }
+          resources:
+            requests: { cpu: "1", memory: 6Gi }   # 1 partition quotes ~2-3 triệu dòng + dims 30 triệu khách
+            limits: { memory: 8Gi }
+---
+# Replay 30 ngày sau batch vào Kafka (topic quotes + booking_events), 1 phút giả lập = 1 giây thật.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: event-replayer
+  namespace: data
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: replay
+          image: REGISTRY/data/generator:TAG
+          command: ["python", "-m", "generator.stream_gen", "365", "395", "60"]
+          env:
+            - { name: KAFKA_BOOTSTRAP, value: booking-kafka-bootstrap.data.svc.cluster.local:9092 }
+            - { name: EVENT_DIR, value: /data/events }
+            - { name: GEN_WORKERS, value: "4" }          # lần đầu sinh ~2.900 partition song song; replay chỉ cần 1 CPU
+          volumeMounts: [{ name: events, mountPath: /data/events }]
+          resources:
+            requests: { cpu: "4", memory: 10Gi }
+      volumes:
+        - name: events
+          persistentVolumeClaim: { claimName: event-log }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: event-log
+  namespace: data
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: standard-rwo
+  resources: { requests: { storage: 50Gi } }
