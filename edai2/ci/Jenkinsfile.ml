@@ -59,8 +59,12 @@ pipeline {
             {\"op\": \"add\", \"path\": \"/spec/predictor/canaryTrafficPercent\", \"value\": ${CANARY_PERCENT}}]"
           kubectl -n ml wait isvc/cancel-risk --for=condition=Ready --timeout=300s
           kubectl -n ml get isvc cancel-risk -o jsonpath='{.status.components.predictor.traffic}'
-          # promote: booking đang giữ phòng còn điểm của bản cũ, chấm lại bằng bản mới cho propose_overbooking
+          # promote: booking đang giữ phòng còn điểm của bản cũ, chấm lại bằng bản mới cho propose_overbooking,
+          # qua cancel-risk-bulk (không logger) để drift-api không nhận cả loạt
           if [ "${CANARY_PERCENT}" = "100" ]; then
+            kubectl -n ml patch isvc cancel-risk-bulk --type json -p "[
+              {\"op\": \"replace\", \"path\": \"/spec/predictor/containers/0/image\", \"value\": \"$REGISTRY/ml/cancel-risk:v$V\"}]"
+            kubectl -n ml wait isvc/cancel-risk-bulk --for=condition=Ready --timeout=300s
             kubectl -n airflow exec deploy/airflow-scheduler -- airflow dags trigger rescore_active
           fi
         '''

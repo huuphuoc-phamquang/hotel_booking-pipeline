@@ -172,3 +172,14 @@ def test_tracing_setup(monkeypatch):
     pytest.importorskip("opentelemetry.instrumentation.fastapi")
     risk_api.setup_tracing()
     assert getattr(risk_api.app, "_is_instrumented_by_opentelemetry", False)
+
+
+@respx.mock
+def test_batch_bulk_skips_logged_service(monkeypatch):
+    """bulk=True (rescore_active) gọi cancel-risk-bulk, không chạm InferenceService có logger của drift-api."""
+    monkeypatch.setattr(risk_api, "_online", fake_online(BOOKING, CONTEXT))
+    logged = respx.post(risk_api.KSERVE_URL).mock(return_value=Response(200, json={"predictions": [[0.9, 0.1]]}))
+    bulk = respx.post(risk_api.KSERVE_BULK_URL).mock(
+        return_value=Response(200, json={"predictions": [[0.9, 0.1]], "model_version": "14"}))
+    r = TestClient(risk_api.app).post("/v1/cancel-risk/batch", json={"booking_ids": [7], "bulk": True})
+    assert r.json()["model_version"] == "14" and bulk.call_count == 1 and logged.call_count == 0

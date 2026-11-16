@@ -6,3 +6,4 @@ autoscaled: true
 env:
   FEAST_REPO: /feature_repo
   KSERVE_URL: http://cancel-risk-predictor.ml.svc.cluster.local/v1/models/cancel-risk:predict
+  KSERVE_BULK_URL: http://cancel-risk-bulk-predictor.ml.svc.cluster.local/v1/models/cancel-risk:predict

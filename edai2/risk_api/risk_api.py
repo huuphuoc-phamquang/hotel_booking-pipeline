@@ -22,6 +22,9 @@ from prometheus_fastapi_instrumentator import Instrumentator
 from pydantic import BaseModel, Field
 
 KSERVE_URL = os.environ.get("KSERVE_URL", "http://cancel-risk-predictor.ml.svc.cluster.local/v1/models/cancel-risk:predict")
+# InferenceService không logger cho chấm lại hàng loạt (serving/kserve-cancel-risk.yaml › cancel-risk-bulk)
+KSERVE_BULK_URL = os.environ.get("KSERVE_BULK_URL",
+                                 "http://cancel-risk-bulk-predictor.ml.svc.cluster.local/v1/models/cancel-risk:predict")
 BOOKING_FEATURES = ["booking_attributes:customer_id", "booking_attributes:hotel_id", "booking_attributes:lead_days",
                     "booking_attributes:nights", "booking_attributes:free_cancel", "booking_attributes:loyalty_tier"]
 CONTEXT_FEATURES = ["customer_booking_stats:bookings_90d", "customer_booking_stats:cancel_rate_90d",
@@ -41,6 +44,7 @@ class RiskRequest(BaseModel):
 class BatchRequest(BaseModel):
     """Nhiều booking cần chấm điểm (1 lô của DAG score_bookings)."""
     booking_ids: list[int] = Field(min_length=1, max_length=1000)
+    bulk: bool = Field(False, description="chấm lại hàng loạt: gọi cancel-risk-bulk, không qua KServe logger / drift-api")
 
 
 class CancelRisk(BaseModel):
@@ -82,9 +86,9 @@ async def model_rows(booking_ids: list[int]) -> tuple[list[int], list[list], lis
     return [i for i, _ in found], rows, missing
 
 
-async def _predict(rows: list[list]) -> tuple[list[float], str | None]:
+async def _predict(rows: list[list], url: str = KSERVE_URL) -> tuple[list[float], str | None]:
     """1 request KServe (V1 protocol) cho mọi dòng; trả (xác suất huỷ, model_version của revision đã chấm)."""
-    r = await http.post(KSERVE_URL, json={"instances": rows})
+    r = await http.post(url, json={"instances": rows})
     r.raise_for_status()
     body = r.json()
     # serving/predictor.py trả [P(không huỷ), P(huỷ)]; response chỉ có nhãn 0/1 thì lỗi ở đây
@@ -135,7 +139,8 @@ async def cancel_risk(req: RiskRequest) -> CancelRisk:
 async def cancel_risk_batch(req: BatchRequest) -> BatchRisk:
     """Chấm cả lô: 2 lần đọc Feast + 1 request KServe thay vì mỗi booking 3 lượt."""
     ids, rows, missing = await model_rows(req.booking_ids)
-    probs, version = await _predict(rows) if rows else ([], None)
+    url = KSERVE_BULK_URL if req.bulk else KSERVE_URL
+    probs, version = await _predict(rows, url) if rows else ([], None)
     results = [CancelRisk(booking_id=i, probability=p, model_version=version) for i, p in zip(ids, probs)]
     return BatchRisk(results=results, missing=missing, model_version=version)
 

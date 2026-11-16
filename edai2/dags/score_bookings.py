@@ -31,22 +31,27 @@ WHERE f.booking_date = %(as_of)s::date - 1                            -- tạo t
   AND f.checkin_date >= %(as_of)s::date
   AND (f.cancelled_at IS NULL OR f.cancelled_at > %(as_of)s)          -- huỷ ngay trong ngày tạo thì không cần chấm
 """
-# as_of = ngày chấm mới nhất đã có (giờ dữ liệu, không theo giờ máy); booking tạo trước đó, chưa nhận phòng, chưa huỷ
+# as_of = ngày chấm mới nhất đã có (giờ dữ liệu, không theo giờ máy); booking tạo trước đó, chưa nhận phòng, chưa huỷ.
+# ~11 triệu dòng (389 nghìn booking/ngày × lead ~29 ngày): chia RESCORE_PARTS task song song theo booking_id.
 ACTIVE_SQL = """
 SELECT f.booking_id, h.hotel_id, f.checkin_date AS stay_date
 FROM gold.fact_bookings f JOIN gold.dim_hotel h USING (hotel_key)
 WHERE f.booking_date < %(as_of)s AND f.checkin_date >= %(as_of)s
   AND (f.cancelled_at IS NULL OR f.cancelled_at > %(as_of)s)
+  AND f.booking_id %% %(parts)s = %(part)s
 """
+RESCORE_PARTS = 8
+CHUNK = 50_000                             # dòng / lần đọc từ server-side cursor: vừa worker Airflow 1Gi
 
 
-def score_and_store(pg, df, scored_date) -> int:
-    """Chấm df (index booking_id, cột hotel_id, stay_date) theo lô 1000 qua risk-api, upsert gold.booking_risk."""
+def score_and_store(pg, df, scored_date, bulk: bool = False) -> int:
+    """Chấm df (index booking_id, cột hotel_id, stay_date) theo lô 1000 qua risk-api, upsert gold.booking_risk.
+    bulk=True: risk-api gọi cancel-risk-bulk (không KServe logger) để drift-api không nhận cả loạt chấm lại."""
     import httpx
     probs = {}                                           # booking_id -> (xác suất, model_version)
     with httpx.Client(base_url=Variable.get("risk_api_url"), timeout=60) as http:
         for i in range(0, len(df), BATCH):
-            r = http.post("/v1/cancel-risk/batch", json={"booking_ids": df.index[i:i + BATCH].tolist()})
+            r = http.post("/v1/cancel-risk/batch", json={"booking_ids": df.index[i:i + BATCH].tolist(), "bulk": bulk})
             r.raise_for_status()
             probs.update({x["booking_id"]: (x["probability"], x["model_version"]) for x in r.json()["results"]})
     # missing = booking chưa lên online store (booking_attributes): chỉ ghi log
@@ -54,7 +59,7 @@ def score_and_store(pg, df, scored_date) -> int:
     rows = [(b, int(df.at[b, "hotel_id"]), df.at[b, "stay_date"], p, scored_date, v) for b, (p, v) in probs.items()]
     pg.insert_rows("gold.booking_risk", rows,
                    ["booking_id", "hotel_id", "stay_date", "probability", "scored_date", "model_version"],
-                   replace=True, replace_index=["booking_id", "scored_date"])
+                   replace=True, replace_index=["booking_id", "scored_date"], executemany=True)
     return len(rows)
 
 
@@ -77,18 +82,30 @@ def score_bookings():
 @dag(dag_id="rescore_active", start_date=datetime(2025, 1, 1), schedule=None, catchup=False, max_active_runs=1,
      tags=["serving"])
 def rescore_active():
-    """Chấm lại booking còn giữ phòng sau khi promote (canary 100%). shortcut: cả loạt đi qua KServe logger nên
-    drift-api thấy lead_days dài hơn (booking giữ phòng lâu) và báo drift trong lúc chạy; bỏ qua cửa sổ đó trên Grafana."""
+    """Chấm lại booking còn giữ phòng sau khi promote (canary 100%), qua cancel-risk-bulk (không logger, drift-api
+    không thấy). RESCORE_PARTS task song song, mỗi task đọc phần của mình theo khối CHUNK dòng."""
 
     @task
-    def rescore() -> int:
+    def as_of_date():
+        from airflow.providers.postgres.hooks.postgres import PostgresHook
+        return str(PostgresHook(postgres_conn_id="warehouse").get_first(
+            "SELECT max(scored_date) FROM gold.booking_risk")[0])
+
+    @task
+    def rescore(part: int, as_of: str) -> int:
+        import pandas as pd
         from airflow.providers.postgres.hooks.postgres import PostgresHook
         pg = PostgresHook(postgres_conn_id="warehouse")
-        as_of = pg.get_first("SELECT max(scored_date) FROM gold.booking_risk")[0]
-        df = pg.get_pandas_df(ACTIVE_SQL, parameters={"as_of": as_of}).set_index("booking_id")
-        return score_and_store(pg, df, as_of)
+        n = 0
+        with pg.get_conn() as conn, conn.cursor(name=f"active_{part}") as cur:   # server-side: không kéo hết về worker
+            cur.itersize = CHUNK
+            cur.execute(ACTIVE_SQL, {"as_of": as_of, "parts": RESCORE_PARTS, "part": part})
+            while rows := cur.fetchmany(CHUNK):
+                df = pd.DataFrame(rows, columns=["booking_id", "hotel_id", "stay_date"]).set_index("booking_id")
+                n += score_and_store(pg, df, as_of, bulk=True)
+        return n
 
-    rescore()
+    rescore.partial(as_of=as_of_date()).expand(part=list(range(RESCORE_PARTS)))
 
 
 score_bookings()
