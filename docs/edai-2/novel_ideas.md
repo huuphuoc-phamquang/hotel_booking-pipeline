@@ -6,18 +6,26 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 **Kết quả** điền khi đã chạy: số liệu, ảnh chụp (`docs/images/`), link code.
 
 <a id="edai-2-56"></a>
-## Idea 1 (edai-2): Regret so với giá tối ưu thật P*
+## Idea 1 (edai-2): Calibration so với xác suất thật
 
 **Rubric:** edai-2 · dòng 56 · 2 điểm · nhóm *Novel ideas*
 
 **Cần nộp (cả nhóm):** Document idea + proof it worked!
 
-**Cách làm:** Idea 1 - Calibration so với xác suất thật: generator ghi xác suất huỷ thật p của từng booking vào bucket truth (ngoài landing); join với gold.booking_risk để đo Brier / reliability so với p thật và sai số K bán vượt (K từ xác suất model so với K từ p thật), trước và sau retrain. Proof: reliability diagram + bảng sai số K.
+**Cách làm:** Idea 1 - Calibration so với xác suất thật: generator ghi xác suất huỷ thật p của từng booking vào bucket truth (ngoài landing); join với gold.booking_risk để đo Brier / reliability so với p thật và sai số K bán vượt (K từ xác suất model so với K từ p thật), trước và sau retrain. Proof: notebooks/cancel_risk.ipynb đã chạy: reliability theo decile khớp p thật, sau drift v1 lệch calibration 0,127, v2 0,0008, sai số K 1,62 -> 0,36. [Cần làm] cùng phép đo trên gold.booking_risk của cluster.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** `notebooks/cancel_risk.ipynb` (chạy cục bộ, dims thu nhỏ):
+
+| | Lệch calibration | Brier vs p thật | \|K model − K thật\| TB |
+|---|---|---|---|
+| v1, validation trước drift | 0,0009 | 0,016 | 0,30 |
+| v1, sau drift 2025-06-01 | 0,127 | 0,040 | 1,62 |
+| v2 (retrain trên dữ liệu sau drift) | 0,0008 | 0,019 | 0,36 |
+
+Reliability theo decile trước drift: xác suất dự báo lệch xác suất thật dưới 0,05 ở mọi decile. _Chưa đo trên `gold.booking_risk` của cluster._
 
 <a id="edai-2-57"></a>
-## Idea 2 (edai-2): Định giá công bằng có kiểm chứng + HITL
+## Idea 2 (edai-2): HITL cho bán vượt
 
 **Rubric:** edai-2 · dòng 57 · 2 điểm · nhóm *Novel ideas*
 
@@ -39,7 +47,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
 <a id="final-59"></a>
-### Idea 2 (final): A/B có doanh thu thật
+### Idea 2 (final): A/B có Brier thật
 
 **Rubric:** final · dòng 59 · 2 điểm · nhóm *Novel ideas*
 
