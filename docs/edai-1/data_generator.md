@@ -7,34 +7,34 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 ## Đặc tính dữ liệu đo được
 
-Sinh bằng `python -m generator.profile_data` (thư mục `edai1/`), mẫu đủ 16 shard của 12 ngày cách nhau 30 ngày (rải đều mùa vụ), ngoại suy ra cả năm. `quotes_per_cell` 580 và `conversion` 0,01267 (tích giữ nguyên nên số booking không đổi) cho ~109GB, dư ~9% so với mốc 100GB. Đổi `config.yaml` thì chạy lại và thay bảng này; không ghi số đo vào config hay comment.
+Sinh bằng `python -m generator.profile_data` (thư mục `edai1/`), mẫu đủ 16 shard của 12 ngày cách nhau 30 ngày (rải đều mùa vụ), ngoại suy ra cả năm. `quotes_per_cell` 580 và `conversion` 0,01267 (tích giữ nguyên nên số booking không đổi) cho ~108GB, dư ~8% so với mốc 100GB. Đổi `config.yaml` thì chạy lại và thay bảng này; không ghi số đo vào config hay comment.
 
-Mẫu: ngày [15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345], đủ 16 shard; số cả năm = mẫu × 30. config_sha256 1bf48f24825e
+Mẫu: ngày [15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345], đủ 16 shard; số cả năm = mẫu × 30. config_sha256 94e5c466f09d
 
 | Bảng | Dòng / ngày | Byte / dòng (Parquet zstd) | Dòng / năm | Dung lượng / năm |
 |---|---|---|---|---|
-| quotes | 34,206,576 | 8.4 | 12.49 tỉ | 105.0 GB |
-| bookings | 388,665 | 24.3 | 0.14 tỉ | 3.4 GB |
-| cancellations | 138,570 | 15.3 | 0.05 tỉ | 0.8 GB |
-| **tổng** | | | | **109.2 GB** |
+| quotes | 33,771,299 | 8.4 | 12.33 tỉ | 103.9 GB |
+| bookings | 387,034 | 24.3 | 0.14 tỉ | 3.4 GB |
+| cancellations | 156,979 | 15.3 | 0.06 tỉ | 0.9 GB |
+| **tổng** | | | | **108.2 GB** |
 
 | Phễu và lỗi dữ liệu | Giá trị |
 |---|---|
-| Đặt / lượt xem (look-to-book) | 1.11% |
-| Lượt xem gặp hết phòng | 3.87% |
+| Đặt / lượt xem (look-to-book) | 1.12% |
+| Lượt xem gặp hết phòng | 3.73% |
 | Double submit (dòng thừa / booking) | 1.99% |
-| Tỉ lệ huỷ trước drift | 32.8% |
-| Lead time trung bình trước drift (covariate drift) | 18.4 ngày |
-| Tỉ lệ huỷ sau drift | 47.6% |
-| Lead time trung bình sau drift (covariate drift) | 28.7 ngày |
-| Booking schema v1 / v2 trong mẫu | 2,365,707 / 2,298,273 |
+| Tỉ lệ huỷ trước drift | 32.9% |
+| Lead time trung bình trước drift (covariate drift) | 18.6 ngày |
+| Tỉ lệ huỷ sau drift | 47.4% |
+| Lead time trung bình sau drift (covariate drift) | 28.3 ngày |
+| Booking schema v1 / v2 trong mẫu | 2,359,953 / 2,284,456 |
 
 | Skew theo khách sạn (mỗi ngày, trung bình mẫu) | Lượt xem | Booking |
 |---|---|---|
 | Top 1 khách sạn | 2.6% | 2.7% |
 | Top 10 khách sạn | 9.1% | 9.1% |
 | Top 1% khách sạn | 33.0% | 33.0% |
-| Khách sạn trung vị (dòng / ngày) | 265 | 3.0 |
+| Khách sạn trung vị (dòng / ngày) | 262 | 3.0 |
 
 | Khách (1 năm) | Giá trị |
 |---|---|
@@ -44,14 +44,14 @@ Mẫu: ngày [15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345], đủ 16
 
 | Trần AUC (điểm = công thức nhãn thật) | Trước drift | Sau drift |
 |---|---|---|
-| oracle (biết propensity ẩn) | 0.735 | 0.745 |
-| lead + policy + loyalty (input của cancel-risk, chưa tính lịch sử khách) | 0.682 | 0.698 |
-| lead + policy (bỏ loyalty) | 0.649 | 0.669 |
+| oracle (biết propensity ẩn) | 0.734 | 0.745 |
+| lead + policy + loyalty (input của cancel-risk, chưa tính lịch sử khách) | 0.681 | 0.698 |
+| lead + policy (bỏ loyalty) | 0.648 | 0.669 |
 
 | Event trễ (booking_created, 1 shard) | Tỉ lệ |
 |---|---|
-| Trễ 10–15 phút (vào lại qua allowed lateness) | 5.69% |
-| Trễ > 15 phút (side output nhánh tumbling 1 phút) | 6.84% |
+| Trễ 10–15 phút (vào lại qua allowed lateness) | 5.68% |
+| Trễ > 15 phút (side output nhánh tumbling 1 phút) | 6.83% |
 | Trễ > 75 phút (side output nhánh trượt 1 giờ) | 0.88% |
 | Qua channel manager (trễ 1–4 giờ) | 0.97% |
 
@@ -104,7 +104,7 @@ Mẫu: ngày [15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345], đủ 16
 
 **Cần nộp (cả nhóm):** Tương tự cái trên: - Dữ liệu nào late, late bao lâu - Tỷ lệ duplicate như nào...
 
-**Cách làm:** [Đã có] mobile offline 30% trễ 5-20 phút (một phần vượt watermark 10' + lateness 5' -> side output), payment webhook trễ 1-15 phút, 1% booking đến qua channel manager trễ 1-4 giờ. Replay chỉ phát event có ingest_time trong cửa sổ; lùi 150 ngày để có event huỷ của booking tạo trước cửa sổ; mỗi idempotency_key huỷ 1 lần. Event log gom 1 file booking / ngày ingest đã sắp theo ingest_time, replay từng ngày nên chỉ mở vài file cùng lúc. [Cần làm] bảng late theo nguồn + histogram (ingest_time - event_time).
+**Cách làm:** [Đã có] mobile offline 30% trễ 5-20 phút (một phần vượt watermark 10' + lateness 5' -> side output), payment webhook trễ 1-15 phút, 1% booking đến qua channel manager trễ 1-4 giờ. Replay chỉ phát event có ingest_time trong cửa sổ; lùi 150 ngày để có event huỷ của booking tạo trước cửa sổ; mỗi idempotency_key huỷ 1 lần. Event log gom 1 file booking / ngày ingest đã sắp theo ingest_time, replay từng ngày nên chỉ mở vài file cùng lúc; lần đầu sinh ~2.900 partition song song GEN_WORKERS process (trước đây tuần tự ~3 giờ). [Cần làm] bảng late theo nguồn + histogram (ingest_time - event_time).
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -128,7 +128,7 @@ Mẫu: ngày [15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345], đủ 16
 
 **Cần nộp (cả nhóm):** Capture màn hình thể hiện generator configuration và bảng sau khi merge id và label
 
-**Cách làm:** [Đã có] concept drift: label.drift lead_time 0,8 -> 1,4 và covariate drift covariate_drift (lead time ×1,5), cùng từ 2025-10-01; profile_data in lead time và tỉ lệ huỷ trước/sau drift. [Cần làm] chụp bảng số đo.
+**Cách làm:** [Đã có] concept drift: label.drift lead_time 0,8 -> 1,4 và covariate drift covariate_drift (lead time ×1,5), cùng từ 2025-06-01 (giữa năm: còn đủ ngày cho nhãn sau drift chín); profile_data in lead time và tỉ lệ huỷ trước/sau drift. [Cần làm] chụp bảng số đo.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
