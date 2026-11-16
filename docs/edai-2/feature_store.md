@@ -1,9 +1,9 @@
 # Feature store
 
-Materialize offline -> online, push stream feature, TTL.
+Materialize feature từ offline sang online, đẩy stream feature và chọn TTL cho từng bảng.
 
-Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết kế (cột F của rubric);
-**Kết quả** điền khi đã chạy: số liệu, ảnh chụp (`docs/images/`), link code.
+Mỗi mục dưới đây ứng với một dòng của rubric. Phần **Cách làm** mô tả giải pháp đã triển khai, đồng bộ từ
+cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu đo được hoặc ảnh chụp (`docs/images/`).
 
 <a id="edai-2-11"></a>
 ## Build data pipeline để incremental materialize dữ liệu mới nhất từ OFFLINE qua ONLINE…
@@ -14,9 +14,9 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document show ảnh pipeline đã chạy thành công trên Airflow + link tới code pipeline
 
-**Cách làm:** [Đã có] feast_materialize_incremental chạy theo Airflow Dataset của DP3 (sau validate), materialize đúng cửa sổ ngày logic, max_active_runs=1, bắn Dataset kích hoạt score_bookings. [Cần làm] chụp run thành công + dữ liệu trên online store.
+**Cách làm:** [Đã có] `feast_materialize_incremental` chạy theo Airflow Dataset của DP3 (sau bước validate), materialize đúng cửa sổ ngày logic với `max_active_runs=1`, rồi phát Dataset kích hoạt `score_bookings`. [Cần làm] chụp lần chạy thành công và dữ liệu trên online store.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
 
 <a id="edai-2-12"></a>
 ## Deploy các jobs chịu trách nhiệm push streaming feature vào OFFLINE & ONLINE store
@@ -27,9 +27,9 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document show ảnh các jobs đã chạy thành công, dữ liệu đã có + link tới code của các jobs
 
-**Cách làm:** [Đã có] Job 1: Flink sliding window 1 giờ trượt 5 phút upsert gold.feat_hotel_realtime (offline); Job 2: DAG feast_materialize_realtime mỗi 5 phút đưa hotel_realtime lên online, cửa sổ [max(event_timestamp) - 2h, max] theo giờ dữ liệu. [Cần làm] chụp 2 job chạy + feature online/offline có dữ liệu.
+**Cách làm:** [Đã có] Job 1: Flink tính cửa sổ trượt 1 giờ, bước 5 phút, upsert `gold.feat_hotel_realtime` (offline). Job 2: DAG `feast_materialize_realtime` chạy mỗi 5 phút, đưa `hotel_realtime` lên online với cửa sổ [`max(event_timestamp)` − 2 giờ, `max`] theo giờ dữ liệu. [Cần làm] chụp 2 job đang chạy và feature có dữ liệu ở cả online lẫn offline.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
 
 ## Bổ sung final-coursework
 
@@ -42,9 +42,9 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** + Capture màn hình thể hiện các data pipeline và thứ tự các stage trên Airflow + Capture màn hình thể hiện 2 job đang chạy, và thể hiện output đã chạy thành công + Document tại sao chọn TTL như thế
 
-**Cách làm:** [Đã có] feast_materialize_incremental chạy theo Airflow Dataset của task validate DP3, materialize đúng cửa sổ ngày logic của run DP3 (backfill được), max_active_runs=1, bắn Dataset cho score_bookings; feast_materialize_realtime mỗi 5 phút materialize [max(event_timestamp) - 2h, max] của gold.feat_hotel_realtime (giờ dữ liệu, không theo giờ máy). [Cần làm] chụp DAG + run.
+**Cách làm:** [Đã có] `feast_materialize_incremental` chạy theo Airflow Dataset của task validate DP3, materialize đúng cửa sổ ngày logic của lần chạy DP3 (backfill được) với `max_active_runs=1`, rồi phát Dataset cho `score_bookings`. `feast_materialize_realtime` chạy mỗi 5 phút, materialize [`max(event_timestamp)` − 2 giờ, `max`] của `gold.feat_hotel_realtime` theo giờ dữ liệu, không theo giờ máy. [Cần làm] chụp DAG và lần chạy.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
 
 <a id="final-20"></a>
 ### Deploy job chịu trách nhiệm push streaming feature vào OFFLINE store
@@ -53,9 +53,9 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Deploy job chịu trách nhiệm push streaming feature (ở mini-coursework) vào OFFLINE store
 
-**Cách làm:** [Đã có] Job 1: Flink booking_events_window (sliding 1 giờ trượt 5 phút) sink JDBC upsert gold.feat_hotel_realtime (offline store PostgreSQL); tests/test_stream_e2e.py chạy Kafka -> Flink -> Postgres trên Docker, bảng có dữ liệu. Tách khỏi Feast push vì push offline sang PostgreSQL chưa kiểm. [Cần làm] chụp FlinkDeployment trên cluster.
+**Cách làm:** [Đã có] Job 1: Flink `booking_events_window` (cửa sổ trượt 1 giờ, bước 5 phút) upsert `gold.feat_hotel_realtime` qua JDBC, tức offline store PostgreSQL. `tests/test_stream_e2e.py` chạy Kafka → Flink → Postgres trên Docker và xác nhận bảng có dữ liệu. Job này tách khỏi Feast push vì đường push offline sang PostgreSQL chưa được kiểm. [Cần làm] chụp FlinkDeployment trên cluster.
 
-**Kết quả:** chạy cục bộ, pass (2026-11-16): `edai1/tests/test_stream_e2e.py`. _Chưa có ảnh chụp trên cluster._
+**Kết quả:** các test `edai1/tests/test_stream_e2e.py` chạy cục bộ và đạt (2026-11-16). Chưa có ảnh chụp trên cluster.
 
 <a id="final-21"></a>
 ### Deploy job chịu trách nhiệm push streaming feature vào ONLINE store
@@ -64,15 +64,15 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Deploy job chịu trách nhiệm push streaming feature (ở mini-coursework) vào ONLINE store
 
-**Cách làm:** [Đã có] Job 1: Flink sliding window 1 giờ trượt 5 phút upsert gold.feat_hotel_realtime (offline); Job 2: DAG feast_materialize_realtime mỗi 5 phút đưa hotel_realtime lên online, cửa sổ [max(event_timestamp) - 2h, max] (replay chạy giờ giả lập nên materialize_incremental theo giờ máy không lấy được dòng nào). PushSource hotel_realtime_push để sẵn cho store.push(ONLINE) khi cần độ tươi tính bằng giây. [Cần làm] chụp 2 job chạy + feature online có dữ liệu.
+**Cách làm:** [Đã có] Job 1: Flink tính cửa sổ trượt 1 giờ, bước 5 phút, upsert `gold.feat_hotel_realtime` (offline). Job 2: DAG `feast_materialize_realtime` chạy mỗi 5 phút, đưa `hotel_realtime` lên online với cửa sổ [`max(event_timestamp)` − 2 giờ, `max`]. Replay chạy theo giờ giả lập, nên `materialize_incremental` theo giờ máy không lấy được dòng nào. `PushSource hotel_realtime_push` để sẵn cho `store.push(ONLINE)` khi cần độ tươi tính bằng giây. [Cần làm] chụp 2 job đang chạy và feature online có dữ liệu.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
 
 <a id="final-22"></a>
 ### Define TTL cho từng bảng feature, giải thích tại sao chọn TTL như thế
 
 **Rubric:** final · dòng 22 · 2 điểm · nhóm *Feature Store* › *Build materialize pipeline & jobs for push streaming data into feature stores*
 
-**Cách làm:** [Đã có] features.py: booking_attributes 365 ngày (chấm điểm tới ngày nhận phòng); customer_booking_stats 90 ngày (khách thường chỉ đặt 1-2 lần/năm, quá 90 ngày thì bookings_90d chắc chắn về 0); hotel_demand 2 ngày (DP3 ghi mỗi ngày, chịu trễ 1 lần chạy); hotel_realtime 2 giờ; policy_chunks 365 ngày. [Cần làm] lý do ghi trong docs/edai-2/feature_store.md.
+**Cách làm:** [Đã có] TTL trong `features.py`: `booking_attributes` 365 ngày (booking cần chấm điểm tới ngày nhận phòng); `customer_booking_stats` 90 ngày (khách thường chỉ đặt 1–2 lần mỗi năm, quá 90 ngày thì `bookings_90d` về 0); `hotel_demand` 2 ngày (DP3 ghi mỗi ngày, cho phép trễ một lần chạy); `hotel_realtime` 2 giờ; `policy_chunks` 365 ngày. [Cần làm] ghi lý do vào `docs/edai-2/feature_store.md`.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._

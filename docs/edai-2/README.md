@@ -2,29 +2,29 @@
 
 | Tài liệu | Nội dung |
 |---|---|
-| [llm_inference_platform.md](llm_inference_platform.md) | llm-d + vLLM, custom LLM, agentgateway, benchmark. |
-| [global_model_config.md](global_model_config.md) | ModelConfig dùng chung cho các agent. |
-| [agent_registry.md](agent_registry.md) | Registry cho agent và MCP server. |
-| [rag_pipeline.md](rag_pipeline.md) | Tài liệu chính sách -> chunk -> embedding -> Feast, kèm governance. |
-| [feature_store.md](feature_store.md) | Materialize offline -> online, push stream feature, TTL. |
-| [ml_pipeline.md](ml_pipeline.md) | Notebook, Kubeflow pipeline, training phân tán, MLflow, version dữ liệu. |
-| [ml_inference_service.md](ml_inference_service.md) | KServe model-inside-image. |
-| [mcp_server.md](mcp_server.md) | booking-mcp: FastAPI, async, helm; agent dùng MCP tool, sandbox, registry. |
-| [web_api.md](web_api.md) | Web API kéo dữ liệu, drift detection realtime, autoscale bằng KEDA. |
-| [second_agent.md](second_agent.md) | Agent có tool ML và RAG. |
-| [mcp_gateway.md](mcp_gateway.md) | agentgateway làm entrypoint cho MCP server. |
-| [a2a_gateway.md](a2a_gateway.md) | agentgateway làm entrypoint cho agent. |
-| [coordinator_agent.md](coordinator_agent.md) | Điều phối agent con; replica, autoscale, registry. |
-| [warm_up.md](warm_up.md) | Giữ sẵn worker cho agent để giảm chi phí và độ trễ. |
-| [testing.md](testing.md) | Unit test, EP/BVA, mutation, property-based, load test. |
-| [cicd.md](cicd.md) | Jenkins: test + build + auto-deploy. CI/CD cho DP1–DP3 ở [edai-1/cicd.md](../edai-1/cicd.md). |
-| [routing_gateway.md](routing_gateway.md) | Ẩn service sau ingress, basic auth, rate limit, domain + HTTPS. |
-| [iac.md](iac.md) | Terraform cho GKE, Ansible cho VM. |
-| [observability.md](observability.md) | Metric Web API, telemetry hệ thống, log, trace, LLM/agent, drift theo lịch. |
-| [ab_testing.md](ab_testing.md) | A/B cho agent, LLM và model inference. |
-| [security.md](security.md) | Vault cho secret, Istio cho service-to-service. |
-| [ml_design.md](ml_design.md) | README/documentation, design pattern, 5 class chính. |
-| [novel_ideas.md](novel_ideas.md) | Mỗi ý tưởng: vấn đề, cách làm, bằng chứng đã chạy. |
+| [llm_inference_platform.md](llm_inference_platform.md) | Nền tảng LLM gồm llm-d và vLLM, model tự fine-tune, agentgateway và benchmark. |
+| [global_model_config.md](global_model_config.md) | Một ModelConfig dùng chung cho mọi agent. |
+| [agent_registry.md](agent_registry.md) | Registry lưu agent card và MCP server. |
+| [rag_pipeline.md](rag_pipeline.md) | Tài liệu chính sách được chia chunk, embed rồi lưu vào Feast, có lineage và kiểm tra dữ liệu. |
+| [feature_store.md](feature_store.md) | Materialize feature từ offline sang online, đẩy stream feature và chọn TTL cho từng bảng. |
+| [ml_pipeline.md](ml_pipeline.md) | Notebook, Kubeflow pipeline, training phân tán, MLflow và versioning dữ liệu train. |
+| [ml_inference_service.md](ml_inference_service.md) | Model được phục vụ bằng KServe theo mô hình model-inside-image. |
+| [mcp_server.md](mcp_server.md) | booking-mcp viết bằng FastAPI, xử lý bất đồng bộ, deploy bằng Helm; agent gọi MCP tool, chạy trong sandbox và được đăng ký trên registry. |
+| [web_api.md](web_api.md) | risk-api lấy feature theo `booking_id` rồi gọi KServe `cancel-risk`. drift-api phát hiện drift theo thời gian thực. Cả hai autoscale bằng KEDA. |
+| [second_agent.md](second_agent.md) | Agent thứ hai dùng tool ML (`predict_cancellation` qua risk-api) và tool RAG (`search_policy`). |
+| [mcp_gateway.md](mcp_gateway.md) | agentgateway là điểm vào duy nhất cho MCP server. |
+| [a2a_gateway.md](a2a_gateway.md) | agentgateway là điểm vào duy nhất cho các agent. |
+| [coordinator_agent.md](coordinator_agent.md) | Coordinator điều phối các agent con; tài liệu gồm số replica, autoscale và registry. |
+| [warm_up.md](warm_up.md) | Giữ sẵn worker cho agent để giảm chi phí và độ trễ khởi động. |
+| [testing.md](testing.md) | Unit test, phân lớp tương đương và giá trị biên (EP/BVA), mutation test, property-based test và load test. |
+| [cicd.md](cicd.md) | Jenkins chạy test, build image và tự deploy. CI/CD cho DP1–DP3 nằm ở [edai-1/cicd.md](../edai-1/cicd.md). |
+| [routing_gateway.md](routing_gateway.md) | Service được đặt sau ingress, có basic auth, rate limit, domain và HTTPS. |
+| [iac.md](iac.md) | Terraform dựng hạ tầng GKE; Ansible cấu hình VM. |
+| [observability.md](observability.md) | Metric của Web API, telemetry hệ thống, log, trace, telemetry cho LLM và agent, kiểm tra drift theo lịch. |
+| [ab_testing.md](ab_testing.md) | A/B testing cho agent, LLM và model inference. |
+| [security.md](security.md) | Vault quản lý secret; Istio bảo vệ giao tiếp giữa các service. |
+| [ml_design.md](ml_design.md) | README và tài liệu, các design pattern đã dùng và 5 class chính của hệ thống ML. |
+| [novel_ideas.md](novel_ideas.md) | Mỗi ý tưởng gồm vấn đề, cách làm và minh chứng đã chạy. |
 
 ## Dòng rubric edai-2
 
@@ -40,7 +40,7 @@
 | 10 | 2 | Đảm bảo data governance cho pipeline | [rag_pipeline.md](rag_pipeline.md#edai-2-10) | Đã có · chờ cluster |
 | 11 | 2 | Build data pipeline để incremental materialize dữ liệu mới nhất từ OFFLINE qua ONLINE… | [feature_store.md](feature_store.md#edai-2-11) | Đã có · chờ cluster |
 | 12 | 2 | Deploy các jobs chịu trách nhiệm push streaming feature vào OFFLINE & ONLINE store | [feature_store.md](feature_store.md#edai-2-12) | Đã có · chờ cluster |
-| 13 | 2 | Build 1 training pipeline với ít nhất 4 steps: load data từ offline feature store, data… | [ml_pipeline.md](ml_pipeline.md#edai-2-13) | Đã có · Cần sửa |
+| 13 | 2 | Build 1 training pipeline với ít nhất 4 steps: load data từ offline feature store, data… | [ml_pipeline.md](ml_pipeline.md#edai-2-13) | Đã có |
 | 14 | 2 | Lưu model, data và các metadata liên quan khác ở mỗi training run lên MLFlow, tự động gắn… | [ml_pipeline.md](ml_pipeline.md#edai-2-14) | Đã có |
 | 15 | 2 | Sử dụng KServe để serve model vừa train ở bên trên, dùng model-inside-image pattern | [ml_inference_service.md](ml_inference_service.md#edai-2-15) | Đã có · chờ cluster |
 | 16 | 1 | Có sử dụng FastAPI + data validation + healthcheck for k8s | [mcp_server.md](mcp_server.md#edai-2-16) | Đã có |
@@ -82,8 +82,8 @@
 | 52 | 1 | Perform A/B test for agents with different model config and monitor them | [ab_testing.md](ab_testing.md#edai-2-52) | Đã có · Cần làm |
 | 53 | 1 | Perform A/B test for different LLM versions on the LLM inference platform | [ab_testing.md](ab_testing.md#edai-2-53) | Đã có · chờ cluster |
 | 54 | 1 | Centralize secret management via Hashi Corp Vault so it will be used across the whole… | [security.md](security.md#edai-2-54) | Đã có · chờ cluster |
-| 55 | 2 | README.md và documentation follow rule ở ô A2 | [ml_design.md](ml_design.md#edai-2-55) | Đã có · Cần làm |
-| 56 | 2 | Idea 1 | [novel_ideas.md](novel_ideas.md#edai-2-56) | Cần làm |
+| 55 | 2 | README.md và documentation follow rule ở ô A2 | [ml_design.md](ml_design.md#edai-2-55) | Đã có |
+| 56 | 2 | Idea 1 | [novel_ideas.md](novel_ideas.md#edai-2-56) | chờ cluster |
 | 57 | 2 | Idea 2 | [novel_ideas.md](novel_ideas.md#edai-2-57) | — |
 
 ## Dòng rubric final
@@ -102,7 +102,7 @@
 | 12 | 2 | Có sử dụng kỹ thuật equivalence partitioning vs boundary value analysis khi thiết kế test… | [testing.md](testing.md#final-12) | Đã có · chờ cluster |
 | 13 | 2 | Có sử dụng mutation testing để đánh giá hiệu quả của các test | [testing.md](testing.md#final-13) | Đã có · chờ cluster |
 | 14 | 2 | Idempotency testing sử dụng property-based testing | [testing.md](testing.md#final-14) | Đã có · Thiết kế |
-| 15 | 2 | Load test the Web API to understand throughput and latency | [testing.md](testing.md#final-15) | Đã có · Cần làm |
+| 15 | 2 | Load test the Web API to understand throughput and latency | [testing.md](testing.md#final-15) | Đã có · chờ cluster |
 | 19 | 2 | Build data pipeline để incremental materialize dữ liệu mới nhất từ offline qua online… | [feature_store.md](feature_store.md#final-19) | Đã có · chờ cluster |
 | 20 | 1 | Deploy job chịu trách nhiệm push streaming feature vào OFFLINE store | [feature_store.md](feature_store.md#final-20) | Đã có · chờ cluster |
 | 21 | 1 | Deploy job chịu trách nhiệm push streaming feature vào ONLINE store | [feature_store.md](feature_store.md#final-21) | Đã có · chờ cluster |

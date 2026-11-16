@@ -1,9 +1,9 @@
 # A2A gateway
 
-agentgateway làm entrypoint cho agent.
+agentgateway là điểm vào duy nhất cho các agent.
 
-Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết kế (cột F của rubric);
-**Kết quả** điền khi đã chạy: số liệu, ảnh chụp (`docs/images/`), link code.
+Mỗi mục dưới đây ứng với một dòng của rubric. Phần **Cách làm** mô tả giải pháp đã triển khai, đồng bộ từ
+cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu đo được hoặc ảnh chụp (`docs/images/`).
 
 <a id="edai-2-24"></a>
 ## A2A Gateway
@@ -12,6 +12,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Tương tự bên trên
 
-**Cách làm:** [Đã có] gateway/agentgateway.yaml: route /a2a/data-agent, /a2a/policy-agent (chia 50/50 v1/v2), /a2a/coordinator-agent; mcpAuthorization thêm propose_overbooking, apply_overbooking cho policy-agent. [Cần làm] coordinator gọi agent con qua gateway (kagent v1alpha2 chỉ tham chiếu agent trong cluster); chụp log gateway.
+**Cách làm:** [Đã có] `gateway/agentgateway.yaml` có các route `/a2a/data-agent`, `/a2a/policy-agent` (chia 50/50 giữa v1 và v2), `/a2a/coordinator-agent`; `mcpAuthorization` cho phép policy-agent dùng `propose_overbooking` và `apply_overbooking`. [Cần làm] để coordinator gọi agent con qua gateway (kagent v1alpha2 hiện chỉ tham chiếu agent trong cluster); chụp log gateway.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._

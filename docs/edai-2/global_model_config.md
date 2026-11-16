@@ -1,9 +1,9 @@
 # Global model config
 
-ModelConfig dùng chung cho các agent.
+Một ModelConfig dùng chung cho mọi agent.
 
-Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết kế (cột F của rubric);
-**Kết quả** điền khi đã chạy: số liệu, ảnh chụp (`docs/images/`), link code.
+Mỗi mục dưới đây ứng với một dòng của rubric. Phần **Cách làm** mô tả giải pháp đã triển khai, đồng bộ từ
+cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu đo được hoặc ảnh chụp (`docs/images/`).
 
 <a id="edai-2-7"></a>
 ## Deploy 1 global model config để các Agent có thể dùng follow tutorial này, config này sẽ…
@@ -12,6 +12,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document thể hiện link tới code config và giải thích đã config gì
 
-**Cách làm:** [Đã có] ModelConfig default-model-config trỏ agentgateway /v1 (agents/agents.yaml). [Cần làm] docs link tới file + giải thích.
+**Cách làm:** [Đã có] ModelConfig `default-model-config` trỏ tới `/v1` của agentgateway (`agents/agents.yaml`). [Cần làm] dẫn link tới file trong docs và giải thích.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._

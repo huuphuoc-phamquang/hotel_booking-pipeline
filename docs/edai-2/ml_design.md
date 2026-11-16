@@ -1,18 +1,18 @@
 # Repository & low-level ML design
 
-README/documentation, design pattern, 5 class chính.
+README và tài liệu, các design pattern đã dùng và 5 class chính của hệ thống ML.
 
-Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết kế (cột F của rubric);
-**Kết quả** điền khi đã chạy: số liệu, ảnh chụp (`docs/images/`), link code.
+Mỗi mục dưới đây ứng với một dòng của rubric. Phần **Cách làm** mô tả giải pháp đã triển khai, đồng bộ từ
+cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu đo được hoặc ảnh chụp (`docs/images/`).
 
 <a id="edai-2-55"></a>
 ## README.md và documentation follow rule ở ô A2
 
 **Rubric:** edai-2 · dòng 55 · 2 điểm · nhóm *Repository Design*
 
-**Cách làm:** [Đã có] README.md ở gốc repo: bài toán (dự báo cancellation để overbooking, human-in-the-loop), sơ đồ docs/architecture/booking-overbooking.png (nguồn .drawio), mục lục, cấu trúc repo, luồng dữ liệu theo ngày, link docs/README.md; docstring đầu mọi file. [Cần làm] xuất lại booking-overbooking.png từ file .drawio (đã bỏ nhãn thiết kế ở event-replayer, drift-api).
+**Cách làm:** [Đã có] `README.md` ở gốc repo trình bày bài toán (dự báo cancellation để overbooking, có người duyệt), sơ đồ `docs/architecture/booking-overbooking.png` (nguồn `.drawio`), mục lục, cấu trúc repo, luồng dữ liệu theo ngày và link tới `docs/README.md`; mọi file mã đều có docstring đầu file.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
 
 ## Bổ sung final-coursework
 
@@ -23,9 +23,9 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Capture màn hình thể hiện Design Pattern đã được sử dụng trong code
 
-**Cách làm:** [Đã có] Repository (risk_api._online + model_rows giấu Feast sau 1 chỗ đọc), Adapter (risk_api._predict đổi response KServe V1 [[p0, p1]] thành xác suất), Facade (tool MCP gói risk-api, Postgres, Feast cho agent), Strategy (dsl.If chọn train 1 node hay TrainJob phân tán, cùng output Model). [Cần làm] chụp code từng pattern.
+**Cách làm:** [Đã có] Bốn design pattern: Repository (`risk_api._online` và `model_rows` gom việc đọc Feast về một chỗ), Adapter (`risk_api._predict` đổi response KServe V1 `[[p0, p1]]` thành xác suất), Facade (tool MCP gói risk-api, Postgres và Feast cho agent), Strategy (`dsl.If` chọn train một node hay TrainJob phân tán, cùng output Model). [Cần làm] chụp code của từng pattern.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
 
 <a id="final-57"></a>
 ### Propose 5 key classes to present our main focus:
@@ -36,7 +36,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document 5 key classes
 
-**Cách làm:** [Đã có] docs/edai-2/ml_design.md: 5 class đề xuất ứng với code hiện có: TrainingDataService (load_from_feast + data_version), SplitService (split_by_time), CancelRiskTrainer (train / train_distributed + evaluate_and_register), CancelRiskClient (risk_api model_rows + _predict), OverbookingPlanner (overbooking.limit).
+**Cách làm:** [Đã có] `docs/edai-2/ml_design.md` đề xuất 5 class ứng với code hiện có: `TrainingDataService` (`load_from_feast` và `data_version`), `SplitService` (`split_by_time`), `CancelRiskTrainer` (`train`, `train_distributed` và `evaluate_and_register`), `CancelRiskClient` (`model_rows` và `_predict` của risk-api), `OverbookingPlanner` (`overbooking.limit`).
 
 ```python
 class TrainingDataService:
@@ -58,4 +58,4 @@ class OverbookingPlanner:
     def limit(self, probs: list[float], c_spoil: float, c_walk: float) -> int: ...   # K lớn nhất với P(N < K) ≤ c_spoil/(c_spoil+c_walk)
 ```
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._

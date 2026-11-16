@@ -1,9 +1,9 @@
 # RAG data pipeline
 
-Tài liệu chính sách -> chunk -> embedding -> Feast, kèm governance.
+Tài liệu chính sách được chia chunk, embed rồi lưu vào Feast, có lineage và kiểm tra dữ liệu.
 
-Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết kế (cột F của rubric);
-**Kết quả** điền khi đã chạy: số liệu, ảnh chụp (`docs/images/`), link code.
+Mỗi mục dưới đây ứng với một dòng của rubric. Phần **Cách làm** mô tả giải pháp đã triển khai, đồng bộ từ
+cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu đo được hoặc ảnh chụp (`docs/images/`).
 
 <a id="edai-2-9"></a>
 ## Build data pipeline với ít nhất các step sau: kéo dữ liệu từ text => chia chunk => lưu…
@@ -14,9 +14,9 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document show ảnh pipeline đã chạy thành công trên Airflow, và lineage thể hiện trên DataHub + link tới code pipeline
 
-**Cách làm:** [Đã có] rag_pipeline.py: chunk + bge-m3 -> Feast policy_chunks; tài liệu chính sách ở policies/*.md; task embed chạy pod riêng 4-6Gi (executor_config) và chart booking-mcp nâng limit 4Gi. [Cần làm] chụp Airflow run.
+**Cách làm:** [Đã có] `rag_pipeline.py` chia chunk, embed bằng bge-m3 rồi ghi vào Feast `policy_chunks`; tài liệu chính sách nằm ở `policies/*.md`. Task embed chạy trên pod riêng 4–6Gi (`executor_config`), chart booking-mcp nâng limit lên 4Gi. [Cần làm] chụp lần chạy trên Airflow.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
 
 <a id="edai-2-10"></a>
 ## Đảm bảo data governance cho pipeline
@@ -25,6 +25,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Đảm bảo data governance cho pipeline (tương tự mini-coursework)
 
-**Cách làm:** [Đã có] inlets/outlets -> DataHub lineage docs/policies -> policy_chunks; validate số chunk > 0, chunk_id unique, embedding đúng 1024 chiều; mỗi chunk ghi doc_sha256 (version tài liệu) + embed_model. [Cần làm] chụp lineage + tab Validation.
+**Cách làm:** [Đã có] Inlets, outlets tạo lineage trên DataHub từ `docs/policies` tới `policy_chunks`. Pipeline kiểm số chunk > 0, `chunk_id` không trùng và embedding đúng 1024 chiều; mỗi chunk ghi `doc_sha256` (version tài liệu) và `embed_model`. [Cần làm] chụp lineage và tab Validation.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._

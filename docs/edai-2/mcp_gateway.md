@@ -1,9 +1,9 @@
 # MCP gateway
 
-agentgateway làm entrypoint cho MCP server.
+agentgateway là điểm vào duy nhất cho MCP server.
 
-Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết kế (cột F của rubric);
-**Kết quả** điền khi đã chạy: số liệu, ảnh chụp (`docs/images/`), link code.
+Mỗi mục dưới đây ứng với một dòng của rubric. Phần **Cách làm** mô tả giải pháp đã triển khai, đồng bộ từ
+cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu đo được hoặc ảnh chụp (`docs/images/`).
 
 <a id="edai-2-23"></a>
 ## MCP Gateway
@@ -12,6 +12,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document phải show được setup agentgateway để làm MCP Gateway, show được các thiết lập về security và policy kèm giải thích tại sao dùng cái đó + link tới YAML chứa các setting
 
-**Cách làm:** [Đã có] route /mcp qua gateway, JWT, mcpAuthorization theo tool + role (RemoteMCPServer trỏ gateway, không trỏ thẳng MCP).
+**Cách làm:** [Đã có] Route `/mcp` đi qua gateway, xác thực JWT, `mcpAuthorization` theo tool và role; `RemoteMCPServer` trỏ tới gateway thay vì gọi thẳng MCP.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._

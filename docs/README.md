@@ -4,16 +4,18 @@ Tài liệu của đồ án EDAI K11: nền tảng dữ liệu và AI cho ứng 
 booking để đề xuất số phòng overbooking (revenue manager duyệt).
 
 - [architecture/](architecture/): sơ đồ triển khai tổng thể (`booking-overbooking.drawio`, `booking-overbooking.png`) và sơ đồ bảng (`booking-schema.drawio`).
-- [edai-1/](edai-1/README.md): data platform. [edai-2/](edai-2/README.md): AI / agent platform. Các dòng của final-coursework nằm trong file cùng chủ đề ở hai thư mục này.
+- [edai-1/](edai-1/README.md): data platform. [edai-2/](edai-2/README.md): nền tảng AI và agent. Các dòng của final-coursework nằm trong file cùng chủ đề ở hai thư mục này.
 - `images/edai-1/`, `images/edai-2/`: ảnh chụp minh chứng.
 
 Bảng dưới tra ngược từ dòng rubric (file `EDAI K11.xlsx`) sang mục tài liệu. Trạng thái tính lại mỗi lần đồng bộ với
 cột F (lần gần nhất 2026-11-16):
 
-- **Đã có**: có code (và test cục bộ nếu mục ghi Kết quả).
-- **chờ cluster**: code đã có, chỉ còn chạy / chụp minh chứng trên GKE.
-- **Cần làm**: còn thiếu code hoặc tài liệu. **Thiết kế**: mới có manifest / thiết kế, chưa chạy được ở đâu.
-- Tạm thời toàn bộ hệ thống mới chạy cục bộ (Docker, pyspark, Postgres); `images/` sẽ có ảnh khi dựng cluster.
+- **Đã có**: đã có code; mục nào ghi Kết quả thì đã có test chạy cục bộ.
+- **chờ cluster**: code đã có, chỉ còn chạy hoặc chụp minh chứng trên GKE.
+- **Cần làm**: còn thiếu code hoặc tài liệu.
+- **Thiết kế**: mới có manifest hoặc thiết kế, chưa chạy ở môi trường nào.
+
+Hiện toàn bộ hệ thống mới được chạy cục bộ (Docker, pyspark, Postgres). Thư mục `images/` sẽ có ảnh khi dựng cluster.
 
 ## edai-1
 
@@ -24,17 +26,17 @@ cột F (lần gần nhất 2026-11-16):
 | 5 | 2 | Simulate skew | [edai-1/data_generator.md](edai-1/data_generator.md#edai-1-5) | Đã có · Cần làm |
 | 6 | 2 | Simulate schema evolution | [edai-1/data_generator.md](edai-1/data_generator.md#edai-1-6) | Đã có · Cần làm |
 | 7 | 2 | Simulate another offline data problem | [edai-1/data_generator.md](edai-1/data_generator.md#edai-1-7) | Đã có · Thêm cho novelty |
-| 8 | 2 | Store data after generating so that we can ingest to Bronze zone later | [edai-1/data_generator.md](edai-1/data_generator.md#edai-1-8) | Đã có · Cần làm |
+| 8 | 2 | Store data after generating so that we can ingest to Bronze zone later | [edai-1/data_generator.md](edai-1/data_generator.md#edai-1-8) | Đã có · chờ cluster |
 | 9 | 2 | Simulate late arrivals | [edai-1/data_generator.md](edai-1/data_generator.md#edai-1-9) | Đã có · Cần làm |
 | 10 | 2 | Simulate another streaming data problem | [edai-1/data_generator.md](edai-1/data_generator.md#edai-1-10) | Đã có |
 | 11 | 2 | Baseline | [edai-1/processing_jobs.md](edai-1/processing_jobs.md#edai-1-11) | Đã có · chờ cluster |
 | 12 | 3 | Handle skew with explanation | [edai-1/processing_jobs.md](edai-1/processing_jobs.md#edai-1-12) | Đã có · chờ cluster |
 | 13 | 3 | Handle schema evolution with explanation | [edai-1/processing_jobs.md](edai-1/processing_jobs.md#edai-1-13) | Đã có · chờ cluster |
-| 14 | 3 | Handle other offline data problem with explanation | [edai-1/processing_jobs.md](edai-1/processing_jobs.md#edai-1-14) | Đã có · Cần làm |
+| 14 | 3 | Handle other offline data problem with explanation | [edai-1/processing_jobs.md](edai-1/processing_jobs.md#edai-1-14) | Đã có · chờ cluster |
 | 15 | 2 | Spark job được tích hợp vào các data pipeline | [edai-1/processing_jobs.md](edai-1/processing_jobs.md#edai-1-15) | Đã có · chờ cluster |
 | 16 | 2 | Baseline | [edai-1/processing_jobs.md](edai-1/processing_jobs.md#edai-1-16) | Đã có · chờ cluster |
 | 17 | 3 | Handle late arrival with explanation | [edai-1/processing_jobs.md](edai-1/processing_jobs.md#edai-1-17) | Đã có · Cần làm |
-| 18 | 3 | Handle other streaming problem with explanation | [edai-1/processing_jobs.md](edai-1/processing_jobs.md#edai-1-18) | Đã có · Cần làm |
+| 18 | 3 | Handle other streaming problem with explanation | [edai-1/processing_jobs.md](edai-1/processing_jobs.md#edai-1-18) | Đã có · chờ cluster |
 | 19 | 2 | Window processing | [edai-1/processing_jobs.md](edai-1/processing_jobs.md#edai-1-19) | Đã có · Cần làm |
 | 20 | 3 | Lakehouse | [edai-1/data_storage.md](edai-1/data_storage.md#edai-1-20) | Đã có · Thiết kế · Cần làm |
 | 21 | 3 | Datawarehouse | [edai-1/data_storage.md](edai-1/data_storage.md#edai-1-21) | Đã có · Cần làm |
@@ -72,7 +74,7 @@ cột F (lần gần nhất 2026-11-16):
 | 10 | 2 | Đảm bảo data governance cho pipeline | [edai-2/rag_pipeline.md](edai-2/rag_pipeline.md#edai-2-10) | Đã có · chờ cluster |
 | 11 | 2 | Build data pipeline để incremental materialize dữ liệu mới nhất từ OFFLINE qua ONLINE… | [edai-2/feature_store.md](edai-2/feature_store.md#edai-2-11) | Đã có · chờ cluster |
 | 12 | 2 | Deploy các jobs chịu trách nhiệm push streaming feature vào OFFLINE & ONLINE store | [edai-2/feature_store.md](edai-2/feature_store.md#edai-2-12) | Đã có · chờ cluster |
-| 13 | 2 | Build 1 training pipeline với ít nhất 4 steps: load data từ offline feature store, data… | [edai-2/ml_pipeline.md](edai-2/ml_pipeline.md#edai-2-13) | Đã có · Cần sửa |
+| 13 | 2 | Build 1 training pipeline với ít nhất 4 steps: load data từ offline feature store, data… | [edai-2/ml_pipeline.md](edai-2/ml_pipeline.md#edai-2-13) | Đã có |
 | 14 | 2 | Lưu model, data và các metadata liên quan khác ở mỗi training run lên MLFlow, tự động gắn… | [edai-2/ml_pipeline.md](edai-2/ml_pipeline.md#edai-2-14) | Đã có |
 | 15 | 2 | Sử dụng KServe để serve model vừa train ở bên trên, dùng model-inside-image pattern | [edai-2/ml_inference_service.md](edai-2/ml_inference_service.md#edai-2-15) | Đã có · chờ cluster |
 | 16 | 1 | Có sử dụng FastAPI + data validation + healthcheck for k8s | [edai-2/mcp_server.md](edai-2/mcp_server.md#edai-2-16) | Đã có |
@@ -114,8 +116,8 @@ cột F (lần gần nhất 2026-11-16):
 | 52 | 1 | Perform A/B test for agents with different model config and monitor them | [edai-2/ab_testing.md](edai-2/ab_testing.md#edai-2-52) | Đã có · Cần làm |
 | 53 | 1 | Perform A/B test for different LLM versions on the LLM inference platform | [edai-2/ab_testing.md](edai-2/ab_testing.md#edai-2-53) | Đã có · chờ cluster |
 | 54 | 1 | Centralize secret management via Hashi Corp Vault so it will be used across the whole… | [edai-2/security.md](edai-2/security.md#edai-2-54) | Đã có · chờ cluster |
-| 55 | 2 | README.md và documentation follow rule ở ô A2 | [edai-2/ml_design.md](edai-2/ml_design.md#edai-2-55) | Đã có · Cần làm |
-| 56 | 2 | Idea 1 | [edai-2/novel_ideas.md](edai-2/novel_ideas.md#edai-2-56) | Cần làm |
+| 55 | 2 | README.md và documentation follow rule ở ô A2 | [edai-2/ml_design.md](edai-2/ml_design.md#edai-2-55) | Đã có |
+| 56 | 2 | Idea 1 | [edai-2/novel_ideas.md](edai-2/novel_ideas.md#edai-2-56) | chờ cluster |
 | 57 | 2 | Idea 2 | [edai-2/novel_ideas.md](edai-2/novel_ideas.md#edai-2-57) | — |
 
 ## final
@@ -134,7 +136,7 @@ cột F (lần gần nhất 2026-11-16):
 | 12 | 2 | Có sử dụng kỹ thuật equivalence partitioning vs boundary value analysis khi thiết kế test… | [edai-2/testing.md](edai-2/testing.md#final-12) | Đã có · chờ cluster |
 | 13 | 2 | Có sử dụng mutation testing để đánh giá hiệu quả của các test | [edai-2/testing.md](edai-2/testing.md#final-13) | Đã có · chờ cluster |
 | 14 | 2 | Idempotency testing sử dụng property-based testing | [edai-2/testing.md](edai-2/testing.md#final-14) | Đã có · Thiết kế |
-| 15 | 2 | Load test the Web API to understand throughput and latency | [edai-2/testing.md](edai-2/testing.md#final-15) | Đã có · Cần làm |
+| 15 | 2 | Load test the Web API to understand throughput and latency | [edai-2/testing.md](edai-2/testing.md#final-15) | Đã có · chờ cluster |
 | 16 | 2 | Simulate data drift | [edai-1/data_generator.md](edai-1/data_generator.md#final-16) | Đã có · chờ cluster |
 | 17 | 2 | Using generator configuration | [edai-1/data_generator.md](edai-1/data_generator.md#final-17) | Đã có · chờ cluster |
 | 18 | 2 | Tạo bảng label có 2 cột id và label | [edai-1/data_generator.md](edai-1/data_generator.md#final-18) | Đã có · chờ cluster |

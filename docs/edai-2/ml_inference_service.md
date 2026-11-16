@@ -1,9 +1,9 @@
 # ML inference service
 
-KServe model-inside-image.
+Model được phục vụ bằng KServe theo mô hình model-inside-image.
 
-Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết kế (cột F của rubric);
-**Kết quả** điền khi đã chạy: số liệu, ảnh chụp (`docs/images/`), link code.
+Mỗi mục dưới đây ứng với một dòng của rubric. Phần **Cách làm** mô tả giải pháp đã triển khai, đồng bộ từ
+cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu đo được hoặc ảnh chụp (`docs/images/`).
 
 <a id="edai-2-15"></a>
 ## Sử dụng KServe để serve model vừa train ở bên trên, dùng model-inside-image pattern
@@ -12,6 +12,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document show có pod KServe + link tới kserve YAML file + show ảnh đã gọi thử KServe thành công
 
-**Cách làm:** [Đã có] kserve-cancel-risk.yaml model-inside-image. [Cần làm] chụp pod + gọi V1 predict.
+**Cách làm:** [Đã có] `kserve-cancel-risk.yaml` theo mô hình model-inside-image. [Cần làm] chụp pod và một lần gọi V1 predict.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._

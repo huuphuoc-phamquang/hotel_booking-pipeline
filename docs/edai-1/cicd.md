@@ -1,9 +1,10 @@
 # CI/CD cho DP1–DP3
 
-Jenkins: test DAG + GX suite, build image Spark job, sync DAG lên Airflow. Cấu hình Jenkins dùng chung: [edai-2/cicd.md](../edai-2/cicd.md).
+Jenkins kiểm DAG và bộ Great Expectations, build image cho Spark job rồi đồng bộ DAG lên Airflow. Cấu hình
+Jenkins dùng chung nằm ở [edai-2/cicd.md](../edai-2/cicd.md).
 
-Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết kế (cột F của rubric);
-**Kết quả** điền khi đã chạy: số liệu, ảnh chụp (`docs/images/`), link code.
+Mỗi mục dưới đây ứng với một dòng của rubric. Phần **Cách làm** mô tả giải pháp đã triển khai, đồng bộ từ
+cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu đo được hoặc ảnh chụp (`docs/images/`).
 
 <a id="final-30"></a>
 ## DP 1
@@ -14,9 +15,9 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Capture màn hình từng CI/CD pipeline đã run thành công
 
-**Cách làm:** [Đã có] ci/Jenkinsfile.data: test generator + GX + Spark + SQL + DAG integrity -> build image generator/Spark/Flink -> e2e stream -> deploy DAG (dp1_ingest_bronze cùng các DAG khác). [Cần làm] chụp run.
+**Cách làm:** [Đã có] `ci/Jenkinsfile.data` test generator, Great Expectations, Spark, SQL và DAG integrity; build image generator, Spark, Flink; chạy e2e stream; cuối cùng deploy DAG (`dp1_ingest_bronze` cùng các DAG khác). [Cần làm] chụp lần chạy.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
 
 <a id="final-31"></a>
 ## DP 2
@@ -25,9 +26,9 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > DP 2 (xem ở sheet mini-coursework)
 
-**Cách làm:** [Đã có] ci/Jenkinsfile.data cho dp2_bronze_to_gold: test Spark (pyspark) + SQL DP2 trên Postgres thật -> build image Spark -> deploy DAG + sql/. [Cần làm] chụp run.
+**Cách làm:** [Đã có] Với `dp2_bronze_to_gold`, `ci/Jenkinsfile.data` test Spark (pyspark) và SQL DP2 trên Postgres thật, build image Spark, rồi deploy DAG cùng thư mục `sql/`. [Cần làm] chụp lần chạy.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
 
 <a id="final-32"></a>
 ## DP 3
@@ -36,6 +37,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > DP 3 (xem ở sheet mini-coursework)
 
-**Cách làm:** [Đã có] ci/Jenkinsfile.data cho dp3_offline_features: test SQL DP3 + check validate trên Postgres thật -> deploy DAG + sql/dp3_features.sql. [Cần làm] chụp run.
+**Cách làm:** [Đã có] Với `dp3_offline_features`, `ci/Jenkinsfile.data` test SQL DP3 và các kiểm tra validate trên Postgres thật, rồi deploy DAG cùng `sql/dp3_features.sql`. [Cần làm] chụp lần chạy.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._

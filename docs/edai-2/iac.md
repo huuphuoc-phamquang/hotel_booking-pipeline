@@ -1,9 +1,9 @@
 # Infrastructure as Code
 
-Terraform cho GKE, Ansible cho VM.
+Terraform dựng hạ tầng GKE; Ansible cấu hình VM.
 
-Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết kế (cột F của rubric);
-**Kết quả** điền khi đã chạy: số liệu, ảnh chụp (`docs/images/`), link code.
+Mỗi mục dưới đây ứng với một dòng của rubric. Phần **Cách làm** mô tả giải pháp đã triển khai, đồng bộ từ
+cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu đo được hoặc ảnh chụp (`docs/images/`).
 
 <a id="edai-2-44"></a>
 ## Dùng Terraform để setup GKE hoặc các cloud services · edai-2 · IaC
@@ -12,18 +12,18 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document phải show hình ảnh Terraform và Ansible code đã chạy
 
-**Cách làm:** [Đã có] iac/modules/{network,gke,registry,budget} + iac/envs/dev: VPC + Cloud NAT, GKE private node, pool CPU spot và GPU L4 (min 0), Artifact Registry, budget alert. [Cần làm] chụp terraform apply.
+**Cách làm:** [Đã có] `iac/modules/{network,gke,registry,budget}` và `iac/envs/dev`: VPC với Cloud NAT, GKE node private, pool CPU spot và pool GPU L4 (tối thiểu 0 node), Artifact Registry, cảnh báo ngân sách. [Cần làm] chụp `terraform apply`.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
 
 <a id="edai-2-45"></a>
 ## Dùng Ansible để configure và deploy các service lên VM · edai-2 · IaC
 
 **Rubric:** edai-2 · dòng 45 · 1 điểm · nhóm *IaC*
 
-**Cách làm:** [Đã có] iac/ansible: site.yml + role common, docker, vault, jenkins (container); syntax-check + ansible-lint production sạch. [Cần làm] chạy trên VM, chụp playbook.
+**Cách làm:** [Đã có] `iac/ansible` gồm `site.yml` và các role common, docker, vault, jenkins (chạy dạng container); `--syntax-check` và `ansible-lint` profile production đều sạch. [Cần làm] chạy trên VM, chụp kết quả playbook.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
 
 ## Bổ sung final-coursework
 
@@ -34,15 +34,15 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Capture màn hình thể hiện từng setup đã chạy thành công
 
-**Cách làm:** [Đã có] iac/modules/{network,gke,registry,budget} + iac/envs/dev (state GCS), terraform validate sạch. [Cần làm] chụp terraform apply.
+**Cách làm:** [Đã có] `iac/modules/{network,gke,registry,budget}` và `iac/envs/dev` (state lưu trên GCS); `terraform validate` sạch. [Cần làm] chụp `terraform apply`.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
 
 <a id="final-45"></a>
 ### Dùng Ansible để configure và deploy các service lên VM · final · IaC
 
 **Rubric:** final · dòng 45 · 2 điểm · nhóm *IaC*
 
-**Cách làm:** [Đã có] iac/ansible: site.yml + role common (ufw), docker, vault (container + vault.hcl), jenkins; ansible-playbook --syntax-check và ansible-lint (profile production) sạch. [Cần làm] chạy trên VM, chụp playbook.
+**Cách làm:** [Đã có] `iac/ansible` gồm `site.yml` và các role common (ufw), docker, vault (container cùng `vault.hcl`), jenkins; `ansible-playbook --syntax-check` và `ansible-lint` profile production đều sạch. [Cần làm] chạy trên VM, chụp kết quả playbook.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._

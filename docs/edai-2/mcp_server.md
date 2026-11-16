@@ -1,9 +1,10 @@
 # MCP server & agent dùng tool
 
-booking-mcp: FastAPI, async, helm; agent dùng MCP tool, sandbox, registry.
+booking-mcp viết bằng FastAPI, xử lý bất đồng bộ, deploy bằng Helm; agent gọi MCP tool, chạy trong sandbox
+và được đăng ký trên registry.
 
-Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết kế (cột F của rubric);
-**Kết quả** điền khi đã chạy: số liệu, ảnh chụp (`docs/images/`), link code.
+Mỗi mục dưới đây ứng với một dòng của rubric. Phần **Cách làm** mô tả giải pháp đã triển khai, đồng bộ từ
+cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu đo được hoặc ảnh chụp (`docs/images/`).
 
 <a id="edai-2-16"></a>
 ## Có sử dụng FastAPI + data validation + healthcheck for k8s
@@ -14,18 +15,18 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document phải show được Agent đã có trên registry, được deploy với multi-replica, giới hạn quyền thông qua Sandbox và màn hình UI chat với Agent + link tới YAML file deploy Agent
 
-**Cách làm:** [Đã có] pydantic BookingFeatures / CancelRisk ở MCP, RiskRequest / CancelRisk ở risk-api; /healthz, /readyz.
+**Cách làm:** [Đã có] Model pydantic `BookingFeatures`, `CancelRisk` ở MCP và `RiskRequest`, `CancelRisk` ở risk-api; có `/healthz`, `/readyz`.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
 
 <a id="edai-2-17"></a>
 ## Sử dụng async cho concurrent processing
 
 **Rubric:** edai-2 · dòng 17 · 1 điểm · nhóm *Web API kéo dữ liệu user (đã lưu thông qua feature pipeline) và chunk (đã được lưu thông qua RAG pipeline)* › *Có sử dụng FastAPI + data validation (với pydantic)*
 
-**Cách làm:** [Đã có] tool async def, Feast online async, httpx.AsyncClient.
+**Cách làm:** [Đã có] Tool viết bằng `async def`, đọc Feast online bất đồng bộ, gọi HTTP bằng `httpx.AsyncClient`.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
 
 <a id="edai-2-18"></a>
 ## Deploy in the form of MCP tool to k8s with helm + rollingupdate + auto fallback
@@ -34,33 +35,33 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Deploy in the form of MCP tool to k8s with helm + rollingupdate + auto fallback (see here) Remember, your MCP tool is not like normal API deployment, check it our how to deploy here.
 
-**Cách làm:** [Đã có] chart chung helm/api (values-booking-mcp.yaml): RollingUpdate maxUnavailable 0 + Jenkins --atomic. [Cần làm] chụp helm history khi rollback tự động.
+**Cách làm:** [Đã có] Chart chung `helm/api` (`values-booking-mcp.yaml`) dùng RollingUpdate `maxUnavailable: 0`, kết hợp `--atomic` trong Jenkins. [Cần làm] chụp `helm history` khi rollback tự động.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
 
 <a id="edai-2-19"></a>
 ## Deploy 1 Agent sử dụng MCP tool ở trên với multi-replica và auto-scale sử dụng cái này
 
 **Rubric:** edai-2 · dòng 19 · 2 điểm · nhóm *Web API kéo dữ liệu user (đã lưu thông qua feature pipeline) và chunk (đã được lưu thông qua RAG pipeline)* › *Có sử dụng FastAPI + data validation (với pydantic)*
 
-**Cách làm:** [Đã có] k8s/keda.yaml: ScaledObject data-agent theo request/s của route a2a-data-agent qua agentgateway, min 2; HPA CPU đã bỏ khỏi agents.yaml. [Cần làm] chụp scale khi chạy locust.
+**Cách làm:** [Đã có] `k8s/keda.yaml` có ScaledObject cho data-agent theo request/s của route `a2a-data-agent` qua agentgateway, tối thiểu 2 replica; HPA theo CPU đã bỏ khỏi `agents.yaml`. [Cần làm] chụp quá trình scale khi chạy locust.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
 
 <a id="edai-2-20"></a>
 ## Configure Agent chạy trong Sandbox để đảm bảo security
 
 **Rubric:** edai-2 · dòng 20 · 1 điểm · nhóm *Web API kéo dữ liệu user (đã lưu thông qua feature pipeline) và chunk (đã được lưu thông qua RAG pipeline)* › *Có sử dụng FastAPI + data validation (với pydantic)*
 
-**Cách làm:** [Thiết kế] k8s/agent-substrate.yaml: WorkerPool gVisor + SandboxAgent runtime go cho data-agent + NetworkPolicy chỉ cho agent gọi agentgateway và DNS (field substrate cần kiểm bằng kubectl explain với bản đã cài). [Cần làm] chụp agent chạy trong sandbox.
+**Cách làm:** [Thiết kế] `k8s/agent-substrate.yaml`: WorkerPool gVisor, SandboxAgent runtime go cho data-agent và NetworkPolicy chỉ cho agent gọi agentgateway và DNS. Các field của Substrate cần kiểm bằng `kubectl explain` với bản đã cài. [Cần làm] chụp agent chạy trong sandbox.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
 
 <a id="edai-2-21"></a>
 ## Publish Agent ở trên lên registry đã deploy để đảm bảo governance
 
 **Rubric:** edai-2 · dòng 21 · 1 điểm · nhóm *Web API kéo dữ liệu user (đã lưu thông qua feature pipeline) và chunk (đã được lưu thông qua RAG pipeline)* › *Có sử dụng FastAPI + data validation (với pydantic)*
 
-**Cách làm:** [Đã có] ci/publish_agent_card.py (Jenkins gọi sau rollout từng agent). [Cần làm] publish data-agent, chụp registry UI.
+**Cách làm:** [Đã có] `ci/publish_agent_card.py`, Jenkins gọi sau khi rollout từng agent. [Cần làm] publish data-agent, chụp registry UI.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._

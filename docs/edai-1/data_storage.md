@@ -1,9 +1,9 @@
 # Tối ưu lưu trữ
 
-Lakehouse (Iceberg) và data warehouse (PostgreSQL Gold).
+Lakehouse dùng Iceberg, data warehouse là tầng Gold trên PostgreSQL.
 
-Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết kế (cột F của rubric);
-**Kết quả** điền khi đã chạy: số liệu, ảnh chụp (`docs/images/`), link code.
+Mỗi mục dưới đây ứng với một dòng của rubric. Phần **Cách làm** mô tả giải pháp đã triển khai, đồng bộ từ
+cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu đo được hoặc ảnh chụp (`docs/images/`).
 
 <a id="edai-1-20"></a>
 ## Lakehouse
@@ -14,9 +14,9 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document show đoạn code và phân tích đã optimize được những gì so với chưa optimize
 
-**Cách làm:** [Đã có] optimize.sql: compaction (rewrite_data_files), sort order, expire snapshots. [Thiết kế] catalog lake = Iceberg JDBC catalog trên PostgreSQL (không thêm service). [Cần làm] số file / kích thước / thời gian query trước-sau; sửa mốc ngày viết cứng.
+**Cách làm:** [Đã có] `optimize.sql` gồm compaction (`rewrite_data_files`), sort order và expire snapshots. [Thiết kế] Catalog `lake` là Iceberg JDBC catalog đặt trên chính PostgreSQL, không thêm service. [Cần làm] đo số file, kích thước file và thời gian query trước, sau; bỏ mốc ngày viết cứng.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
 
 <a id="edai-1-21"></a>
 ## Datawarehouse
@@ -25,6 +25,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Datawarehouse (ví dụ indexing)
 
-**Cách làm:** [Đã có] schema/gold_schema.sql: index fact_bookings(customer_key, booking_date), (hotel_key, booking_date), (checkin_date), booking_risk(hotel_id, stay_date, scored_date), partial unique dim_hotel(hotel_id) WHERE is_current; feat_* dùng PK (entity, event_timestamp). [Cần làm] fact_quotes(hotel_id, stay_date); EXPLAIN ANALYZE trước/sau.
+**Cách làm:** [Đã có] `schema/gold_schema.sql` tạo index `fact_bookings(customer_key, booking_date)`, `(hotel_key, booking_date)`, `(checkin_date)`, `booking_risk(hotel_id, stay_date, scored_date)` và partial unique `dim_hotel(hotel_id) WHERE is_current`; các bảng `feat_*` dùng khoá chính (entity, `event_timestamp`). [Cần làm] index `fact_quotes(hotel_id, stay_date)`; so `EXPLAIN ANALYZE` trước và sau.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._

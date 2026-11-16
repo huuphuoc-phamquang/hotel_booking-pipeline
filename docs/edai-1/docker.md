@@ -1,9 +1,9 @@
 # Docker & Docker Compose
 
-Đóng gói các thành phần data platform và tối ưu image.
+Các thành phần của data platform được đóng gói thành image và tối ưu kích thước.
 
-Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết kế (cột F của rubric);
-**Kết quả** điền khi đã chạy: số liệu, ảnh chụp (`docs/images/`), link code.
+Mỗi mục dưới đây ứng với một dòng của rubric. Phần **Cách làm** mô tả giải pháp đã triển khai, đồng bộ từ
+cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu đo được hoặc ảnh chụp (`docs/images/`).
 
 <a id="edai-1-3"></a>
 ## Có sử dụng Docker & Docker Compose
@@ -12,9 +12,9 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document cách optimizer Docker image, và kích thước sau khi optimize so với cái gốc thay đổi như nào
 
-**Cách làm:** [Đã có] docker-compose chạy MinIO, Kafka, generator, replayer. [Cần làm] thêm Spark, Flink, Airflow, Postgres, DataHub vào compose; chụp `docker compose ps` all healthy trong docs/edai-1/docker.md.
+**Cách làm:** [Đã có] `docker-compose` khởi chạy MinIO, Kafka, generator và replayer. [Cần làm] bổ sung Spark, Flink, Airflow, Postgres, DataHub vào compose; chụp `docker compose ps` với mọi service ở trạng thái healthy, đưa vào `docs/edai-1/docker.md`.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
 
 <a id="edai-1-4"></a>
 ## Optimize Dockerfile
@@ -23,6 +23,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Optimize Dockerfile (ví dụ multistage build)
 
-**Cách làm:** [Đã có] docker/Dockerfile multistage (builder + runtime, python:3.12-slim) và docker/Dockerfile.single (1 stage, python:3.12) để so; .dockerignore; requirements.txt ghim version. Đo cục bộ bằng docker images: 1 stage 2,09GB, multistage 834MB. [Cần làm] ghi bảng vào docs/edai-1/docker.md.
+**Cách làm:** [Đã có] `docker/Dockerfile` dùng multistage (builder và runtime trên `python:3.12-slim`), kèm `docker/Dockerfile.single` một stage để so sánh, `.dockerignore` và `requirements.txt` ghim version. Đo cục bộ bằng `docker images`: bản một stage nặng 2,09GB, bản multistage 834MB. [Cần làm] ghi bảng so sánh vào `docs/edai-1/docker.md`.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._

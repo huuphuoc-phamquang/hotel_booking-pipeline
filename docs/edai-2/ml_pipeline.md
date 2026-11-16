@@ -1,9 +1,9 @@
 # ML pipeline
 
-Notebook, Kubeflow pipeline, training phân tán, MLflow, version dữ liệu.
+Notebook, Kubeflow pipeline, training phân tán, MLflow và versioning dữ liệu train.
 
-Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết kế (cột F của rubric);
-**Kết quả** điền khi đã chạy: số liệu, ảnh chụp (`docs/images/`), link code.
+Mỗi mục dưới đây ứng với một dòng của rubric. Phần **Cách làm** mô tả giải pháp đã triển khai, đồng bộ từ
+cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu đo được hoặc ảnh chụp (`docs/images/`).
 
 <a id="edai-2-13"></a>
 ## Build 1 training pipeline với ít nhất 4 steps: load data từ offline feature store, data…
@@ -14,9 +14,9 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document show ảnh pipeline đã chạy thành công trên KF Pipelines + link tới code pipeline
 
-**Cách làm:** [Đã có] cancel-risk KFP 4 step; dữ liệu theo cửa sổ [since, until) (v1: tháng 1-6/2025, v2: dữ liệu gần đây sau drift), lấy mẫu sample_pct theo booking_id; nhãn từ view gold.labels_cancel, chỉ booking có checkin < until; input có loyalty_tier và has_customer_history. [Cần sửa] connection string lấy từ Secret.
+**Cách làm:** [Đã có] Pipeline KFP 4 step cho cancel-risk. Dữ liệu lấy theo cửa sổ [`since`, `until`): v1 dùng [2025-01-01, 2025-06-01), v2 bắt đầu từ mốc phát hiện drift; lấy mẫu `sample_pct` theo `booking_id`. Nhãn đến từ view `gold.labels_cancel`, chỉ gồm booking đã chín nhãn. Input có `loyalty_tier` và `has_customer_history`. DSN warehouse lấy từ Secret `ml-warehouse`.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
 
 <a id="edai-2-14"></a>
 ## Lưu model, data và các metadata liên quan khác ở mỗi training run lên MLFlow, tự động gắn…
@@ -27,9 +27,9 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document show ảnh model đã được version và lưu trữ lại + Data tương ứng cũng được version
 
-**Cách làm:** [Đã có] log model/data/params, tag release=latest, alias production qua cổng promote: AUC ≥ 0,60 (sàn chặn model hỏng, dưới trần đo bằng generator/profile_data), lệch calibration ≤ 0,03, không kém bản production chấm trên cùng validation; bỏ scale_pos_weight (làm lệch xác suất).
+**Cách làm:** [Đã có] Ghi model, dữ liệu và tham số lên MLflow, gắn tag `release=latest`. Alias `production` chỉ được gán khi qua cổng promote: AUC ≥ 0,60 (sàn chặn model hỏng, thấp hơn trần đo bằng `generator/profile_data`), lệch calibration ≤ 0,03 và không kém bản production khi chấm trên cùng tập validation. Không dùng `scale_pos_weight` vì tham số này làm lệch xác suất.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
 
 ## Bổ sung final-coursework
 
@@ -42,9 +42,9 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document các step chính đã làm trong Jupyter notebook
 
-**Cách làm:** [Đã có] notebooks/cancel_risk.ipynb (chạy cục bộ, có output): dữ liệu từ generator, split theo thời gian, XGBoost, AUC so với trần của nhãn, reliability theo decile so với p thật, Brier vs p thật, sai số K bán vượt (overbooking.limit), drift (2025-06-01) làm lệch calibration 0,127 và retrain trên cửa sổ sau drift kéo về 0,0008, sai số K 1,62 -> 0,36. Notebook dùng nhãn generator ngay; pipeline thật phải chờ nhãn chín (drift_stats.retrain_window).
+**Cách làm:** [Đã có] `notebooks/cancel_risk.ipynb` chạy cục bộ và có output. Notebook lấy dữ liệu từ generator, chia train và validation theo thời gian, train XGBoost, so AUC với trần của nhãn, vẽ reliability theo decile so với p thật, tính Brier so với p thật và sai số số phòng bán vượt K (`overbooking.limit`). Sau drift 2025-06-01, độ lệch calibration của v1 là 0,127; retrain trên cửa sổ sau drift kéo xuống 0,0008, sai số K giảm từ 1,62 xuống 0,36. Notebook dùng nhãn generator ngay, còn pipeline thật phải chờ nhãn chín (`drift_stats.retrain_window`).
 
-**Kết quả:** chạy cục bộ, pass (2026-11-16): `notebooks/cancel_risk.ipynb`. _Chưa có ảnh chụp trên cluster._
+**Kết quả:** notebook `notebooks/cancel_risk.ipynb` đã chạy cục bộ và có output (2026-11-16). Chưa có ảnh chụp trên cluster.
 
 <a id="final-24"></a>
 ### Chuyển đổi code từ Jupyter notebook thành training pipeline với số lượng step giống ở…
@@ -55,9 +55,9 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Capture training pipeline đã run thành công + Capture màn hình thể hiện có sử dụng distributed training
 
-**Cách làm:** [Đã có] ml/training_pipeline.py 4 step (load_from_feast, split_by_time, train, evaluate_and_register). [Cần làm] chụp run.
+**Cách làm:** [Đã có] `ml/training_pipeline.py` gồm 4 step: `load_from_feast`, `split_by_time`, `train`, `evaluate_and_register`. [Cần làm] chụp lần chạy.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
 
 <a id="final-25"></a>
 ### Trong training pipeline, ở step train, thay bằng distributed training
@@ -66,9 +66,9 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Trong training pipeline, ở step train, thay bằng distributed training, ví dụ nếu mọi người dùng model XGBoost thì có thể coi tutorial này.
 
-**Cách làm:** [Đã có] ml/train_xgb_dist.py (xgboost.collective, mỗi worker 1 phần dữ liệu) + component train_distributed tạo Kubeflow Trainer TrainJob runtime xgboost-distributed 2 node (distributed=True mặc định, dsl.If/OneOf với bản 1 node); tests/test_train_xgb_dist.py chạy 2 worker với RabitTracker cục bộ, AUC lệch < 0,01 so với 1 node. [Cần làm] chụp 2 pod worker.
+**Cách làm:** [Đã có] `ml/train_xgb_dist.py` dùng `xgboost.collective`, mỗi worker giữ một phần dữ liệu. Component `train_distributed` tạo Kubeflow Trainer TrainJob runtime `xgboost-distributed` với 2 node (`distributed=True` mặc định, `dsl.If`/`dsl.OneOf` chọn giữa bản này và bản một node). `tests/test_train_xgb_dist.py` chạy 2 worker với RabitTracker cục bộ; AUC lệch dưới 0,01 so với bản một node. [Cần làm] chụp 2 pod worker.
 
-**Kết quả:** chạy cục bộ, pass (2026-11-16): `edai2/tests/test_train_xgb_dist.py`. _Chưa có ảnh chụp trên cluster._
+**Kết quả:** các test `edai2/tests/test_train_xgb_dist.py` chạy cục bộ và đạt (2026-11-16). Chưa có ảnh chụp trên cluster.
 
 <a id="final-26"></a>
 ### Khi training pipeline hoàn tất, thông tin của MODEL cần được lưu trữ lại ở Model Registry
@@ -79,9 +79,9 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Model đã được version và lưu trữ lại + Data tương ứng cũng được version theo cơ chế incremental
 
-**Cách làm:** [Đã có] MLflow registry, tag release=latest, alias production qua cổng promote: AUC ≥ 0,60 (sàn chặn model hỏng, dưới trần đo bằng generator/profile_data), lệch calibration ≤ 0,03, không kém bản production chấm trên cùng validation; bỏ scale_pos_weight (làm lệch xác suất).
+**Cách làm:** [Đã có] MLflow registry gắn tag `release=latest`. Alias `production` chỉ được gán khi qua cổng promote: AUC ≥ 0,60 (sàn chặn model hỏng, thấp hơn trần đo bằng `generator/profile_data`), lệch calibration ≤ 0,03 và không kém bản production khi chấm trên cùng tập validation. Không dùng `scale_pos_weight` vì tham số này làm lệch xác suất.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
 
 <a id="final-27"></a>
 ### Mỗi lần kéo dữ liệu từ Feast về để training, cần version lại DATA theo cơ chế incremental
@@ -90,6 +90,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Mỗi lần kéo dữ liệu từ Feast về để training, cần version lại DATA theo cơ chế incremental (ví dụ lần train thứ 2 data chỉ có 1 chút thay đổi thì chỉ lưu trữ lại phần thay đổi này thôi, tránh việc lưu full data của cả lần 1 và lần 2)
 
-**Cách làm:** [Đã có] ml/data_version.py: tập train upsert vào Iceberg ml.train_cancel_risk theo booking_id (pyiceberg), load_from_feast trả snapshot_id, MLflow log train_snapshot_id; tests/test_data_version.py: chỉ ghi phần thay đổi, dữ liệu giống hệt không tạo snapshot mới, time travel trả đúng tập cũ. [Cần làm] chụp snapshot trên cluster.
+**Cách làm:** [Đã có] `ml/data_version.py` upsert tập train vào bảng Iceberg `ml.train_cancel_risk` theo `booking_id` (pyiceberg); `load_from_feast` trả `snapshot_id` và MLflow ghi `train_snapshot_id`. `tests/test_data_version.py` xác nhận: chỉ phần thay đổi được ghi, dữ liệu giống hệt không tạo snapshot mới, time travel trả đúng tập cũ. [Cần làm] chụp snapshot trên cluster.
 
-**Kết quả:** chạy cục bộ, pass (2026-11-16): `edai2/tests/test_data_version.py`. _Chưa có ảnh chụp trên cluster._
+**Kết quả:** các test `edai2/tests/test_data_version.py` chạy cục bộ và đạt (2026-11-16). Chưa có ảnh chụp trên cluster.

@@ -1,9 +1,9 @@
 # Agent registry
 
-Registry cho agent và MCP server.
+Registry lưu agent card và MCP server.
 
-Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết kế (cột F của rubric);
-**Kết quả** điền khi đã chạy: số liệu, ảnh chụp (`docs/images/`), link code.
+Mỗi mục dưới đây ứng với một dòng của rubric. Phần **Cách làm** mô tả giải pháp đã triển khai, đồng bộ từ
+cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu đo được hoặc ảnh chụp (`docs/images/`).
 
 <a id="edai-2-8"></a>
 ## Deploy registry for agent theo tutorial này
@@ -12,6 +12,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document thể hiện show cái ảnh registry UI có agent, và link tới code chứa registry
 
-**Cách làm:** [Đã có] ci/publish_agent_card.py lấy agent card A2A qua agentgateway rồi đăng lên registry (version = commit). [Thiết kế] deploy agent registry theo aregistry.ai. [Cần làm] chụp registry UI có các agent.
+**Cách làm:** [Đã có] `ci/publish_agent_card.py` lấy agent card A2A qua agentgateway rồi đăng lên registry, version là commit. [Thiết kế] Deploy agent registry theo aregistry.ai. [Cần làm] chụp registry UI có các agent.
 
-**Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
+**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
