@@ -1,0 +1,52 @@
+# Agent Substrate của kagent (sandbox + warm-up): agent chạy dạng SandboxAgent trong actor gVisor theo từng session,
+# WorkerPool giữ sẵn worker (warm), actor snapshot khi rảnh và khôi phục khi có session mới.
+# Cần chart substrate >= 0.0.9, kagent >= 0.9.7, controller.substrate.enabled=true; substrate chỉ hỗ trợ declarative
+# agent runtime: go. Field theo tài liệu substrate tại thời điểm viết: kiểm lại với `kubectl explain sandboxagent.spec`.
+# Proof: chụp nhiều agent / session chạy trên ít worker hơn số agent; NetworkPolicy chặn gọi ra ngoài agentgateway.
+apiVersion: substrate.kagent.dev/v1alpha1
+kind: WorkerPool
+metadata:
+  name: agents-warm
+  namespace: kagent
+spec:
+  replicas: 2                      # worker giữ sẵn; HPA trên scale subresource của WorkerPool khi cần nhiều hơn
+  runtimeClassName: gvisor
+  template:
+    resources:
+      requests: { cpu: 500m, memory: 1Gi }
+---
+apiVersion: kagent.dev/v1alpha2
+kind: SandboxAgent
+metadata:
+  name: data-agent-sandbox
+  namespace: kagent
+spec:
+  description: data-agent chạy trong sandbox gVisor theo session
+  declarative:
+    runtime: go
+    modelConfig: default-model-config
+    systemMessage: "{{ fetched from Langfuse prompt 'data-agent' at deploy time }}"
+    tools:
+      - type: McpServer
+        mcpServer: { apiGroup: kagent.dev, kind: RemoteMCPServer, name: booking-tools, toolNames: [get_booking_features] }
+  substrate:
+    workerPoolRef: { name: agents-warm }
+---
+# Agent (cả sandbox lẫn thường) chỉ được gọi agentgateway và DNS; mọi đường ra khác bị chặn
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: agents-egress-only-gateway
+  namespace: kagent
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: gateway } }
+          podSelector: { matchLabels: { app.kubernetes.io/name: agentgateway } }
+      ports: [{ port: 3000, protocol: TCP }]
+    - to:
+        - namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: kube-system } }
+          podSelector: { matchLabels: { k8s-app: kube-dns } }
+      ports: [{ port: 53, protocol: UDP }, { port: 53, protocol: TCP }]

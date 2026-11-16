@@ -1,0 +1,17 @@
+- name: Cài Docker Engine
+  ansible.builtin.apt:
+    name: [docker.io, python3-docker]
+    state: present
+
+- name: Docker chạy cùng máy
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: User đăng nhập dùng được docker
+  ansible.builtin.user:
+    name: "{{ ansible_user }}"
+    groups: docker
+    append: true
+  notify: Restart docker

@@ -1,0 +1,603 @@
+# ConfigMap dashboard: sidecar Grafana của kube-prometheus-stack nạp mọi ConfigMap có nhãn grafana_dashboard=1.
+# Sinh từ observability/dashboards/*.json; apply: kubectl apply -f observability/dashboards/configmaps.yaml
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dashboard-booking-apis
+  namespace: monitoring
+  labels: { grafana_dashboard: "1" }
+data:
+  booking-apis.json: |
+    {
+     "uid": "booking-apis",
+     "title": "Booking APIs (risk-api, drift-api, booking-mcp)",
+     "schemaVersion": 39,
+     "time": {
+      "from": "now-6h",
+      "to": "now"
+     },
+     "refresh": "30s",
+     "tags": [
+      "booking"
+     ],
+     "panels": [
+      {
+       "id": 1,
+       "type": "timeseries",
+       "title": "Request / giây theo service",
+       "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+       },
+       "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+       },
+       "fieldConfig": {
+        "defaults": {
+         "unit": "reqps"
+        },
+        "overrides": []
+       },
+       "targets": [
+        {
+         "refId": "A",
+         "expr": "sum by (service, handler) (rate(http_requests_total{handler!~\"/metrics|/healthz|/readyz\"}[1m]))",
+         "legendFormat": "{{service}} {{handler}}"
+        }
+       ]
+      },
+      {
+       "id": 2,
+       "type": "timeseries",
+       "title": "Tỉ lệ lỗi 5xx",
+       "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+       },
+       "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+       },
+       "fieldConfig": {
+        "defaults": {
+         "unit": "percentunit"
+        },
+        "overrides": []
+       },
+       "targets": [
+        {
+         "refId": "A",
+         "expr": "sum by (service) (rate(http_requests_total{status=\"5xx\"}[5m])) / sum by (service) (rate(http_requests_total[5m]))",
+         "legendFormat": "{{service}}"
+        }
+       ]
+      },
+      {
+       "id": 3,
+       "type": "timeseries",
+       "title": "Latency p95",
+       "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+       },
+       "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 8
+       },
+       "fieldConfig": {
+        "defaults": {
+         "unit": "s"
+        },
+        "overrides": []
+       },
+       "targets": [
+        {
+         "refId": "A",
+         "expr": "histogram_quantile(0.95, sum by (le, service) (rate(http_request_duration_seconds_bucket[5m])))",
+         "legendFormat": "{{service}} p95"
+        }
+       ]
+      },
+      {
+       "id": 4,
+       "type": "timeseries",
+       "title": "Tổng số request",
+       "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+       },
+       "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 8
+       },
+       "fieldConfig": {
+        "defaults": {
+         "unit": "short"
+        },
+        "overrides": []
+       },
+       "targets": [
+        {
+         "refId": "A",
+         "expr": "sum by (service) (increase(http_requests_total[1h]))",
+         "legendFormat": "{{service}}"
+        }
+       ]
+      },
+      {
+       "id": 5,
+       "type": "timeseries",
+       "title": "MCP tool: số lần gọi / lỗi",
+       "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+       },
+       "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 12,
+        "h": 8
+       },
+       "fieldConfig": {
+        "defaults": {
+         "unit": "ops"
+        },
+        "overrides": []
+       },
+       "targets": [
+        {
+         "refId": "A",
+         "expr": "sum by (tool) (rate(mcp_tool_calls_total[5m]))",
+         "legendFormat": "calls {{tool}}"
+        },
+        {
+         "refId": "B",
+         "expr": "sum by (tool) (rate(mcp_tool_failures_total[5m]))",
+         "legendFormat": "fail {{tool}}"
+        }
+       ]
+      },
+      {
+       "id": 6,
+       "type": "timeseries",
+       "title": "Replica (KEDA)",
+       "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+       },
+       "gridPos": {
+        "x": 12,
+        "y": 16,
+        "w": 12,
+        "h": 8
+       },
+       "fieldConfig": {
+        "defaults": {
+         "unit": "short"
+        },
+        "overrides": []
+       },
+       "targets": [
+        {
+         "refId": "A",
+         "expr": "sum by (deployment) (kube_deployment_status_replicas{deployment=~\"risk-api|drift-api|booking-mcp|.*-agent.*\"})",
+         "legendFormat": "{{deployment}}"
+        }
+       ]
+      }
+     ]
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dashboard-cancel-risk-ml
+  namespace: monitoring
+  labels: { grafana_dashboard: "1" }
+data:
+  cancel-risk-ml.json: |
+    {
+     "uid": "cancel-risk-ml",
+     "title": "cancel-risk: drift, calibration, A/B theo revision",
+     "schemaVersion": 39,
+     "time": {
+      "from": "now-6h",
+      "to": "now"
+     },
+     "refresh": "30s",
+     "tags": [
+      "booking"
+     ],
+     "panels": [
+      {
+       "id": 1,
+       "type": "timeseries",
+       "title": "drift-api: p-value KS lead_days",
+       "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+       },
+       "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+       },
+       "fieldConfig": {
+        "defaults": {
+         "unit": "short"
+        },
+        "overrides": []
+       },
+       "targets": [
+        {
+         "refId": "A",
+         "expr": "drift_p_value{feature=\"lead_days\"}",
+         "legendFormat": "model {{model_version}}"
+        },
+        {
+         "refId": "B",
+         "expr": "vector(0.05)",
+         "legendFormat": "ngưỡng 0,05"
+        }
+       ]
+      },
+      {
+       "id": 2,
+       "type": "timeseries",
+       "title": "drift_monitor: PSI / lệch calibration",
+       "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+       },
+       "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+       },
+       "fieldConfig": {
+        "defaults": {
+         "unit": "short"
+        },
+        "overrides": []
+       },
+       "targets": [
+        {
+         "refId": "A",
+         "expr": "cancel_risk_psi",
+         "legendFormat": "PSI v{{model_version}}"
+        },
+        {
+         "refId": "B",
+         "expr": "cancel_risk_calib_gap",
+         "legendFormat": "calib gap v{{model_version}}"
+        },
+        {
+         "refId": "C",
+         "expr": "vector(0.2)",
+         "legendFormat": "ngưỡng PSI 0,2"
+        },
+        {
+         "refId": "D",
+         "expr": "vector(0.03)",
+         "legendFormat": "ngưỡng calib 0,03"
+        }
+       ]
+      },
+      {
+       "id": 3,
+       "type": "timeseries",
+       "title": "A/B: request / giây theo revision",
+       "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+       },
+       "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 8
+       },
+       "fieldConfig": {
+        "defaults": {
+         "unit": "reqps"
+        },
+        "overrides": []
+       },
+       "targets": [
+        {
+         "refId": "A",
+         "expr": "sum by (revision_name) (rate(revision_app_request_count{namespace_name=\"ml\", configuration_name=\"cancel-risk-predictor\"}[1m]))",
+         "legendFormat": "{{revision_name}}"
+        }
+       ]
+      },
+      {
+       "id": 4,
+       "type": "timeseries",
+       "title": "A/B: latency p95 theo revision",
+       "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+       },
+       "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 8
+       },
+       "fieldConfig": {
+        "defaults": {
+         "unit": "ms"
+        },
+        "overrides": []
+       },
+       "targets": [
+        {
+         "refId": "A",
+         "expr": "histogram_quantile(0.95, sum by (le, revision_name) (rate(revision_app_request_latencies_bucket{namespace_name=\"ml\", configuration_name=\"cancel-risk-predictor\"}[5m])))",
+         "legendFormat": "{{revision_name}}"
+        }
+       ]
+      },
+      {
+       "id": 5,
+       "type": "timeseries",
+       "title": "A/B: tỉ lệ lỗi theo revision",
+       "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+       },
+       "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 12,
+        "h": 8
+       },
+       "fieldConfig": {
+        "defaults": {
+         "unit": "percentunit"
+        },
+        "overrides": []
+       },
+       "targets": [
+        {
+         "refId": "A",
+         "expr": "sum by (revision_name) (rate(revision_app_request_count{namespace_name=\"ml\", configuration_name=\"cancel-risk-predictor\", response_code_class=\"5xx\"}[5m])) / sum by (revision_name) (rate(revision_app_request_count{namespace_name=\"ml\", configuration_name=\"cancel-risk-predictor\"}[5m]))",
+         "legendFormat": "{{revision_name}}"
+        }
+       ]
+      },
+      {
+       "id": 6,
+       "type": "timeseries",
+       "title": "drift-api: CloudEvent / giây",
+       "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+       },
+       "gridPos": {
+        "x": 12,
+        "y": 16,
+        "w": 12,
+        "h": 8
+       },
+       "fieldConfig": {
+        "defaults": {
+         "unit": "ops"
+        },
+        "overrides": []
+       },
+       "targets": [
+        {
+         "refId": "A",
+         "expr": "sum(rate(drift_events_total[1m]))",
+         "legendFormat": "events"
+        }
+       ]
+      }
+     ]
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dashboard-llm-agents
+  namespace: monitoring
+  labels: { grafana_dashboard: "1" }
+data:
+  llm-agents.json: |
+    {
+     "uid": "llm-agents",
+     "title": "LLM + agent",
+     "schemaVersion": 39,
+     "time": {
+      "from": "now-6h",
+      "to": "now"
+     },
+     "refresh": "30s",
+     "tags": [
+      "booking"
+     ],
+     "panels": [
+      {
+       "id": 1,
+       "type": "timeseries",
+       "title": "Token / giây theo model",
+       "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+       },
+       "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+       },
+       "fieldConfig": {
+        "defaults": {
+         "unit": "short"
+        },
+        "overrides": []
+       },
+       "targets": [
+        {
+         "refId": "A",
+         "expr": "sum by (model, kind) (rate(llm_tokens_total[5m]))",
+         "legendFormat": "{{model}} {{kind}}"
+        }
+       ]
+      },
+      {
+       "id": 2,
+       "type": "timeseries",
+       "title": "TTFT p95",
+       "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+       },
+       "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+       },
+       "fieldConfig": {
+        "defaults": {
+         "unit": "s"
+        },
+        "overrides": []
+       },
+       "targets": [
+        {
+         "refId": "A",
+         "expr": "histogram_quantile(0.95, sum by (le, model) (rate(llm_ttft_seconds_bucket[5m])))",
+         "legendFormat": "{{model}}"
+        }
+       ]
+      },
+      {
+       "id": 3,
+       "type": "timeseries",
+       "title": "Round-trip p95",
+       "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+       },
+       "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 8
+       },
+       "fieldConfig": {
+        "defaults": {
+         "unit": "s"
+        },
+        "overrides": []
+       },
+       "targets": [
+        {
+         "refId": "A",
+         "expr": "histogram_quantile(0.95, sum by (le, model) (rate(llm_request_seconds_bucket[5m])))",
+         "legendFormat": "{{model}}"
+        }
+       ]
+      },
+      {
+       "id": 4,
+       "type": "timeseries",
+       "title": "Prompt bị chặn vì PII",
+       "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+       },
+       "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 8
+       },
+       "fieldConfig": {
+        "defaults": {
+         "unit": "short"
+        },
+        "overrides": []
+       },
+       "targets": [
+        {
+         "refId": "A",
+         "expr": "sum by (pii_type) (increase(llm_pii_blocked_total[1h]))",
+         "legendFormat": "{{pii_type}}"
+        }
+       ]
+      },
+      {
+       "id": 5,
+       "type": "timeseries",
+       "title": "Agent gọi qua agentgateway (A2A)",
+       "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+       },
+       "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 12,
+        "h": 8
+       },
+       "fieldConfig": {
+        "defaults": {
+         "unit": "reqps"
+        },
+        "overrides": []
+       },
+       "targets": [
+        {
+         "refId": "A",
+         "expr": "sum by (route) (rate(agentgateway_requests_total{route=~\"a2a-.*\"}[1m]))",
+         "legendFormat": "{{route}}"
+        }
+       ]
+      },
+      {
+       "id": 6,
+       "type": "timeseries",
+       "title": "Số lần gọi agent",
+       "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+       },
+       "gridPos": {
+        "x": 12,
+        "y": 16,
+        "w": 12,
+        "h": 8
+       },
+       "fieldConfig": {
+        "defaults": {
+         "unit": "ops"
+        },
+        "overrides": []
+       },
+       "targets": [
+        {
+         "refId": "A",
+         "expr": "sum by (agent) (rate(agent_calls_total[5m]))",
+         "legendFormat": "{{agent}}"
+        }
+       ]
+      }
+     ]
+    }

@@ -1,0 +1,31 @@
+# Feast repo dùng chung cho risk-api, booking-mcp, Airflow (materialize, RAG), Kubeflow (load_from_feast).
+# Không deploy Feast feature server: các app nhúng SDK và đọc thẳng store. Mount vào pod bằng ConfigMap (k8s/feast.yaml),
+# thông tin kết nối lấy từ Secret qua biến môi trường (Feast thay ${VAR} lúc đọc file).
+#   - registry : bảng SQL trên PostgreSQL (nhiều app đọc cùng lúc, không dùng file registry.db)
+#   - offline  : chính Gold (schema gold) -> point-in-time join chạy trong PostgreSQL
+#   - online   : PostgreSQL + pgvector, schema feast_online riêng (policy_chunks có vector_index)
+project: booking
+provider: local
+registry:
+  registry_type: sql
+  path: postgresql+psycopg://${FEAST_PG_USER}:${FEAST_PG_PASSWORD}@${FEAST_PG_HOST}:5432/warehouse
+  cache_ttl_seconds: 60
+offline_store:
+  type: postgres
+  host: ${FEAST_PG_HOST}
+  port: 5432
+  database: warehouse
+  db_schema: gold
+  user: ${FEAST_PG_USER}
+  password: ${FEAST_PG_PASSWORD}
+online_store:
+  type: postgres
+  host: ${FEAST_PG_HOST}
+  port: 5432
+  database: warehouse
+  db_schema: feast_online
+  user: ${FEAST_PG_USER}
+  password: ${FEAST_PG_PASSWORD}
+  vector_enabled: true
+  vector_len: 1024              # bge-m3
+entity_key_serialization_version: 3

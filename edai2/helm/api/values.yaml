@@ -1,0 +1,17 @@
+# Mặc định; mỗi service ghi đè bằng values-<tên>.yaml, CI truyền image.tag = commit.
+replicaCount: 2
+image:
+  repository: ""
+  tag: latest
+module: app                # uvicorn <module>:app
+env: {}
+secretName: ""             # Secret k8s nạp làm biến môi trường (khi không dùng Vault Agent Injector)
+vault:                     # role rỗng = tắt; bật thì secret ở `path` (KV v2) được export thành biến môi trường
+  role: ""
+  path: ""
+autoscaled: false          # true: KEDA quản lý replica
+serviceMonitor: true       # kube-prometheus-stack scrape /metrics (http_requests_total có nhãn service)
+feastRepo: false           # mount ConfigMap feature-repo vào /feature_repo
+resources:
+  requests: { cpu: 200m, memory: 512Mi }
+  limits: { cpu: "1", memory: 1Gi }

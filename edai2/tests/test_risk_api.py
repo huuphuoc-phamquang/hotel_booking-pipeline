@@ -1,0 +1,174 @@
+"""Unit test cho risk_api/risk_api.py (Web API kéo feature theo booking_id rồi gọi KServe).
+
+Rubric final › Validation & Verification:
+  - Coverage > 90% + fixture + mock   : fixture `online` giả Feast, respx giả KServe
+  - Equivalence partitioning + BVA    : test_probability_bounds (biên 0 và 1), test_booking_id_bounds
+  - Idempotency bằng property-based   : test_cancel_risk_idempotent (hypothesis)
+Chạy: PYTHONPATH=risk_api pytest tests/test_risk_api.py --cov=risk_api --cov-fail-under=90
+"""
+import asyncio
+import json
+from unittest.mock import patch
+
+import pytest
+import respx
+from fastapi.testclient import TestClient
+from httpx import Response
+from hypothesis import given, settings
+from hypothesis import strategies as st
+
+import risk_api
+
+BOOKING = {"customer_id": 42, "hotel_id": 7, "lead_days": 30, "nights": 2, "free_cancel": 1, "loyalty_tier": 2}
+CONTEXT = {"bookings_90d": 3, "cancel_rate_90d": 0.33, "avg_lead_days_90d": 21.0, "bookings_7d": 120,
+           "cancel_rate_30d": 0.18}
+
+
+def fake_online(booking: dict | None, context: dict):
+    """Giả _online: booking_attributes theo booking_id, feature khách/khách sạn theo (customer_id, hotel_id)."""
+    async def _online(features, entities):
+        return [(booking or {k: None for k in BOOKING}) if "booking_id" in e else context for e in entities]
+    return _online
+
+
+@pytest.fixture
+def online(monkeypatch):
+    monkeypatch.setattr(risk_api, "_online", fake_online(BOOKING, CONTEXT))
+
+
+@pytest.fixture
+def client(online):
+    return TestClient(risk_api.app)
+
+
+def test_health(client):
+    assert client.get("/healthz").json() == {"status": "ok"}
+    assert client.get("/readyz").json() == {"status": "ready"}
+
+
+@respx.mock
+def test_sends_features_in_model_order(client):
+    """Thứ tự gửi KServe phải khớp MODEL_INPUTS lúc train; sai thứ tự model vẫn chạy nhưng dự đoán sai."""
+    route = respx.post(risk_api.KSERVE_URL).mock(
+        return_value=Response(200, json={"predictions": [[0.9, 0.1]], "model_version": "13"}))
+    r = client.post("/v1/cancel-risk", json={"booking_id": 7})
+    assert r.json() == {"booking_id": 7, "probability": 0.1, "model_version": "13"}
+    assert json.loads(route.calls.last.request.content)["instances"][0] == [30, 2, 1, 3, 0.33, 21.0, 120, 0.18, 1, 2]
+
+
+@respx.mock
+def test_new_customer_filled_like_training(monkeypatch):
+    """Khách chưa có dòng customer_booking_stats: điền 0 + has_customer_history = 0, giống load_from_feast."""
+    monkeypatch.setattr(risk_api, "_online", fake_online(BOOKING, {k: None for k in CONTEXT}))
+    route = respx.post(risk_api.KSERVE_URL).mock(return_value=Response(200, json={"predictions": [[0.9, 0.1]]}))
+    TestClient(risk_api.app).post("/v1/cancel-risk", json={"booking_id": 7})
+    assert json.loads(route.calls.last.request.content)["instances"][0] == [30, 2, 1, 0, 0.0, 0.0, 0, 0.0, 0, 2]
+
+
+def test_unknown_booking_is_404(monkeypatch):
+    monkeypatch.setattr(risk_api, "_online", fake_online(None, CONTEXT))
+    assert TestClient(risk_api.app).post("/v1/cancel-risk", json={"booking_id": 7}).status_code == 404
+
+
+# BVA booking_id: 0 không hợp lệ, 1 hợp lệ
+@pytest.mark.parametrize("booking_id, status", [(0, 422), (-1, 422), ("abc", 422)])
+def test_booking_id_bounds(client, booking_id, status):
+    assert client.post("/v1/cancel-risk", json={"booking_id": booking_id}).status_code == status
+
+
+# EP + BVA cho output của KServe: trong [0, 1] trả nguyên; ngoài [0, 1] là model hỏng -> lỗi, không trả về
+@pytest.mark.parametrize("prob, ok", [(-0.001, False), (0.0, True), (0.5, True), (1.0, True), (1.001, False)])
+@respx.mock
+async def test_probability_bounds(online, prob, ok):
+    respx.post(risk_api.KSERVE_URL).mock(return_value=Response(200, json={"predictions": [[1 - prob, prob]]}))
+    if ok:
+        assert (await risk_api.cancel_risk(risk_api.RiskRequest(booking_id=7))).probability == prob
+    else:
+        with pytest.raises(ValueError):
+            await risk_api.cancel_risk(risk_api.RiskRequest(booking_id=7))
+
+
+@respx.mock
+async def test_label_only_response_rejected(online):
+    """Runtime trả nhãn 0/1 (vd sklearnserver thiếu PREDICT_PROBA): phải lỗi thay vì coi nhãn là xác suất."""
+    respx.post(risk_api.KSERVE_URL).mock(return_value=Response(200, json={"predictions": [1]}))
+    with pytest.raises(TypeError):
+        await risk_api.cancel_risk(risk_api.RiskRequest(booking_id=7))
+
+
+@respx.mock
+async def test_kserve_error_propagates(online):
+    respx.post(risk_api.KSERVE_URL).mock(return_value=Response(503))
+    with pytest.raises(Exception):
+        await risk_api.cancel_risk(risk_api.RiskRequest(booking_id=7))
+
+
+async def test_online_splits_rows(monkeypatch):
+    """_online đổi response của Feast (mỗi feature là 1 list) thành 1 dict / entity, giữ thứ tự."""
+    class _Resp:
+        def to_dict(self):
+            return {"booking_id": [7, 8], "lead_days": [30, 5], "loyalty_tier": [None, 1]}
+
+    async def _get(**kwargs):
+        return _Resp()
+    monkeypatch.setattr(risk_api.store, "get_online_features_async", _get, raising=False)
+    assert await risk_api._online(["booking_attributes:lead_days"], [{"booking_id": 7}, {"booking_id": 8}]) == \
+        [{"booking_id": 7, "lead_days": 30, "loyalty_tier": None}, {"booking_id": 8, "lead_days": 5, "loyalty_tier": 1}]
+
+
+@respx.mock
+def test_batch_one_kserve_call_and_missing(monkeypatch):
+    """Lô 3 booking, 1 chưa có trên online store: 1 request KServe 2 dòng, booking thiếu nằm ở missing."""
+    async def _online(features, entities):
+        if "booking_id" in entities[0]:
+            return [BOOKING if e["booking_id"] != 9 else {k: None for k in BOOKING} for e in entities]
+        return [CONTEXT for _ in entities]
+    monkeypatch.setattr(risk_api, "_online", _online)
+    route = respx.post(risk_api.KSERVE_URL).mock(
+        return_value=Response(200, json={"predictions": [[0.9, 0.1], [0.3, 0.7]], "model_version": "14"}))
+    r = TestClient(risk_api.app).post("/v1/cancel-risk/batch", json={"booking_ids": [7, 9, 8]})
+    assert r.json() == {"results": [{"booking_id": 7, "probability": 0.1, "model_version": "14"},
+                                    {"booking_id": 8, "probability": 0.7, "model_version": "14"}],
+                        "missing": [9], "model_version": "14"}
+    assert route.call_count == 1 and len(json.loads(route.calls.last.request.content)["instances"]) == 2
+
+
+def test_batch_all_missing_skips_kserve(monkeypatch):
+    monkeypatch.setattr(risk_api, "_online", fake_online(None, CONTEXT))
+    r = TestClient(risk_api.app).post("/v1/cancel-risk/batch", json={"booking_ids": [7]})
+    assert r.json() == {"results": [], "missing": [7], "model_version": None}
+
+
+@pytest.mark.parametrize("ids", [[], list(range(1, 1002))])
+def test_batch_size_bounds(client, ids):
+    assert client.post("/v1/cancel-risk/batch", json={"booking_ids": ids}).status_code == 422
+
+
+@settings(max_examples=50, deadline=None)
+@given(booking_id=st.integers(min_value=1, max_value=10**13), prob=st.floats(min_value=0.0, max_value=1.0))
+def test_cancel_risk_idempotent(booking_id, prob):
+    """Cùng booking gọi 2 lần ra cùng kết quả (không state ẩn, không random)."""
+    async def call_twice():
+        with patch.object(risk_api, "_online", fake_online(BOOKING, CONTEXT)), respx.mock:
+            respx.post(risk_api.KSERVE_URL).mock(return_value=Response(200, json={"predictions": [[1 - prob, prob]]}))
+            req = risk_api.RiskRequest(booking_id=booking_id)
+            return await risk_api.cancel_risk(req), await risk_api.cancel_risk(req)
+
+    first, second = asyncio.run(call_twice())
+    assert first == second
+
+
+@respx.mock
+def test_metrics_count_requests(client):
+    """/metrics có http_requests_total theo handler + status (dashboard Grafana và KEDA dùng)."""
+    respx.post(risk_api.KSERVE_URL).mock(return_value=Response(200, json={"predictions": [[0.9, 0.1]]}))
+    client.post("/v1/cancel-risk", json={"booking_id": 7})
+    body = client.get("/metrics/").text
+    assert 'http_requests_total{handler="/v1/cancel-risk",method="POST",status="2xx"}' in body
+
+
+def test_tracing_setup(monkeypatch):
+    """setup_tracing gắn FastAPI + httpx instrumentation và span feast.online không lỗi (exporter không cần chạy)."""
+    pytest.importorskip("opentelemetry.instrumentation.fastapi")
+    risk_api.setup_tracing()
+    assert getattr(risk_api.app, "_is_instrumented_by_opentelemetry", False)

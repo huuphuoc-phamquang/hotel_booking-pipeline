@@ -1,0 +1,40 @@
+# Rubric final › service mesh: mTLS bắt buộc trong namespace ml, và chỉ đúng service account được gọi từng service.
+# Proof: kubectl exec từ 1 pod khác gọi cancel-risk / drift-api -> 403 (RBAC: access denied).
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: ml
+spec:
+  mtls:
+    mode: STRICT
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: cancel-risk-only-from-risk-api
+  namespace: ml
+spec:
+  selector:
+    matchLabels:
+      serving.kserve.io/inferenceservice: cancel-risk
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals: ["cluster.local/ns/ml/sa/risk-api"]
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: drift-api-only-from-broker
+  namespace: ml
+spec:
+  selector:
+    matchLabels:
+      app: drift-api
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            namespaces: ["knative-eventing"]

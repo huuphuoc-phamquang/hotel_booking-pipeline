@@ -1,0 +1,19 @@
+# Pod agent của Jenkins (plugin Kubernetes): 1 container công cụ + Docker-in-Docker để build image.
+# Image ci-tools (python 3.12 + docker CLI + helm + kubectl) build 1 lần từ ci/tools.Dockerfile.
+apiVersion: v1
+kind: Pod
+spec:
+  serviceAccountName: jenkins-deployer       # RBAC đủ quyền helm upgrade vào agents, ml, kagent
+  containers:
+    - name: jnlp
+      image: jenkins/inbound-agent:latest-jdk21
+    - name: tools
+      image: REGISTRY/ci/tools:1
+      command: ["sleep", "infinity"]
+      env:
+        - { name: DOCKER_HOST, value: tcp://localhost:2375 }
+    - name: dind
+      image: docker:27-dind
+      securityContext: { privileged: true }
+      env:
+        - { name: DOCKER_TLS_CERTDIR, value: "" }

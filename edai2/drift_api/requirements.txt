@@ -1,0 +1,7 @@
+# alibi-detect 0.13 chưa hỗ trợ Python 3.13 (numba) -> image python:3.12
+fastapi==0.162.7
+uvicorn==0.54.0
+prometheus-client==0.26.0
+prometheus-fastapi-instrumentator==8.1.0
+alibi-detect==0.13.0
+numpy==1.26.4

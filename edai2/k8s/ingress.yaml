@@ -1,0 +1,86 @@
+# NGINX Ingress Controller: giấu các service sau 1 gateway, basic auth, rate limit, HTTPS.
+# Rubric edai-2 › External Routing & Gateway:
+#   - hide sau gateway: Grafana (metric), Kibana (log), Jaeger (trace), UI test agent (kagent), UI agent registry
+#   - Basic authentication cho UI test agent : annotation auth-type basic + secret htpasswd
+#   - Rate limit                             : limit-rps
+#   - Domain & HTTPS cho Web API             : cert-manager cấp cert Let's Encrypt cho api.booking.example.com
+# Secret htpasswd tạo bằng: htpasswd -c auth admin && kubectl create secret generic kagent-ui-auth --from-file=auth
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: observability
+  namespace: monitoring
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: grafana.booking.local
+      http:
+        paths: [{ path: /, pathType: Prefix, backend: { service: { name: grafana, port: { number: 80 } } } }]
+    - host: kibana.booking.local
+      http:
+        paths: [{ path: /, pathType: Prefix, backend: { service: { name: kibana, port: { number: 5601 } } } }]
+    - host: jaeger.booking.local
+      http:
+        paths: [{ path: /, pathType: Prefix, backend: { service: { name: jaeger-query, port: { number: 16686 } } } }]
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kagent-ui
+  namespace: kagent
+  annotations:
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: kagent-ui-auth
+    nginx.ingress.kubernetes.io/auth-realm: "Agent test UI"
+    nginx.ingress.kubernetes.io/limit-rps: "10"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: agents.booking.local
+      http:
+        paths: [{ path: /, pathType: Prefix, backend: { service: { name: kagent-ui, port: { number: 8080 } } } }]
+    - host: registry.agents.booking.local
+      http:
+        paths: [{ path: /, pathType: Prefix, backend: { service: { name: agent-registry, port: { number: 8080 } } } }]
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: feature-api
+  namespace: gateway
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/limit-rps: "50"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [api.booking.example.com]
+      secretName: api-booking-tls
+  rules:
+    - host: api.booking.example.com
+      http:
+        paths: [{ path: /, pathType: Prefix, backend: { service: { name: agentgateway, port: { number: 3000 } } } }]
+---
+# risk-api ra ngoài: cùng domain HTTPS, basic auth (client hệ thống đặt phòng) + rate limit.
+# Proof: curl thiếu mật khẩu -> 401; locust vượt limit -> 503.
+# htpasswd -c auth booking-client && kubectl -n ml create secret generic risk-api-auth --from-file=auth
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: risk-api
+  namespace: ml
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: risk-api-auth
+    nginx.ingress.kubernetes.io/auth-realm: "risk-api"
+    nginx.ingress.kubernetes.io/limit-rps: "100"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [api.booking.example.com]
+      secretName: api-booking-tls
+  rules:
+    - host: api.booking.example.com
+      http:
+        paths: [{ path: /v1/cancel-risk, pathType: Prefix, backend: { service: { name: risk-api, port: { number: 80 } } } }]

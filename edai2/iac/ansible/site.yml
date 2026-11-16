@@ -1,0 +1,12 @@
+# Rubric edai-2 › IaC › Ansible: 1 VM (GCE e2-standard-4) chạy Jenkins + Vault bằng Docker, mỗi service 1 role.
+#   ansible-galaxy collection install -r requirements.yml
+#   ansible-playbook -i inventory.ini site.yml
+# Proof: docs/edai-2/iac.md chụp output playbook (changed/ok) và lần chạy thứ 2 toàn ok (idempotent).
+- name: VM CI/CD và secret
+  hosts: cicd
+  become: true
+  roles:
+    - common
+    - docker
+    - vault
+    - jenkins

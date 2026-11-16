@@ -1,0 +1,33 @@
+# Rubric edai-2 › ML Inference Service: KServe + model-inside-image pattern.
+# Model dự đoán xác suất huỷ phòng. Image registry.booking.local/ml/cancel-risk được CI build: tải model alias `production` từ MLflow,
+# COPY vào image (không kéo model lúc pod start) -> pod khởi động nhanh, version model = tag image.
+# Rubric final › drift: logger gửi mọi request dạng CloudEvent tới KNative Broker, Trigger chuyển cho drift-api
+# (k8s/drift-eventing.yaml).
+# A/B: Jenkins apply tag image mới + canaryTrafficPercent: 50 -> KServe giữ revision cũ làm stable, chia 50/50;
+# promote = bỏ canaryTrafficPercent, rollback = đặt 0 (cần KServe chế độ Serverless/Knative).
+# Proof: `kubectl get isvc -n ml` + curl tới /v1/models/cancel-risk:predict (ảnh trong docs/Serving.md).
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: cancel-risk
+  namespace: ml
+spec:
+  predictor:
+    logger:
+      mode: request
+      url: http://broker-ingress.knative-eventing.svc.cluster.local/ml/default
+    minReplicas: 1
+    maxReplicas: 3
+    containers:
+      - name: kserve-container
+        image: registry.booking.local/ml/cancel-risk:v12      # tag = MLflow model version (= model_version trong response)
+        # serving/predictor.py: trả xác suất [P(không huỷ), P(huỷ)] + model_version, không phải nhãn 0/1
+        args: ["--model_name=cancel-risk", "--model_dir=/mnt/models"]
+        ports:
+          - containerPort: 8080
+            protocol: TCP
+        readinessProbe:
+          httpGet: { path: /v1/models/cancel-risk, port: 8080 }
+        resources:
+          requests: { cpu: 500m, memory: 1Gi }
+          limits: { cpu: "1", memory: 2Gi }

@@ -1,0 +1,11 @@
+fastapi==0.162.7
+uvicorn==0.54.0
+httpx==0.28.1
+pydantic==2.14.3
+mcp==1.30.0
+prometheus-client==0.24.1
+prometheus-fastapi-instrumentator==8.1.0
+feast[postgres]==0.68.0
+numpy==2.5.4
+psycopg[binary]==3.3.9
+sentence-transformers          # bge-m3 cho search_policy; ghim theo bản build đầu tiên

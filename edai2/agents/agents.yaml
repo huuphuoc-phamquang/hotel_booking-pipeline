@@ -1,0 +1,134 @@
+# kagent: global model config + 3 agent cho booking app (data, policy, coordinator).
+# Rubric edai-2:
+#   - Deploy 1 global model config      : ModelConfig default-model-config trỏ LLM qua agentgateway (/v1)
+#   - Agent dùng MCP tool, multi-replica : data-agent, deployment.replicas = 2 + HPA bên dưới
+#   - Agent thứ 2 có 2 tool (ML + RAG)   : policy-agent dùng predict_cancellation + search_policy
+#   - HITL                              : policy-agent đề xuất K bằng propose_overbooking; apply_overbooking (ghi K)
+#                                         nằm trong requireApproval -> UI kagent dừng chờ người duyệt
+#   - MCP qua gateway                    : RemoteMCPServer url là agentgateway, không trỏ thẳng MCP server
+#   - Coordinator Agent                  : tools type Agent -> điều phối 2 agent trên
+#   - Publish lên registry               : sau khi apply, đăng ký agent card vào agent registry (xem Jenkinsfile)
+#   - Autoscale                          : KEDA ScaledObject (k8s/keda.yaml) thay HPA CPU; replicas ở đây là số ban đầu
+#   - A/B agent                          : policy-agent-v2 dùng ModelConfig v2 (qwen-v2) + prompt 'policy-agent-v2';
+#                                          agentgateway chia A2A /a2a/policy-agent 50/50 giữa 2 bản
+#   - Sandbox + warm-up                  : bản Agent Substrate ở k8s/agent-substrate.yaml
+# Lưu ý: field theo kagent.dev/v1alpha2; kiểm tra lại với phiên bản kagent đã cài.
+apiVersion: kagent.dev/v1alpha2
+kind: ModelConfig
+metadata:
+  name: default-model-config
+  namespace: kagent
+spec:
+  provider: OpenAI
+  model: qwen-booking
+  apiKeySecret: llm-gateway-token          # token JWT cho agentgateway, nạp từ Vault qua ExternalSecret
+  apiKeySecretKey: token
+  openAI:
+    baseUrl: http://agentgateway.gateway.svc.cluster.local:3000/v1
+---
+apiVersion: kagent.dev/v1alpha2
+kind: RemoteMCPServer
+metadata:
+  name: booking-tools
+  namespace: kagent
+spec:
+  description: Tool đọc online feature store, dự đoán rủi ro huỷ phòng và tra chính sách (RAG)
+  protocol: STREAMABLE_HTTP
+  url: http://agentgateway.gateway.svc.cluster.local:3000/mcp
+---
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: data-agent
+  namespace: kagent
+spec:
+  description: Trả lời câu hỏi về lịch sử đặt/huỷ của khách và nhu cầu hiện tại của khách sạn
+  type: Declarative
+  declarative:
+    modelConfig: default-model-config
+    systemMessage: "{{ fetched from Langfuse prompt 'data-agent' at deploy time }}"
+    tools:
+      - type: McpServer
+        mcpServer:
+          apiGroup: kagent.dev
+          kind: RemoteMCPServer
+          name: booking-tools
+          toolNames: [get_booking_features]
+    deployment:
+      replicas: 2
+---
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: policy-agent
+  namespace: kagent
+spec:
+  description: Ước lượng rủi ro huỷ của booking, đề xuất số phòng bán vượt (ghi phải được duyệt) và giải thích chính sách huỷ/hoàn tiền bằng RAG
+  type: Declarative
+  declarative:
+    modelConfig: default-model-config
+    systemMessage: "{{ fetched from Langfuse prompt 'policy-agent' at deploy time }}"
+    tools:
+      - type: McpServer
+        mcpServer:
+          apiGroup: kagent.dev
+          kind: RemoteMCPServer
+          name: booking-tools
+          toolNames: [predict_cancellation, search_policy, propose_overbooking, apply_overbooking]
+          requireApproval: [apply_overbooking]      # kagent >= 0.7; kiểm tra lại tên field với bản đã cài
+    deployment:
+      replicas: 2
+---
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: coordinator-agent
+  namespace: kagent
+spec:
+  description: Nhận yêu cầu đặt/huỷ/đổi phòng, chuyển cho data-agent hoặc policy-agent rồi tổng hợp
+  type: Declarative
+  declarative:
+    modelConfig: default-model-config
+    systemMessage: "{{ fetched from Langfuse prompt 'coordinator' at deploy time }}"
+    tools:
+      - type: Agent
+        agent: { name: data-agent }
+      - type: Agent
+        agent: { name: policy-agent }
+    deployment:
+      replicas: 2
+---
+apiVersion: kagent.dev/v1alpha2
+kind: ModelConfig
+metadata:
+  name: model-config-v2
+  namespace: kagent
+spec:
+  provider: OpenAI
+  model: qwen-booking
+  apiKeySecret: llm-gateway-token
+  apiKeySecretKey: token
+  openAI:
+    baseUrl: http://agentgateway.gateway.svc.cluster.local:3000/llm-v2/v1   # route chỉ tới qwen-v2
+---
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: policy-agent-v2
+  namespace: kagent
+spec:
+  description: Ước lượng rủi ro huỷ của booking, đề xuất số phòng bán vượt (ghi phải được duyệt) và giải thích chính sách huỷ/hoàn tiền bằng RAG
+  type: Declarative
+  declarative:
+    modelConfig: model-config-v2
+    systemMessage: "{{ fetched from Langfuse prompt 'policy-agent-v2' at deploy time }}"
+    tools:
+      - type: McpServer
+        mcpServer:
+          apiGroup: kagent.dev
+          kind: RemoteMCPServer
+          name: booking-tools
+          toolNames: [predict_cancellation, search_policy, propose_overbooking, apply_overbooking]
+          requireApproval: [apply_overbooking]      # kagent >= 0.7; kiểm tra lại tên field với bản đã cài
+    deployment:
+      replicas: 2

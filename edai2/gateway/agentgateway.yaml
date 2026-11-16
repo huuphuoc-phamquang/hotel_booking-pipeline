@@ -1,0 +1,116 @@
+# agentgateway cho booking app: 1 entrypoint cho LLM, MCP server và A2A giữa các agent.
+# Rubric edai-2:
+#   - Setup agent gateway + security & policy  : jwtAuth, localRateLimit, cors
+#   - MCP Gateway                              : route /mcp, gom nhiều MCP server, mcpAuthorization theo tool
+#   - A2A Gateway                              : route /a2a/*, agent gọi agent qua gateway thay vì trực tiếp
+#   - A/B test LLM versions                    : backend LLM chia weight 90/10 giữa v1 và v2
+#   - A/B agent                                : /a2a/policy-agent chia 50/50 giữa policy-agent (v1) và policy-agent-v2;
+#                                                v2 gọi LLM qua /llm-v2 (chỉ qwen-v2) nên 2 bản khác cả prompt lẫn model
+# Lưu ý: schema config của agentgateway thay đổi theo version — đối chiếu https://agentgateway.dev/docs/
+binds:
+  - port: 3000
+    listeners:
+      - routes:
+          # ---------- LLM: agent gọi OpenAI-compatible API ----------
+          - name: llm
+            matches:
+              - path: { pathPrefix: /v1 }
+            policies:
+              jwtAuth:
+                issuer: https://keycloak.booking.local/realms/agents
+                audiences: [agentgateway]
+                jwks: { url: https://keycloak.booking.local/realms/agents/protocol/openid-connect/certs }
+              localRateLimit:
+                - maxTokens: 50
+                  tokensPerFill: 10
+                  fillInterval: 1s
+            backends:
+              - weight: 90
+                ai:
+                  name: qwen-v1
+                  hostOverride: qwen-booking-predictor.llm.svc.cluster.local:80
+                  provider:
+                    openAI: { model: qwen-booking }
+              - weight: 10
+                ai:
+                  name: qwen-v2
+                  hostOverride: qwen-booking-v2-predictor.llm.svc.cluster.local:80
+                  provider:
+                    openAI: { model: qwen-booking }
+
+          # ---------- MCP Gateway ----------
+          - name: mcp
+            matches:
+              - path: { pathPrefix: /mcp }
+            policies:
+              jwtAuth:
+                issuer: https://keycloak.booking.local/realms/agents
+                audiences: [agentgateway]
+                jwks: { url: https://keycloak.booking.local/realms/agents/protocol/openid-connect/certs }
+              mcpAuthorization:
+                rules:
+                  # chỉ agent có claim role=data-agent mới gọi được tool đọc feature; tool dự đoán/RAG dành cho policy-agent
+                  - 'mcp.tool.name == "get_booking_features" && jwt.role == "data-agent"'
+                  - 'mcp.tool.name in ["predict_cancellation", "search_policy", "propose_overbooking", "apply_overbooking"] && jwt.role == "policy-agent"'
+            backends:
+              - mcp:
+                  targets:
+                    - name: booking-tools
+                      mcp: { host: http://booking-mcp.agents.svc.cluster.local:8000/mcp/ }
+
+          # ---------- A2A Gateway ----------
+          - name: a2a-data-agent
+            matches:
+              - path: { pathPrefix: /a2a/data-agent }
+            policies:
+              a2a: {}
+              jwtAuth:
+                issuer: https://keycloak.booking.local/realms/agents
+                audiences: [agentgateway]
+                jwks: { url: https://keycloak.booking.local/realms/agents/protocol/openid-connect/certs }
+            backends:
+              - host: data-agent.kagent.svc.cluster.local:8080
+
+          - name: a2a-policy-agent
+            matches:
+              - path: { pathPrefix: /a2a/policy-agent }
+            policies:
+              a2a: {}
+              jwtAuth:
+                issuer: https://keycloak.booking.local/realms/agents
+                audiences: [agentgateway]
+                jwks: { url: https://keycloak.booking.local/realms/agents/protocol/openid-connect/certs }
+            backends:
+              - weight: 50
+                host: policy-agent.kagent.svc.cluster.local:8080
+              - weight: 50
+                host: policy-agent-v2.kagent.svc.cluster.local:8080
+
+          - name: a2a-coordinator
+            matches:
+              - path: { pathPrefix: /a2a/coordinator-agent }
+            policies:
+              a2a: {}
+              jwtAuth:
+                issuer: https://keycloak.booking.local/realms/agents
+                audiences: [agentgateway]
+                jwks: { url: https://keycloak.booking.local/realms/agents/protocol/openid-connect/certs }
+            backends:
+              - host: coordinator-agent.kagent.svc.cluster.local:8080
+
+          # ---------- LLM chỉ bản v2 (cho policy-agent-v2 của A/B agent) ----------
+          - name: llm-v2
+            matches:
+              - path: { pathPrefix: /llm-v2/v1 }
+            policies:
+              urlRewrite: { path: { prefix: /v1 } }
+              jwtAuth:
+                issuer: https://keycloak.booking.local/realms/agents
+                audiences: [agentgateway]
+                jwks: { url: https://keycloak.booking.local/realms/agents/protocol/openid-connect/certs }
+            backends:
+              - ai:
+                  name: qwen-v2-only
+                  hostOverride: qwen-booking-v2-predictor.llm.svc.cluster.local:80
+                  provider:
+                    openAI: { model: qwen-booking }

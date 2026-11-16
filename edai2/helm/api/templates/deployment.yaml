@@ -1,0 +1,78 @@
+# Chart dùng chung cho 3 FastAPI: booking-mcp, risk-api, drift-api (values-<tên>.yaml).
+# Rubric edai-2 / final › "Deploy ... to k8s with helm + rollingupdate + auto fallback":
+#   - strategy RollingUpdate maxUnavailable 0 -> luôn còn pod cũ phục vụ trong lúc cập nhật
+#   - readinessProbe /readyz -> pod mới chỉ nhận traffic khi đọc được store / nạp xong reference
+#   - auto fallback: CI chạy `helm upgrade --install --atomic --timeout 5m` -> pod mới không Ready
+#     trong 5 phút thì Helm tự rollback về revision trước
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  labels: { app: {{ .Release.Name }} }
+spec:
+  {{- if not .Values.autoscaled }}
+  replicas: {{ .Values.replicaCount }}       # autoscaled: KEDA (k8s/keda.yaml) giữ số replica, helm upgrade không ghi đè
+  {{- end }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels: { app: {{ .Release.Name }} }
+  template:
+    metadata:
+      labels: { app: {{ .Release.Name }} }
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /metrics
+        prometheus.io/port: "8000"
+        {{- if .Values.vault.role }}
+        # Vault Agent Injector: sidecar lấy secret theo role của ServiceAccount, ghi /vault/secrets/env dạng export
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: {{ .Values.vault.role }}
+        vault.hashicorp.com/agent-inject-secret-env: {{ .Values.vault.path }}
+        vault.hashicorp.com/agent-inject-template-env: |
+          {{`{{- with secret "`}}{{ .Values.vault.path }}{{`" -}}{{ range $k, $v := .Data.data }}export {{ $k }}="{{ $v }}"
+          {{ end }}{{- end }}`}}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ .Release.Name }}       # Istio AuthorizationPolicy cho phép theo service account
+      containers:
+        - name: server
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          {{- if .Values.vault.role }}
+          command: ["sh", "-c", ". /vault/secrets/env && exec uvicorn {{ .Values.module }}:app --host 0.0.0.0 --port 8000"]
+          {{- else }}
+          command: ["uvicorn", "{{ .Values.module }}:app", "--host", "0.0.0.0", "--port", "8000"]
+          {{- end }}
+          ports:
+            - containerPort: 8000
+          env:
+            {{- range $k, $v := .Values.env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end }}
+          {{- if .Values.secretName }}
+          envFrom:
+            - secretRef: { name: {{ .Values.secretName }} }
+          {{- end }}
+          {{- if .Values.feastRepo }}
+          volumeMounts:
+            - { name: feature-repo, mountPath: /feature_repo, readOnly: true }
+          {{- end }}
+          livenessProbe:
+            httpGet: { path: /healthz, port: 8000 }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet: { path: /readyz, port: 8000 }
+            periodSeconds: 5
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- if .Values.feastRepo }}
+      volumes:
+        - name: feature-repo
+          configMap: { name: feature-repo }         # k8s/feast.yaml: features.py + feature_store.yaml
+      {{- end }}

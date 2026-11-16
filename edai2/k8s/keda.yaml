@@ -1,0 +1,88 @@
+# KEDA thay HPA CPU (rubric dẫn KEDA): mỗi ScaledObject tự tạo 1 HPA keda-hpa-<tên>, nên không để HPA khác cùng target.
+# Scaler Prometheus theo request/s; coordinator thêm trigger cpu để giữ tiêu chí CPU (KEDA lấy replica lớn nhất).
+# Tên metric agentgateway theo bản đã cài (kiểm `curl agentgateway:15020/metrics`); API dùng http_requests_total của
+# prometheus-fastapi-instrumentator. Proof: chạy locust, chụp `kubectl get hpa,pods -w` tăng replica.
+# Lưu ý kagent: nếu controller reconcile lại deployment.replicas thì bỏ replicas khỏi Agent (agents/agents.yaml).
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: data-agent
+  namespace: kagent
+spec:
+  scaleTargetRef: { name: data-agent }
+  minReplicaCount: 2
+  maxReplicaCount: 6
+  triggers:
+    - type: prometheus
+      metadata:
+        serverAddress: http://kube-prometheus-stack-prometheus.monitoring:9090
+        query: sum(rate(agentgateway_requests_total{route="a2a-data-agent"}[1m]))
+        threshold: "5"                       # req/s mỗi replica
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: policy-agent
+  namespace: kagent
+spec:
+  scaleTargetRef: { name: policy-agent }
+  minReplicaCount: 2
+  maxReplicaCount: 6
+  triggers:
+    - type: prometheus
+      metadata:
+        serverAddress: http://kube-prometheus-stack-prometheus.monitoring:9090
+        query: sum(rate(agentgateway_requests_total{route="a2a-policy-agent"}[1m])) / 2   # 50/50 với v2
+        threshold: "5"
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: coordinator-agent
+  namespace: kagent
+spec:
+  scaleTargetRef: { name: coordinator-agent }
+  minReplicaCount: 2
+  maxReplicaCount: 6
+  triggers:
+    - type: prometheus
+      metadata:
+        serverAddress: http://kube-prometheus-stack-prometheus.monitoring:9090
+        query: sum(rate(agentgateway_requests_total{route="a2a-coordinator"}[1m]))
+        threshold: "5"
+    - type: cpu
+      metricType: Utilization
+      metadata: { value: "60" }
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: risk-api
+  namespace: ml
+spec:
+  scaleTargetRef: { name: risk-api }
+  minReplicaCount: 2
+  maxReplicaCount: 10
+  triggers:
+    - type: prometheus
+      metadata:
+        serverAddress: http://kube-prometheus-stack-prometheus.monitoring:9090
+        query: sum(rate(http_requests_total{service="risk-api", handler=~"/v1/cancel-risk.*"}[1m]))
+        threshold: "50"
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: drift-api
+  namespace: ml
+spec:
+  scaleTargetRef: { name: drift-api }
+  # shortcut: 1 replica vì buffer cửa sổ KS nằm trong bộ nhớ pod; scale ngang cần buffer chung (Redis) hoặc KS mỗi pod
+  minReplicaCount: 1
+  maxReplicaCount: 1
+  triggers:
+    - type: prometheus
+      metadata:
+        serverAddress: http://kube-prometheus-stack-prometheus.monitoring:9090
+        query: sum(rate(drift_events_total[1m]))
+        threshold: "200"

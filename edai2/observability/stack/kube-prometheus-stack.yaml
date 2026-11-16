@@ -1,0 +1,28 @@
+# helm install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n monitoring -f stack/kube-prometheus-stack.yaml
+# Rubric: system telemetry (CPU/RAM/disk/network theo node + pod: node-exporter, kube-state-metrics có sẵn) + Grafana.
+grafana:
+  adminPassword: ""                     # lấy từ Secret grafana-admin (Vault), không để trong values
+  admin: { existingSecret: grafana-admin, userKey: user, passwordKey: password }
+  sidecar:
+    dashboards: { enabled: true, label: grafana_dashboard, searchNamespace: ALL }   # observability/dashboards
+  service: { port: 80 }
+prometheus:
+  prometheusSpec:
+    retention: 7d
+    serviceMonitorSelectorNilUsesHelmValues: false   # nhận ServiceMonitor của helm/api, KServe, agentgateway
+    podMonitorSelectorNilUsesHelmValues: false
+    storageSpec:
+      volumeClaimTemplate:
+        spec: { storageClassName: standard-rwo, resources: { requests: { storage: 30Gi } } }
+    additionalScrapeConfigs:
+      - job_name: pushgateway                # drift_monitor đẩy cancel_risk_psi / ks_p_value / calib_gap
+        honor_labels: true
+        static_configs: [{ targets: ["prometheus-pushgateway.monitoring:9091"] }]
+      - job_name: knative-queue-proxy        # metric theo revision của InferenceService (A/B canary)
+        kubernetes_sd_configs: [{ role: pod, namespaces: { names: [ml] } }]
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_container_port_name]
+            action: keep
+            regex: http-usermetric
+alertmanager:
+  enabled: false

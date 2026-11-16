@@ -1,0 +1,6 @@
+image: { repository: REGISTRY/ml/drift-api }   # reference_lead_days.npy chép vào image ở /app/reference (cùng version model)
+module: drift_api
+replicaCount: 1                      # buffer cửa sổ KS nằm trong bộ nhớ: nhiều replica thì mỗi pod test 1 phần event
+env:
+  REF_PATH: /app/reference/reference_lead_days.npy
+  DRIFT_WINDOW: "500"

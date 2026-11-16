@@ -1,0 +1,9 @@
+ui = true
+storage "file" {
+  path = "/vault/file"
+}
+listener "tcp" {
+  address     = "0.0.0.0:8200"
+  tls_disable = {{ vault_tls_disable | default(true) | lower }}   # demo: TLS ở reverse proxy / bật khi có cert
+}
+api_addr = "http://{{ ansible_host }}:8200"

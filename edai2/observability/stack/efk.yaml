@@ -1,0 +1,43 @@
+# Log tập trung EFK: Fluent Bit (DaemonSet) đọc log container -> Elasticsearch -> Kibana (ingress kibana.booking.local).
+#   helm install elasticsearch elastic/elasticsearch -n monitoring --set replicas=1 --set minimumMasterNodes=1 \
+#     --set resources.requests.memory=2Gi --set volumeClaimTemplate.resources.requests.storage=30Gi
+#   helm install kibana elastic/kibana -n monitoring
+#   helm install fluent-bit fluent/fluent-bit -n monitoring -f stack/efk.yaml
+# Đây là values của fluent-bit: log JSON của uvicorn/Airflow giữ nguyên trường, thêm metadata pod/namespace.
+config:
+  inputs: |
+    [INPUT]
+        Name              tail
+        Path              /var/log/containers/*.log
+        multiline.parser  docker, cri
+        Tag               kube.*
+        Mem_Buf_Limit     50MB
+        Skip_Long_Lines   On
+  filters: |
+    [FILTER]
+        Name                kubernetes
+        Match               kube.*
+        Merge_Log           On
+        Keep_Log            Off
+        K8S-Logging.Parser  On
+    [FILTER]
+        Name    grep
+        Match   kube.*
+        Exclude $kubernetes['namespace_name'] ^(kube-system|monitoring)$
+  outputs: |
+    [OUTPUT]
+        Name             es
+        Match            kube.*
+        Host             elasticsearch-master.monitoring
+        Port             9200
+        HTTP_User        elastic
+        HTTP_Passwd      ${ES_PASSWORD}
+        tls              On
+        tls.verify       Off
+        Logstash_Format  On
+        Logstash_Prefix  booking
+        Suppress_Type_Name On
+        Replace_Dots     On
+env:
+  - name: ES_PASSWORD
+    valueFrom: { secretKeyRef: { name: elasticsearch-master-credentials, key: password } }

@@ -1,0 +1,28 @@
+- name: Thư mục cấu hình và dữ liệu Vault
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "100"
+    mode: "0750"
+  loop: [/opt/vault/config, /opt/vault/data]
+
+- name: Cấu hình Vault (storage file, UI)
+  ansible.builtin.template:
+    src: vault.hcl.j2
+    dest: /opt/vault/config/vault.hcl
+    mode: "0640"
+
+- name: Container Vault
+  community.docker.docker_container:
+    name: vault
+    image: hashicorp/vault:1.20
+    command: server
+    restart_policy: unless-stopped
+    capabilities: [IPC_LOCK]
+    ports: ["8200:8200"]
+    volumes:
+      - /opt/vault/config:/vault/config:ro
+      - /opt/vault/data:/vault/file
+    env:
+      VAULT_ADDR: http://127.0.0.1:8200
+# Khởi tạo 1 lần bằng tay (unseal key không đi qua Ansible): docker exec vault vault operator init

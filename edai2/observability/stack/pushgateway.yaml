@@ -1,0 +1,3 @@
+# helm install prometheus-pushgateway prometheus-community/prometheus-pushgateway -n monitoring -f stack/pushgateway.yaml
+# Airflow Variable pushgateway_url = http://prometheus-pushgateway.monitoring:9091
+persistentVolume: { enabled: true, size: 2Gi }

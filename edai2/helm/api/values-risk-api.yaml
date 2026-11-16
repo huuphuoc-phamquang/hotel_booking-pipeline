@@ -1,0 +1,8 @@
+image: { repository: REGISTRY/ml/risk-api }
+module: risk_api
+feastRepo: true
+vault: { role: risk-api, path: secret/data/ml/risk-api }   # FEAST_PG_*, OTEL_EXPORTER_OTLP_ENDPOINT
+autoscaled: true
+env:
+  FEAST_REPO: /feature_repo
+  KSERVE_URL: http://cancel-risk-predictor.ml.svc.cluster.local/v1/models/cancel-risk:predict

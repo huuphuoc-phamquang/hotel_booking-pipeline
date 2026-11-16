@@ -1,0 +1,13 @@
+- name: Volume dữ liệu Jenkins
+  community.docker.docker_volume:
+    name: jenkins_home
+
+- name: Container Jenkins LTS (plugin Vault, Kubernetes cài qua UI hoặc JCasC)
+  community.docker.docker_container:
+    name: jenkins
+    image: jenkins/jenkins:lts-jdk21
+    restart_policy: unless-stopped
+    ports: ["8080:8080", "50000:50000"]
+    volumes: [jenkins_home:/var/jenkins_home]
+    env:
+      JAVA_OPTS: -Djenkins.install.runSetupWizard=true

@@ -1,0 +1,11 @@
+# Test cho booking-mcp, risk-api, drift_monitor (drift-api cài riêng drift_api/requirements.txt: Python 3.12)
+-r mcp_server/requirements.txt
+pytest==9.2.0
+pytest-asyncio==1.5.0
+pytest-cov==7.1.0
+respx==0.23.1
+hypothesis==6.170.15
+scipy
+mutmut<3
+-r risk_api/requirements.txt
+opentelemetry-api

@@ -1,0 +1,23 @@
+# KNative Eventing cho drift realtime: KServe logger (serving/kserve-cancel-risk.yaml) -> Broker -> Trigger -> drift-api.
+# Trigger chỉ lấy request (không lấy response) của cancel-risk.
+apiVersion: eventing.knative.dev/v1
+kind: Broker
+metadata:
+  name: default
+  namespace: ml
+---
+apiVersion: eventing.knative.dev/v1
+kind: Trigger
+metadata:
+  name: cancel-risk-requests-to-drift-api
+  namespace: ml
+spec:
+  broker: default
+  filter:
+    attributes:
+      type: org.kubeflow.serving.inference.request
+  subscriber:
+    ref:
+      apiVersion: v1
+      kind: Service
+      name: drift-api

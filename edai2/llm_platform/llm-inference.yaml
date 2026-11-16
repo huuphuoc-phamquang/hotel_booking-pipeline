@@ -1,0 +1,57 @@
+# Rubric edai-2 › Deploy LLM inference platform + custom model & agentgateway
+#   - Deploy LLM inference platform : KServe + runtime huggingface (backend vLLM) trên GPU node
+#   - Setup a custom LLM model      : InferenceService qwen-booking trỏ tới model đã fine-tune trên MinIO
+#   - Benchmark & optimize          : chạy `vllm bench serve` / guidellm trước-sau khi đổi các arg bên dưới
+#     (max-model-len, gpu-memory-utilization, prefix caching) -> ghi throughput, TTFT, p95 vào docs/LLM.md
+# Lưu ý: tên field theo KServe v0.15; đối chiếu với tutorial của khoá nếu phiên bản khác.
+# Trạng thái mẫu: đích cuối là llm-d theo quickstart của rubric (design mục 4.3). Giữ file này đến khi llm-d chạy được
+# để không mất A/B v1/v2 của agentgateway, rồi xoá; không chạy song song 2 nền tảng trên cùng GPU.
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: qwen-booking
+  namespace: llm
+  labels:
+    model-version: v1
+spec:
+  predictor:
+    minReplicas: 1
+    maxReplicas: 2
+    model:
+      modelFormat:
+        name: huggingface
+      storageUri: s3://models/qwen2.5-1.5b-booking-sft/      # custom model đã fine-tune, MinIO giả lập S3
+      args:
+        - --model_name=qwen-booking
+        - --max-model-len=4096
+        - --gpu-memory-utilization=0.90
+        - --enable-prefix-caching                           # tối ưu: system prompt dùng chung được cache KV
+      resources:
+        limits:
+          nvidia.com/gpu: "1"
+          memory: 16Gi
+        requests:
+          cpu: "2"
+          memory: 12Gi
+---
+# Bản v2 dùng cho A/B test LLM version (Rubric edai-2 › A/B Testing › different LLM versions)
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: qwen-booking-v2
+  namespace: llm
+  labels:
+    model-version: v2
+spec:
+  predictor:
+    model:
+      modelFormat:
+        name: huggingface
+      storageUri: s3://models/qwen2.5-3b-booking-sft/
+      args:
+        - --model_name=qwen-booking
+        - --max-model-len=4096
+        - --enable-prefix-caching
+      resources:
+        limits:
+          nvidia.com/gpu: "1"
