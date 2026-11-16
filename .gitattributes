@@ -1,0 +1,5 @@
+# Script và file chạy trong container Linux luôn LF, kể cả khi checkout trên Windows (core.autocrlf)
+* text=auto eol=lf
+*.png binary
+*.drawio text eol=lf
+*.xlsx binary
