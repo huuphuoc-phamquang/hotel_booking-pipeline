@@ -36,36 +36,42 @@ Nguồn sơ đồ: `docs/architecture/booking-overbooking.drawio`. Trạng thái
 ## Cấu trúc repo
 
 ```
-docs/               tài liệu theo từng dòng rubric (edai-1, edai-2, final), architecture/, images/
-edai1/              data platform
-  generator/        sinh dữ liệu landing (~108GB/năm) và replay event stream lên Kafka
-  spark_jobs/       landing -> Bronze -> Silver (Iceberg) -> staging Gold
-  sql/              upsert Gold (SCD2, fact) và offline features
-  dags/             DP1, DP2, DP3
-  flink_jobs/       window + late event + dedup + DLQ
-  schema/           Gold schema, data contract của topic booking_events
-  storage/          Iceberg DDL, compaction, z-order
-  governance/       DataHub lineage, data validation
-  docker/ k8s/      image và manifest (MinIO, Postgres, Kafka, Flink, generator)
-  tests/
-edai2/              ML + agent platform
-  feature_repo/     Feast feature definitions
-  ml/               training pipeline (KFP, MLflow)
-  risk_api/         API dự báo cancel-risk
-  drift_api/        realtime drift detection
-  mcp_server/       MCP tool cho agent, tính overbooking limit K
-  dags/             RAG pipeline, materialize, score_bookings, drift_monitor
-  serving/          KServe InferenceService
-  llm_platform/     LLM inference, fine-tune
-  agents/ gateway/  kagent, agentgateway
-  observability/    metrics, dashboard, logging, tracing
-  policies/         tài liệu nguồn cho RAG
-  helm/ k8s/ iac/   deploy, IaC
-  ci/ docker/       CI/CD, image dùng chung cho 3 API
-  tests/
-notebooks/          cancel_risk.ipynb
-ci/                 Jenkinsfile cho data pipeline, DAG integrity test
-tests/              test_dag_integrity.py
+.
+├── docs/             tài liệu theo từng dòng rubric
+├── edai1/            data platform
+│   ├── generator/    sinh dữ liệu landing (~108GB/năm) và replay event lên Kafka
+│   ├── spark_jobs/   landing → Bronze → Silver (Iceberg) → staging Gold
+│   ├── flink_jobs/   window, event trễ, khử trùng, DLQ
+│   ├── dags/         DP1, DP2, DP3
+│   ├── sql/
+│   ├── schema/
+│   ├── storage/
+│   ├── governance/
+│   ├── docker/
+│   ├── k8s/
+│   └── tests/
+├── edai2/            ML + agent platform
+│   ├── ml/           training pipeline (KFP, MLflow)
+│   ├── risk_api/     API dự báo cancel-risk
+│   ├── drift_api/    phát hiện drift theo thời gian thực
+│   ├── mcp_server/   MCP tool cho agent, tính số phòng bán vượt K
+│   ├── dags/         materialize, score_bookings, drift_monitor, RAG
+│   ├── serving/      KServe InferenceService
+│   ├── feature_repo/
+│   ├── llm_platform/
+│   ├── agents/
+│   ├── gateway/
+│   ├── observability/
+│   ├── policies/
+│   ├── helm/
+│   ├── k8s/
+│   ├── iac/
+│   ├── ci/
+│   ├── docker/
+│   └── tests/
+├── notebooks/        notebook cancel-risk
+├── ci/
+└── tests/
 ```
 
 ## Luồng dữ liệu theo ngày (Airflow)
