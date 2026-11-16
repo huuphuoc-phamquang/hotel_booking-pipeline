@@ -36,7 +36,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Capture màn hình thể hiện cách mọi người thực hiện A/B test và dashboard để đánh giá kết quả A/B test
 
-**Cách làm:** [Thiết kế] 1 InferenceService cancel-risk: Jenkins apply image v2 (retrain sau drift) với canaryTrafficPercent: 50, KServe giữ revision v1 (train tháng 1-6/2025) làm stable và chia 50/50 giữa 2 revision; promote = bỏ canaryTrafficPercent, rollback = đặt 0.
+**Cách làm:** [Đã có] 1 InferenceService cancel-risk (serving/kserve-cancel-risk.yaml), edai2/ci/Jenkinsfile.ml JSON patch image v2 (retrain sau drift) với canaryTrafficPercent: 50, KServe giữ revision v1 (train [2025-01-01, 2025-06-01)) làm stable và chia 50/50 giữa 2 revision; promote = bỏ canaryTrafficPercent, rollback = đặt 0.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 

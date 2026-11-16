@@ -42,7 +42,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document các step chính đã làm trong Jupyter notebook
 
-**Cách làm:** [Đã có] notebooks/cancel_risk.ipynb (chạy cục bộ, có output): dữ liệu từ generator, split theo thời gian, XGBoost, AUC so với trần của nhãn, reliability theo decile so với p thật, Brier vs p thật, sai số K bán vượt (overbooking.limit), drift làm lệch calibration và retrain trên cửa sổ sau drift sửa được.
+**Cách làm:** [Đã có] notebooks/cancel_risk.ipynb (chạy cục bộ, có output): dữ liệu từ generator, split theo thời gian, XGBoost, AUC so với trần của nhãn, reliability theo decile so với p thật, Brier vs p thật, sai số K bán vượt (overbooking.limit), drift (2025-06-01) làm lệch calibration 0,127 và retrain trên cửa sổ sau drift kéo về 0,0008, sai số K 1,62 -> 0,36. Notebook dùng nhãn generator ngay; pipeline thật phải chờ nhãn chín (drift_stats.retrain_window).
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 

@@ -27,7 +27,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** Document show ảnh các jobs đã chạy thành công, dữ liệu đã có + link tới code của các jobs
 
-**Cách làm:** [Đã có] Job 1: Flink sliding window 1 giờ trượt 5 phút upsert gold.feat_hotel_realtime (offline); Job 2: DAG feast_materialize_realtime mỗi 5 phút đưa hotel_realtime lên online. [Cần làm] chụp 2 job chạy + feature online/offline có dữ liệu.
+**Cách làm:** [Đã có] Job 1: Flink sliding window 1 giờ trượt 5 phút upsert gold.feat_hotel_realtime (offline); Job 2: DAG feast_materialize_realtime mỗi 5 phút đưa hotel_realtime lên online, cửa sổ [max(event_timestamp) - 2h, max] theo giờ dữ liệu. [Cần làm] chụp 2 job chạy + feature online/offline có dữ liệu.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -42,7 +42,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Cần nộp (cả nhóm):** + Capture màn hình thể hiện các data pipeline và thứ tự các stage trên Airflow + Capture màn hình thể hiện 2 job đang chạy, và thể hiện output đã chạy thành công + Document tại sao chọn TTL như thế
 
-**Cách làm:** [Đã có] feast_materialize_incremental chạy theo Airflow Dataset của task validate DP3, materialize đúng cửa sổ ngày logic của run DP3 (backfill được), max_active_runs=1, bắn Dataset cho score_bookings; feast_materialize_realtime mỗi 5 phút cho hotel_realtime. [Cần làm] chụp DAG + run.
+**Cách làm:** [Đã có] feast_materialize_incremental chạy theo Airflow Dataset của task validate DP3, materialize đúng cửa sổ ngày logic của run DP3 (backfill được), max_active_runs=1, bắn Dataset cho score_bookings; feast_materialize_realtime mỗi 5 phút materialize [max(event_timestamp) - 2h, max] của gold.feat_hotel_realtime (giờ dữ liệu, không theo giờ máy). [Cần làm] chụp DAG + run.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -53,7 +53,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Deploy job chịu trách nhiệm push streaming feature (ở mini-coursework) vào OFFLINE store
 
-**Cách làm:** [Thiết kế] Job 1: Flink sink JDBC vào gold.feat_hotel_realtime (offline store PostgreSQL). Tách khỏi push vì Feast push offline sang PostgreSQL chưa kiểm.
+**Cách làm:** [Đã có] Job 1: Flink booking_events_window (sliding 1 giờ trượt 5 phút) sink JDBC upsert gold.feat_hotel_realtime (offline store PostgreSQL); tests/test_stream_e2e.py chạy Kafka -> Flink -> Postgres trên Docker, bảng có dữ liệu. Tách khỏi Feast push vì push offline sang PostgreSQL chưa kiểm. [Cần làm] chụp FlinkDeployment trên cluster.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -64,7 +64,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Deploy job chịu trách nhiệm push streaming feature (ở mini-coursework) vào ONLINE store
 
-**Cách làm:** [Đã có] Job 1: Flink sliding window 1 giờ trượt 5 phút upsert gold.feat_hotel_realtime (offline); Job 2: DAG feast_materialize_realtime mỗi 5 phút đưa hotel_realtime lên online. PushSource hotel_realtime_push để sẵn cho store.push(ONLINE) khi cần độ tươi tính bằng giây. [Cần làm] chụp 2 job chạy + feature online có dữ liệu.
+**Cách làm:** [Đã có] Job 1: Flink sliding window 1 giờ trượt 5 phút upsert gold.feat_hotel_realtime (offline); Job 2: DAG feast_materialize_realtime mỗi 5 phút đưa hotel_realtime lên online, cửa sổ [max(event_timestamp) - 2h, max] (replay chạy giờ giả lập nên materialize_incremental theo giờ máy không lấy được dòng nào). PushSource hotel_realtime_push để sẵn cho store.push(ONLINE) khi cần độ tươi tính bằng giây. [Cần làm] chụp 2 job chạy + feature online có dữ liệu.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 

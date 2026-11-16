@@ -45,7 +45,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Có sử dụng FastAPI + data validation (với pydantic) + healthcheck for k8s
 
-**Cách làm:** [Đã có] drift_api/drift_api.py: FastAPI nhận CloudEvent từ KNative Eventing (KServe logger của cancel-risk -> Broker -> Trigger, k8s/drift-eventing.yaml), pydantic cho payload; gom 500 dòng rồi alibi-detect KSDrift chỉ trên lead_days với reference = tập train của model production (artifact MLflow); trả is_drift, p_val, đẩy Prometheus; /healthz, /readyz. [Cần làm] chụp p_value trước/sau 2025-10-01.
+**Cách làm:** [Đã có] drift_api/drift_api.py: FastAPI nhận CloudEvent từ KNative Eventing (KServe logger của cancel-risk -> Broker -> Trigger, k8s/drift-eventing.yaml), pydantic cho payload; gom 500 dòng rồi alibi-detect KSDrift chỉ trên lead_days với reference = tập train của model production (artifact MLflow); trả is_drift, p_val, đẩy Prometheus; /healthz, /readyz. [Cần làm] chụp p_value trước/sau 2025-06-01; score_bookings chấm mỗi booking 1 lần lúc tạo nên request giữ phân phối lead_days như lúc train (chấm lại mỗi ngày làm KS báo drift giả).
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 

@@ -114,6 +114,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 **Rubric:** final · dòng 37 · 1 điểm · nhóm *CI/CD* › *CI/CD cho jobs*
 
-**Cách làm:** [Thiết kế] Job 2 là DAG feast_materialize_realtime: Jenkinsfile test import DAG -> sync DAG lên Airflow (cùng pipeline materialize). [Cần làm] chụp run.
+**Cách làm:** [Đã có] Job 2 là DAG feast_materialize_realtime: ci/Jenkinsfile.data test DAG integrity trong image Airflow -> git-sync -> đợi commit + kiểm không có import error (cùng pipeline materialize). [Cần làm] chụp run.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_

@@ -118,7 +118,7 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Airflow data drift pipeline to periodically pull data from offline feature store and compare with groundtruth and update to Grafana dashboard (via PushGateway). Assumption: we don't have groundtruth to monitor drift here!
 
-**Cách làm:** [Đã có] DAG drift_monitor hằng ngày: lead_days 7 ngày từ Gold so với reference của model production (PSI + KS, dags/drift_stats.py) và tỉ lệ huỷ dự báo so với thực tế; push PushGateway -> Grafana. [Cần làm] chụp dashboard quanh 2025-10-01.
+**Cách làm:** [Đã có] DAG drift_monitor hằng ngày: lead_days 7 ngày từ Gold so với reference của model production (PSI + KS, dags/drift_stats.py) và tỉ lệ huỷ dự báo so với thực tế; push PushGateway -> Grafana. [Cần làm] chụp dashboard quanh 2025-06-01.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
 
@@ -129,6 +129,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Trigger retrain by calling Kubeflow API (you can design by adding one step at the end of the Airflow data drift pipeline)
 
-**Cách làm:** [Đã có] task retrain của drift_monitor (short-circuit khi PSI > 0,2 hoặc lệch calibration > 0,03) gọi kfp.Client().create_run_from_pipeline_package với cửa sổ 180 ngày gần nhất. [Cần làm] chụp run KFP được gọi.
+**Cách làm:** [Đã có] task retrain của drift_monitor (short-circuit khi PSI > 0,2 hoặc lệch calibration > 0,03) ghi mốc phát hiện (Variable cancel_risk_drift_detected); khi đủ 30 ngày booking sau mốc có nhãn chín (mốc + 120 ngày, drift_stats.retrain_window, có test) mới gọi kfp.Client().create_run_from_pipeline_package với since = mốc, until = ngày chạy, nên v2 chỉ học dữ liệu sau drift. [Cần làm] chụp run KFP được gọi.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
