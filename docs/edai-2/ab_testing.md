@@ -47,6 +47,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Setup monitoring dashboard to monitor 2 versions. Assumption: we also don't have groundtruth to monitor drift here!
 
-**Cách làm:** [Đã có] observability/dashboards/cancel-risk-ml.json: drift p-value, PSI, lệch calibration, request / latency p95 / lỗi theo revision của InferenceService cancel-risk (A/B canary). Đã nạp thử trong Grafana 12.2. [Cần làm] Brier so với xác suất thật theo version (cần model_version trong booking_risk); chụp dashboard.
+**Cách làm:** [Đã có] observability/dashboards/cancel-risk-ml.json: drift p-value, PSI, lệch calibration, request / latency p95 / lỗi theo revision của InferenceService cancel-risk (A/B canary). Đã nạp thử trong Grafana 12.2. gold.booking_risk.model_version (serving/predictor.py trả version, risk-api chuyển tiếp) để so calibration / Brier từng revision. [Cần làm] panel theo version trong dashboard; chụp dashboard.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_

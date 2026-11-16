@@ -129,6 +129,6 @@ Mỗi mục ứng với một dòng rubric. **Cách làm** lấy từ thiết k�
 
 > Trigger retrain by calling Kubeflow API (you can design by adding one step at the end of the Airflow data drift pipeline)
 
-**Cách làm:** [Đã có] task retrain của drift_monitor (short-circuit khi PSI > 0,2 hoặc lệch calibration > 0,03) ghi mốc phát hiện (Variable cancel_risk_drift_detected); khi đủ 30 ngày booking sau mốc có nhãn chín (mốc + 120 ngày, drift_stats.retrain_window, có test) mới gọi kfp.Client().create_run_from_pipeline_package với since = mốc, until = ngày chạy, nên v2 chỉ học dữ liệu sau drift. [Cần làm] chụp run KFP được gọi.
+**Cách làm:** [Đã có] task retrain của drift_monitor (short-circuit khi PSI > 0,2 hoặc lệch calibration > 0,03) ghi mốc phát hiện (Variable cancel_risk_drift_detected); khi đủ 30 ngày booking sau mốc có nhãn chín (mốc + 120 ngày, drift_stats.retrain_window, có test) mới gọi kfp.Client().create_run_from_pipeline_package với since = mốc, until = ngày chạy, nên v2 chỉ học dữ liệu sau drift; hết drift 3 ngày liên tiếp hoặc production đổi version thì xoá mốc. calib_gap chỉ tính booking do đúng version production chấm. [Cần làm] chụp run KFP được gọi.
 
 **Kết quả:** _chưa có — số liệu, ảnh chụp, link code_
