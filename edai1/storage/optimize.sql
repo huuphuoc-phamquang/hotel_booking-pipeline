@@ -2,7 +2,7 @@
 -- Rubric edai-1 › Data Storage › How to optimize your data storage:
 --   - Lakehouse     : partitioning + compaction (gom file nhỏ) + z-order
 --   - Datawarehouse : indexing
--- Proof: docs/Storage.md ghi số file / kích thước file trung bình / thời gian query TRƯỚC và SAU,
+-- Proof: docs/edai-1/data_storage.md ghi số file / kích thước file trung bình / thời gian query TRƯỚC và SAU,
 --        kèm EXPLAIN ANALYZE của PostgreSQL trước và sau khi tạo index.
 
 -- ===== Lakehouse (Spark SQL + Iceberg) =====

@@ -5,7 +5,7 @@
 # (k8s/drift-eventing.yaml).
 # A/B: Jenkins apply tag image mới + canaryTrafficPercent: 50 -> KServe giữ revision cũ làm stable, chia 50/50;
 # promote = bỏ canaryTrafficPercent, rollback = đặt 0 (cần KServe chế độ Serverless/Knative).
-# Proof: `kubectl get isvc -n ml` + curl tới /v1/models/cancel-risk:predict (ảnh trong docs/Serving.md).
+# Proof: `kubectl get isvc -n ml` + curl tới /v1/models/cancel-risk:predict (ảnh trong docs/images/edai-2/, mô tả ở docs/edai-2/ml_inference_service.md).
 apiVersion: serving.kserve.io/v1beta1
 kind: InferenceService
 metadata:

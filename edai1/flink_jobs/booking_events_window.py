@@ -15,7 +15,7 @@ Kết quả bookings_1h upsert vào gold.feat_hotel_realtime theo (hotel_id, eve
 batch source của Feast hotel_realtime; DAG feast_materialize_realtime đưa lên online store mỗi 5 phút. Upsert nên window bắn lại do allowedLateness ghi đè chứ không cộng trùng;
 cùng checkpoint EXACTLY_ONCE (offset Kafka + state dedup khôi phục khi restart) thì kết quả cuối không trùng.
 Cần jar flink-connector-jdbc + driver PostgreSQL trên classpath; JDBC lấy từ biến môi trường FEAT_JDBC_*.
-Proof: docs/Flink.md chụp Flink UI (số record ở side output, watermark lag, backpressure, checkpoint).
+Proof: docs/edai-1/processing_jobs.md (ảnh ở docs/images/edai-1/) chụp Flink UI (số record ở side output, watermark lag, backpressure, checkpoint).
 """
 import json
 import os

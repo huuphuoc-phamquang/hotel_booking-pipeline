@@ -10,7 +10,7 @@ Rubric edai-1 › Data Pipeline Orchestration:
     spark_default và Variable bronze_tables, không hard-code endpoint/secret.
 Dims (hotels, hotel_changes, customers, inventory) không chia theo ngày nên nạp bằng DAG dp1_load_dims, trigger tay 1 lần.
 Rubric edai-1 › Data Governance › Lineage: inlets/outlets giúp DataHub vẽ lineage DAG -> bảng.
-Proof: docs/Airflow.md chụp Graph view của 3 DAG + giải thích từng task.
+Proof: docs/edai-1/data_pipeline.md (ảnh ở docs/images/edai-1/) chụp Graph view của 3 DAG + giải thích từng task.
 """
 from datetime import date, datetime, timedelta
 

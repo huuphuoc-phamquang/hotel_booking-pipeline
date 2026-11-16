@@ -10,7 +10,7 @@ Rubric edai-1 › Processing Jobs › Spark job to handle offline data problems:
                                       chế độ opt dựng lại cả bảng từ Bronze (backfill, đo skew)
 Bronze là Parquet (copy nguyên từ landing), Silver là bảng Iceberg lake.silver.stg_bookings
 (tạo bởi storage/optimize.sql); catalog `lake` cấu hình qua --conf của Connection spark_default.
-Proof: docs/Spark.md chụp Spark UI (1 task chạy rất lâu ở baseline vs các task đều nhau sau salting).
+Proof: docs/edai-1/processing_jobs.md (ảnh ở docs/images/edai-1/) chụp Spark UI (1 task chạy rất lâu ở baseline vs các task đều nhau sau salting).
 """
 import sys
 from datetime import date, timedelta
