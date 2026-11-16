@@ -2,7 +2,7 @@
 # hết tuần chạy `terraform destroy` ở envs/dev.
 variable "billing_account" { type = string }
 variable "project_number" { type = string }
-variable "amount_usd" { type = number }
+variable "amount" { type = number } # theo đơn vị tiền của billing account
 
 resource "google_billing_budget" "this" {
   billing_account = var.billing_account
@@ -13,8 +13,7 @@ resource "google_billing_budget" "this" {
   }
   amount {
     specified_amount {
-      currency_code = "USD"
-      units         = tostring(var.amount_usd)
+      units = tostring(var.amount) # bỏ currency_code: API chỉ nhận đúng tiền tệ của billing account
     }
   }
   dynamic "threshold_rules" {

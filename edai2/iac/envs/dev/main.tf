@@ -27,9 +27,9 @@ variable "zone" {
   type    = string
   default = "asia-southeast1-b" # có L4
 }
-variable "budget_usd" {
+variable "budget" {
   type    = number
-  default = 300
+  default = 7900000 # ≈ $300, theo tiền tệ billing account (VND)
 }
 
 data "google_project" "this" {}
@@ -68,7 +68,7 @@ module "budget" {
   source          = "../../modules/budget"
   billing_account = var.billing_account
   project_number  = data.google_project.this.number
-  amount_usd      = var.budget_usd
+  amount          = var.budget
   depends_on      = [google_project_service.apis]
 }
 
