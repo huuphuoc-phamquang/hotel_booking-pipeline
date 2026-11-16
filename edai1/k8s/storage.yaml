@@ -19,9 +19,10 @@ spec:
   template:
     metadata: { labels: { app: minio } }
     spec:
+      securityContext: { fsGroup: 65532 }   # image chạy user 65532, cấp quyền ghi PD
       containers:
         - name: minio
-          image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+          image: cgr.dev/chainguard/minio@sha256:1ec745a06a986762f89e68e855fc189f403941eff8c0a5f94767e92c8e39d3f5   # minio/minio đã rời Docker Hub
           args: ["server", "/data", "--console-address", ":9001"]
           env:
             - name: MINIO_ROOT_USER
