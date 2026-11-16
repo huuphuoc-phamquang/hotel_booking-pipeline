@@ -1,0 +1,82 @@
+// CI/CD cho data pipeline: DP1-DP3, 2 DAG materialize, RAG, score_bookings, drift_monitor (Airflow) + Flink Job 1.
+// Rubric final › CI/CD: DP1/DP2/DP3, Materialize Pipeline, Job 1 stream; edai-2 › CI/CD RAG + stream jobs.
+//   Test   : generator (bất biến stream = landing, contract), Spark (pyspark local), SQL DP2/DP3 trên Postgres thật,
+//            Great Expectations Bronze, DAG integrity trong image Airflow, e2e stream (Kafka -> Flink -> Postgres)
+//   Build  : image generator, Spark (Iceberg + s3a + JDBC), Flink (PyFlink + connector + contract)
+//   Deploy : DAG đi bằng git-sync của Airflow (nhánh main, thư mục dags/sql/governance) -> Jenkins chỉ đợi Airflow
+//            parse xong không lỗi; Variable spark_image trỏ image mới; FlinkDeployment đổi image (upgradeMode last-state)
+// Secret: registry + kubeconfig từ Vault. Chạy từ gốc repo.
+pipeline {
+  agent { kubernetes { yamlFile 'edai2/ci/pod-template.yaml'; defaultContainer 'tools' } }
+  environment {
+    REGISTRY = "asia-southeast1-docker.pkg.dev/${env.GCP_PROJECT}/booking"
+    TAG      = "${env.GIT_COMMIT.take(7)}"
+  }
+  stages {
+    stage('Test') {
+      parallel {
+        stage('generator + SQL + GX') {
+          steps {
+            dir('edai1') {
+              sh 'pip install -q -r requirements.txt pytest jsonschema "psycopg[binary]" great_expectations'
+              sh 'pytest tests/test_stream_gen.py tests/test_gold_sql.py tests/test_bronze_checks.py -q'
+            }
+          }
+        }
+        stage('Spark') {
+          steps {
+            dir('edai1') {
+              sh 'pip install -q pyspark==3.5.6 setuptools pytest && pytest tests/test_silver_quotes.py tests/test_silver_bookings.py -q'
+            }
+          }
+        }
+        stage('DAG integrity') {
+          steps { sh 'docker run --rm -v "$PWD:/opt/booking" -w /opt/booking apache/airflow:2.10.5-python3.12 bash ci/test_dags.sh' }
+        }
+      }
+    }
+    stage('Build & push images') {
+      steps {
+        withVault([vaultSecrets: [[path: 'secret/ci/registry', secretValues: [[envVar: 'REG_KEY', vaultKey: 'json_key']]]]]) {
+          sh 'echo "$REG_KEY" | docker login -u _json_key --password-stdin https://asia-southeast1-docker.pkg.dev'
+          dir('edai1') {
+            sh '''
+              for img in docker/Dockerfile:data/generator k8s/spark.Dockerfile:data/spark-booking k8s/flink.Dockerfile:data/flink-booking; do
+                docker build -f ${img%%:*} -t $REGISTRY/${img#*:}:$TAG . && docker push $REGISTRY/${img#*:}:$TAG
+              done
+              docker tag $REGISTRY/data/generator:$TAG booking-generator:multistage
+              docker tag $REGISTRY/data/flink-booking:$TAG booking-flink:local
+            '''
+          }
+        }
+      }
+    }
+    stage('E2E stream') {
+      steps { dir('edai1') { sh 'pytest tests/test_stream_e2e.py -q' } }   // dùng đúng 2 image vừa build
+    }
+    stage('Deploy DAG') {
+      when { branch 'main' }
+      steps {
+        sh '''
+          kubectl -n airflow exec deploy/airflow-scheduler -- airflow variables set spark_image $REGISTRY/data/spark-booking:$TAG
+          # git-sync kéo main mỗi 60s: đợi commit này xuất hiện rồi kiểm không có DAG nào lỗi import
+          for i in $(seq 1 20); do
+            kubectl -n airflow exec deploy/airflow-scheduler -c git-sync -- sh -c "git -C /git/repo rev-parse HEAD" | grep -q ${GIT_COMMIT} && break
+            sleep 15
+          done
+          kubectl -n airflow exec deploy/airflow-scheduler -- airflow dags reserialize
+          test -z "$(kubectl -n airflow exec deploy/airflow-scheduler -- airflow dags list-import-errors -o plain | tail -n +2)"
+        '''
+      }
+    }
+    stage('Deploy Flink Job 1') {
+      when { branch 'main' }
+      steps {
+        sh '''
+          sed "s#REGISTRY/data/flink-booking:TAG#$REGISTRY/data/flink-booking:$TAG#" edai1/k8s/flink.yaml | kubectl apply -f -
+          kubectl -n data wait flinkdeployment/booking-events-window --for=jsonpath='{.status.lifecycleState}'=STABLE --timeout=600s
+        '''
+      }
+    }
+  }
+}
