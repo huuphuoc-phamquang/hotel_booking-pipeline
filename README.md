@@ -1,8 +1,8 @@
 # Hotel booking pipeline: dự báo cancellation để overbooking
 
-Một model `cancel-risk` dự báo cancellation probability của từng booking; cộng dồn theo hotel × stay date để đề xuất
-overbooking limit K, revenue manager duyệt trước khi áp dụng (human-in-the-loop). `edai1/` là data platform, `edai2/` là
-ML + agent platform.
+Model `cancel-risk` dự báo xác suất huỷ (cancellation probability) của từng booking. Xác suất được cộng dồn theo
+khách sạn × đêm nhận phòng để đề xuất số phòng bán vượt K (overbooking limit). Revenue manager duyệt đề xuất trước khi
+áp dụng (human-in-the-loop). `edai1/` là data platform, `edai2/` là nền tảng ML và agent.
 
 ## Mục lục
 
@@ -14,14 +14,17 @@ ML + agent platform.
 
 ## Bài toán
 
-Khách sạn bán theo đêm; một phần booking sẽ cancel hoặc no-show, nên giữ đúng số phòng thì bị spoilage (phòng trống),
-overbooking quá tay thì phải walk khách sang khách sạn khác. Số cancellation của một đêm là tổng các biến Bernoulli với
-probability từ `cancel-risk` (Poisson-binomial); K là số lớn nhất sao cho P(số cancellation < K) ≤ c_spoil / (c_spoil + c_walk)
-(spoilage cost 1, walk cost 3). Vì K dùng thẳng probability, model được đánh giá bằng calibration chứ không chỉ AUC.
+Khách sạn bán phòng theo đêm, và một phần booking sẽ huỷ hoặc không đến (no-show). Nếu chỉ bán đúng số phòng, khách
+sạn chịu spoilage (phòng trống). Nếu bán vượt quá tay, khách sạn phải walk khách, tức chuyển khách sang khách sạn khác.
 
-Dữ liệu sinh bằng generator reproducible (~108GB/năm quote, booking, cancellation, event stream) với lỗi cài sẵn
-(double submit, schema evolution giữa năm, late event, contract violation) và drift biết trước từ 2025-06-01, nên mọi
-kết quả (stream reconciliation, DLQ, calibration, sai số K, drift detection delay) so được với ground truth.
+Số booking huỷ của một đêm là tổng các biến Bernoulli với xác suất lấy từ `cancel-risk`, nên tuân theo phân phối
+Poisson-binomial. K là số lớn nhất thoả P(số huỷ < K) ≤ c_spoil / (c_spoil + c_walk), với chi phí spoilage là 1 và chi phí
+walk là 3. Do K dùng trực tiếp xác suất, model được đánh giá chủ yếu qua calibration, không chỉ qua AUC.
+
+Dữ liệu do một generator tái lập được sinh ra, khoảng 108GB mỗi năm gồm quote, booking, cancellation và event stream.
+Generator cài sẵn các lỗi thường gặp: double submit, schema đổi giữa năm, event trễ, vi phạm data contract. Drift cũng được
+cài từ một ngày biết trước (2025-06-01). Nhờ vậy, các kết quả như đối soát stream, DLQ, calibration, sai số K và độ trễ
+phát hiện drift đều so được với ground truth.
 
 ## Kiến trúc
 
@@ -67,8 +70,10 @@ tests/              test_dag_integrity.py
 
 ## Luồng dữ liệu theo ngày (Airflow)
 
-`dp1_ingest_bronze` → `dp2_bronze_to_gold` → `dp3_offline_features` —Dataset→ `feast_materialize_incremental`
-—Dataset→ `score_bookings` (batch scoring booking mới 1 lần, ghi `gold.booking_risk`) ; `drift_monitor` mỗi ngày
-(PSI/KS + calibration gap → PushGateway, trigger KFP retrain). Stream: `event-replayer` → Kafka → Flink →
-`gold.feat_hotel_realtime` → `feast_materialize_realtime` (5 phút). Tất cả backfill được (`airflow dags backfill`),
-vì mọi mốc thời gian lấy theo logical date, không theo wall-clock.
+Nhánh batch: `dp1_ingest_bronze` → `dp2_bronze_to_gold` → `dp3_offline_features` —Dataset→ `feast_materialize_incremental`
+—Dataset→ `score_bookings`. `score_bookings` chấm mỗi booking mới một lần và ghi vào `gold.booking_risk`. Mỗi ngày,
+`drift_monitor` tính PSI, KS và độ lệch calibration, đẩy kết quả lên PushGateway và gọi KFP retrain khi cần.
+
+Nhánh stream: `event-replayer` → Kafka → Flink → `gold.feat_hotel_realtime` → `feast_materialize_realtime` (5 phút một lần).
+
+Mọi DAG đều backfill được bằng `airflow dags backfill`, vì các mốc thời gian lấy theo logical date chứ không theo giờ máy.
