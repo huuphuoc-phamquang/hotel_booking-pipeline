@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.hypothesis/
+.coverage
+.ipynb_checkpoints/
+.venv/
+.terraform/
+*.tfstate*
+# sinh bằng python edai2/ml/training_pipeline.py (CI compile lại)
+edai2/ml/training_pipeline.yaml
+# model tải về lúc build image KServe (ci/fetch_model.py)
+edai2/serving/model/
