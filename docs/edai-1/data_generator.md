@@ -108,7 +108,23 @@ sạn đứng đầu có khoảng 10⁶ lượt xem/ngày, khách sạn cuối k
 
 **Cách làm:** [Đã có] Từ 2025-07-01, bảng bookings chuyển sang schema v2: thêm cột `channel`, đổi `room_type` thành `room_category`. Cột `cancellation_policy` có ở cả hai phiên bản, nên thay đổi schema không ảnh hưởng tới công thức nhãn. `profile_data` in số dòng của từng phiên bản. [Cần làm] ghi bảng so sánh schema v1 và v2.
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+**Kết quả:** bảng `landing/bookings` đổi schema tại `dt=2025-07-01` (`anomalies.schema_v2_date`,
+`apply_schema_version` trong `generator/offline_gen.py`):
+
+| Cột | v1 (trước 2025-07-01) | v2 (từ 2025-07-01) |
+|---|---|---|
+| `booking_id`, `idempotency_key`, `customer_id`, `hotel_id` | BIGINT | BIGINT |
+| `room_type` → `room_category` | `room_type` STRING | `room_category` STRING (đổi tên, cùng giá trị) |
+| `channel` | không có | STRING: `mobile` / `web` / `channel_manager` (thêm mới) |
+| `created_at`, `checkin` | TIMESTAMP | TIMESTAMP |
+| `nights` | BIGINT | BIGINT |
+| `cancellation_policy`, `price` | STRING, DOUBLE | STRING, DOUBLE |
+
+Trong mẫu 12 ngày của `profile_data` (bảng Đặc tính dữ liệu ở trên) có 2.359.953 dòng v1 và 2.284.456 dòng v2; cả năm
+khoảng 181 ngày v1 và 214 ngày v2 trên landing. Đọc cả hai phiên bản cùng lúc mà không xử lý thì Parquet báo thiếu cột
+hoặc tách thành hai cột khác tên cho cùng một ý nghĩa; Silver xử lý bằng `mergeSchema`, gộp
+`coalesce(room_category, room_type)` và thêm `channel` null cho dữ liệu v1 (`spark_jobs/silver_bookings.py`, mục
+Handle schema evolution ở `processing_jobs.md`).
 
 <a id="edai-1-7"></a>
 ## Simulate another offline data problem
@@ -119,7 +135,23 @@ sạn đứng đầu có khoảng 10⁶ lượt xem/ngày, khách sạn cuối k
 
 **Cách làm:** [Đã có] 2% booking bị gửi hai lần với cùng `idempotency_key`. [Thêm cho novelty] Khoảng 0,5% bản ghi vi phạm data contract (giá âm, `hotel_id` không tồn tại, thiếu `event_time`); ghi lại tỉ lệ đo được.
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+**Kết quả:** double submit đo bằng `profile_data` trên mẫu 12 ngày: **1,99%** dòng thừa trên mỗi booking (config 2%).
+Mỗi bản thừa có `booking_id` mới, cùng `idempotency_key`, `created_at` lệch 1–3 giây, nên khoá chính không trùng mà
+vẫn là cùng một lần đặt; trên ngày 2025-07-15, `idempotency_key` có 401.912 giá trị khác nhau trên 409.892 dòng
+(bảng cardinality ở mục Simulate skew). Silver dedup theo `idempotency_key`, giữ dòng `created_at` nhỏ nhất.
+
+Vi phạm data contract (chỉ ở nhánh stream, bản sao lỗi của `booking_created`), đo bằng
+`python -m generator.stream_profile 195` trên ngày 2025-07-15, đủ 16 shard:
+
+| Loại vi phạm | Số event | Tỉ lệ trên booking_created |
+|---|---|---|
+| `event_time` (thiếu trường) | 707 | 0,172% |
+| `hotel_id` (= 0, không tồn tại) | 640 | 0,156% |
+| `price` (giá âm) | 692 | 0,169% |
+| **tổng** | **2.039** | **0,497%** (config 0,5%) |
+
+Trên GKE các event này vào topic `booking_events_dlq` kèm `reason` (mục Handle other streaming problem ở
+`processing_jobs.md`).
 
 <a id="edai-1-8"></a>
 ## Store data after generating so that we can ingest to Bronze zone later
@@ -149,7 +181,24 @@ Pod số 0 khởi động lại một lần: 8 pod cùng tạo bucket `landing`,
 
 **Cách làm:** [Đã có] Ba nguồn event trễ: 30% booking từ mobile offline trễ 5–20 phút (một phần vượt watermark 10 phút cộng lateness 5 phút nên rơi ra side output), webhook thanh toán trễ 1–15 phút, 1% booking qua channel manager trễ 1–4 giờ. Replay chỉ phát event có `ingest_time` trong cửa sổ. Generator lùi 150 ngày để có event huỷ của booking tạo trước cửa sổ, mỗi `idempotency_key` huỷ đúng một lần. Event log gom mỗi ngày ingest thành một file đã sắp theo `ingest_time`, nên replay chỉ mở vài file cùng lúc. Lần chạy đầu sinh khoảng 2.900 partition song song bằng `GEN_WORKERS` process, thay cho cách sinh tuần tự mất khoảng 3 giờ. [Cần làm] lập bảng event trễ theo nguồn và histogram của (`ingest_time` − `event_time`).
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+**Kết quả:** `python -m generator.stream_profile 195 <file png>` (2026-11-18) trên event của mọi booking tạo ngày
+2025-07-15, đủ 16 shard (1.009.407 event). Độ trễ = `ingest_time` − `event_time`; mốc so sánh là watermark 10 phút
+và allowedLateness 5 phút của Flink:
+
+| Nguồn | Event | Trễ trung vị | p99 | Max | Trễ > 10 phút | Trễ > 15 phút |
+|---|---|---|---|---|---|---|
+| booking_created · web | 160.334 | 0 | 0 | 0 | 0% | 0% |
+| booking_created · mobile | 245.388 | 0,01 phút | 19,5 phút | 20 phút | 20,09% | 10,03% |
+| booking_created · channel_manager | 4.170 | 147,7 phút | 238,7 phút | 240 phút | 100% | 100% |
+| payment_callback (webhook) | 408.016 | 8,0 phút | 14,9 phút | 15 phút | 35,79% | 0,03% |
+| booking_cancelled | 189.460 | 0 | 0 | 0 | 0% | 0% |
+
+Dữ liệu trễ là `booking_created` từ mobile (30% bị trễ 5–20 phút do mất mạng) và từ channel manager (trễ 1–4 giờ),
+cùng webhook thanh toán (1–15 phút). Với booking, 10,03% event mobile và toàn bộ event channel manager trễ quá
+watermark + lateness, nên nhánh tumbling 1 phút đẩy chúng ra side output; event trễ 10–15 phút vẫn được cửa sổ nhận
+lại nhờ allowedLateness. Webhook không đi qua cửa sổ (chỉ dedup) nên độ trễ của nó không làm mất event.
+
+![Độ trễ event theo nguồn](../images/edai-1/stream-delay.png)
 
 <a id="edai-1-10"></a>
 ## Simulate another streaming data problem
@@ -160,7 +209,16 @@ Pod số 0 khởi động lại một lần: 8 pod cùng tạo bucket `landing`,
 
 **Cách làm:** [Đã có] 1,5% callback thanh toán bị gửi lặp (at-least-once); Flink khử trùng theo `event_id`. `generator/profile_data` in tỉ lệ đo được.
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+**Kết quả:** `python -m generator.stream_profile 195` trên ngày 2025-07-15, đủ 16 shard:
+
+| Lỗi | Số event lặp | Tỉ lệ |
+|---|---|---|
+| `payment_callback` gửi lại (cùng `event_id`, tới sau bản gốc 1–30 giây) | 6.104 | 1,52% callback (config 1,5%) |
+| `booking_created` double submit (cùng `idempotency_key`, khác `booking_id`) | 7.980 | 1,99% booking (config 2%) |
+
+Bản callback gửi lại giữ nguyên `event_id` như webhook at-least-once thật, nên đếm thẳng thì số thanh toán bị đếm hai
+lần; Flink giữ lần đầu theo `event_id` bằng keyed state có TTL 1 giờ (`DedupByEventId`). Double submit khác
+`event_id`, nên Flink dedup theo `idempotency_key` trước khi đếm booking, cùng quy tắc với Silver.
 
 ## Bổ sung final-coursework
 
