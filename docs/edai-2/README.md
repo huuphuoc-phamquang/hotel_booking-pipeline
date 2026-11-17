@@ -31,7 +31,7 @@
 | Dòng | Điểm | Mục | Tài liệu | Trạng thái |
 |---|---|---|---|---|
 | 3 | 2 | Deploy LLM inference platform | [llm_inference_platform.md](llm_inference_platform.md#edai-2-3) | Thiết kế · chờ cluster |
-| 4 | 2 | Setup a custom LLM model | [llm_inference_platform.md](llm_inference_platform.md#edai-2-4) | Đã có · chờ cluster |
+| 4 | 2 | Setup a custom LLM model | [llm_inference_platform.md](llm_inference_platform.md#edai-2-4) | Đã có |
 | 5 | 1 | Setup agent gateway theo hướng dẫn và thiết lập security & policy phù hợp | [llm_inference_platform.md](llm_inference_platform.md#edai-2-5) | Đã có · Cần làm |
 | 6 | 2 | Benchmark model server and optimize the platform | [llm_inference_platform.md](llm_inference_platform.md#edai-2-6) | Đã có · Thiết kế · Cần làm |
 | 7 | 2 | Deploy 1 global model config để các Agent có thể dùng follow tutorial này, config này sẽ… | [global_model_config.md](global_model_config.md#edai-2-7) | Đã có · Cần làm |
