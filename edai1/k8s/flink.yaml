@@ -24,6 +24,8 @@ spec:
           envFrom: [{ secretRef: { name: flink-secrets } }]
           env:
             - { name: KAFKA_BOOTSTRAP, value: booking-kafka-bootstrap.data.svc.cluster.local:9092 }
+            # -pyfs chép code sang /tmp trên worker nên đường dẫn tương đối tới schema/ không còn đúng
+            - { name: CONTRACT_PATH, value: /opt/flink/schema/contracts/booking_event.json }
   jobManager:
     resource: { memory: 2048m, cpu: 1 }
   taskManager:
@@ -31,6 +33,7 @@ spec:
   job:
     jarURI: local:///opt/flink/opt/flink-python-1.20.1.jar
     entryClass: org.apache.flink.client.python.PythonDriver
-    args: ["-py", "/opt/flink/usrlib/booking_events_window.py"]
+    # -pyfs: Python worker trên TaskManager không có thư mục của script trong sys.path -> thiếu module contract
+    args: ["-py", "/opt/flink/usrlib/booking_events_window.py", "-pyfs", "/opt/flink/usrlib"]
     parallelism: 2
     upgradeMode: last-state
