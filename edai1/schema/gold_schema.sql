@@ -90,7 +90,7 @@ CREATE TABLE gold.stream_late_bookings (
     logged_at   TIMESTAMP NOT NULL DEFAULT now()
 );
 
--- Xác suất huỷ do DAG score_bookings chấm qua risk-api một lần, ngay sau ngày tạo booking (1 dòng / booking):
+-- Xác suất huỷ do DAG score_bookings chấm qua booking-mcp (Feast online + KServe) một lần, ngay sau ngày tạo booking (1 dòng / booking):
 -- propose_overbooking cộng các booking còn giữ phòng theo hotel × stay_date; drift_monitor so dự báo với thực tế.
 CREATE TABLE gold.booking_risk (
     booking_id   BIGINT        NOT NULL,

@@ -8,4 +8,8 @@ prometheus-fastapi-instrumentator==8.1.0
 feast[postgres]==0.68.0
 numpy==2.5.4
 psycopg[binary]==3.3.9
+opentelemetry-sdk==1.45.2
+opentelemetry-exporter-otlp-proto-grpc==1.45.2
+opentelemetry-instrumentation-fastapi==0.66b2
+opentelemetry-instrumentation-httpx==0.66b2
 sentence-transformers          # bge-m3 cho search_policy; ghim theo bản build đầu tiên

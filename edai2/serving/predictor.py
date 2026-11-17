@@ -1,5 +1,5 @@
 """Predictor KServe của cancel-risk: như sklearnserver với PREDICT_PROBA (trả [P(không huỷ), P(huỷ)]), thêm
-model_version vào response. risk-api lưu version vào gold.booking_risk để drift_monitor đo calibration đúng bản
+model_version vào response. booking-mcp (score_bookings) lưu version vào gold.booking_risk để drift_monitor đo calibration đúng bản
 production và A/B canary so được từng bản (2 revision cùng tên service, chỉ response cho biết bản nào đã chấm).
 MODEL_VERSION = version MLflow, gắn lúc build image (serving/Dockerfile).
 """

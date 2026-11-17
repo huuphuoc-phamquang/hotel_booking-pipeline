@@ -1,5 +1,5 @@
-# Image dùng chung cho 3 FastAPI; build từ thư mục edai2:
-#   docker build -f docker/api.Dockerfile --build-arg APP=risk_api -t REGISTRY/ml/risk-api:TAG .
+# Image dùng chung cho FastAPI; build từ thư mục edai2:
+#   docker build -f docker/api.Dockerfile --build-arg APP=mcp_server -t REGISTRY/agents/booking-mcp:TAG .
 # drift_api: CI tải reference_lead_days.npy của model production vào drift_api/reference/ trước khi build.
 FROM python:3.12-slim
 ARG APP

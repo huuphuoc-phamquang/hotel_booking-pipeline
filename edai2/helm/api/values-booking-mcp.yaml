@@ -1,10 +1,11 @@
 image: { repository: REGISTRY/agents/booking-mcp }
 module: server
 feastRepo: true
-vault: { role: booking-mcp, path: secret/data/agents/booking-mcp }   # WAREHOUSE_DSN, FEAST_PG_*
+vault: { role: booking-mcp, path: secret/data/agents/booking-mcp }   # WAREHOUSE_DSN, FEAST_PG_*, OTEL_EXPORTER_OTLP_ENDPOINT
 env:
   FEAST_REPO: /feature_repo
-  RISK_API_URL: http://risk-api.ml.svc.cluster.local/v1/cancel-risk
+  KSERVE_URL: http://cancel-risk-predictor.ml.svc.cluster.local/v1/models/cancel-risk:predict
+  KSERVE_BULK_URL: http://cancel-risk-bulk-predictor.ml.svc.cluster.local/v1/models/cancel-risk:predict
 resources:                           # bge-m3 (~2,2GB) nạp trong process cho search_policy
   requests: { cpu: 500m, memory: 3Gi }
   limits: { cpu: "2", memory: 4Gi }

@@ -1,4 +1,4 @@
-# Artifact Registry cho image của Jenkins (booking-mcp, risk-api, drift-api, cancel-risk, generator, Spark, Flink).
+# Artifact Registry cho image của Jenkins (booking-mcp, drift-api, cancel-risk, generator, Spark, Flink).
 variable "region" { type = string }
 
 resource "google_artifact_registry_repository" "booking" {

@@ -2,7 +2,7 @@
 
 Rubric:
   - edai-2 › Feature Store › materialize -> serving : chạy theo Airflow Dataset ONLINE_BATCH của feast_materialize_incremental
-  - final › Web API kéo dữ liệu                     : gọi risk-api /v1/cancel-risk/batch (Feast online + KServe)
+  - edai-2 › ML Inference Service                    : gọi booking-mcp /v1/cancel-risk/batch (Feast online + KServe)
 Kết quả ghi gold.booking_risk (1 dòng / booking): propose_overbooking cộng dồn booking còn giữ phòng theo
 hotel × stay_date, drift_monitor so tỉ lệ huỷ dự báo với thực tế.
 Chỉ chấm booking tạo trong ngày (không chấm lại mỗi ngày mọi booking sắp nhận phòng): request tới KServe khi đó có
@@ -14,7 +14,7 @@ Backfill quanh mốc drift (2025-06-01): online store mới, `feast materialize 
 rồi backfill chuỗi DP (DP3 xong -> materialize -> score, tuần tự từng ngày):
   airflow dags backfill dp1_ingest_bronze -s 2025-05-15 -e 2025-06-15   (tương tự dp2_bronze_to_gold, dp3_offline_features)
 Ngày chấm (as_of) lấy từ data_interval_end của run materialize gây ra event, không phải giờ máy.
-Connection warehouse và Variable risk_api_url đặt trong Airflow.
+Connection warehouse và Variable booking_mcp_url đặt trong Airflow.
 """
 from datetime import datetime
 
@@ -23,7 +23,7 @@ from airflow.decorators import dag, task
 from airflow.models import Variable
 
 ONLINE_BATCH = Dataset("feast://online/batch")
-BATCH = 1000                               # = max_length của BatchRequest trong risk-api
+BATCH = 1000                               # = max_length của BatchRequest trong booking-mcp
 NEW_SQL = """
 SELECT f.booking_id, h.hotel_id, f.checkin_date AS stay_date
 FROM gold.fact_bookings f JOIN gold.dim_hotel h USING (hotel_key)
@@ -45,11 +45,11 @@ CHUNK = 50_000                             # dòng / lần đọc từ server-si
 
 
 def score_and_store(pg, df, scored_date, bulk: bool = False) -> int:
-    """Chấm df (index booking_id, cột hotel_id, stay_date) theo lô 1000 qua risk-api, upsert gold.booking_risk.
-    bulk=True: risk-api gọi cancel-risk-bulk (không KServe logger) để drift-api không nhận cả loạt chấm lại."""
+    """Chấm df (index booking_id, cột hotel_id, stay_date) theo lô 1000 qua booking-mcp, upsert gold.booking_risk.
+    bulk=True: booking-mcp gọi cancel-risk-bulk (không KServe logger) để drift-api không nhận cả loạt chấm lại."""
     import httpx
     probs = {}                                           # booking_id -> (xác suất, model_version)
-    with httpx.Client(base_url=Variable.get("risk_api_url"), timeout=60) as http:
+    with httpx.Client(base_url=Variable.get("booking_mcp_url"), timeout=60) as http:
         for i in range(0, len(df), BATCH):
             r = http.post("/v1/cancel-risk/batch", json={"booking_ids": df.index[i:i + BATCH].tolist(), "bulk": bulk})
             r.raise_for_status()
@@ -69,7 +69,7 @@ def score_bookings():
 
     @task
     def score(triggering_dataset_events=None) -> int:
-        """Lấy booking tạo trong ngày, chấm qua risk-api, upsert gold.booking_risk."""
+        """Lấy booking tạo trong ngày, chấm qua booking-mcp, upsert gold.booking_risk."""
         from airflow.providers.postgres.hooks.postgres import PostgresHook
         as_of = max(e.source_dag_run.data_interval_end for evs in triggering_dataset_events.values() for e in evs)
         pg = PostgresHook(postgres_conn_id="warehouse")

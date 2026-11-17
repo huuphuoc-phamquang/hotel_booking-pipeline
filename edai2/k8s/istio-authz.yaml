@@ -1,4 +1,5 @@
-# Rubric final › service mesh: mTLS bắt buộc trong namespace ml, và chỉ đúng service account được gọi từng service.
+# Service mesh (ngoài phạm vi rubric edai-1/edai-2, giữ làm cấu hình bảo mật): mTLS bắt buộc trong namespace ml, và
+# chỉ đúng service account được gọi từng service.
 # Proof: kubectl exec từ 1 pod khác gọi cancel-risk / drift-api -> 403 (RBAC: access denied).
 apiVersion: security.istio.io/v1
 kind: PeerAuthentication
@@ -12,7 +13,7 @@ spec:
 apiVersion: security.istio.io/v1
 kind: AuthorizationPolicy
 metadata:
-  name: cancel-risk-only-from-risk-api
+  name: cancel-risk-only-from-booking-mcp
   namespace: ml
 spec:
   selector:
@@ -22,7 +23,7 @@ spec:
   rules:
     - from:
         - source:
-            principals: ["cluster.local/ns/ml/sa/risk-api"]
+            principals: ["cluster.local/ns/agents/sa/booking-mcp"]   # tool predict_cancellation + batch của score_bookings
 ---
 apiVersion: security.istio.io/v1
 kind: AuthorizationPolicy

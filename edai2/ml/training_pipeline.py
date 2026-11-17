@@ -25,7 +25,7 @@ MAX_CALIB_GAP = 0.03
 FEATURES = ["customer_booking_stats:bookings_90d", "customer_booking_stats:cancel_rate_90d",
             "customer_booking_stats:avg_lead_days_90d", "hotel_demand:bookings_7d",
             "hotel_demand:cancel_rate_30d"]
-# Thứ tự cột đưa vào model; risk_api/risk_api.py (model_rows) dựng request theo đúng thứ tự này.
+# Thứ tự cột đưa vào model; mcp_server/server.py (model_rows) dựng request theo đúng thứ tự này.
 # Không có bookings_1h: hotel_realtime chưa có lịch sử cho dữ liệu train (toàn 0 lúc train, khác 0 lúc serve).
 # has_customer_history = khách có dòng customer_booking_stats trong TTL; train và serve cùng điền thiếu bằng 0.
 MODEL_INPUTS = ["lead_days", "nights", "free_cancel", "bookings_90d", "cancel_rate_90d", "avg_lead_days_90d",

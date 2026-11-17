@@ -1,4 +1,4 @@
-"""server.py và risk_api.py tạo FeatureStore lúc import; test trỏ FEAST_REPO tới repo tạm (sqlite) để import được.
+"""server.py tạo FeatureStore lúc import; test trỏ FEAST_REPO tới repo tạm (sqlite) để import được.
 Mọi lời gọi online store trong test đều được mock, repo tạm không chứa dữ liệu."""
 import os
 import tempfile

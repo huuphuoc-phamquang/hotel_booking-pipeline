@@ -60,27 +60,3 @@ spec:
     - host: api.booking.example.com
       http:
         paths: [{ path: /, pathType: Prefix, backend: { service: { name: agentgateway, port: { number: 3000 } } } }]
----
-# risk-api ra ngoài: cùng domain HTTPS, basic auth (client hệ thống đặt phòng) + rate limit.
-# Proof: curl thiếu mật khẩu -> 401; locust vượt limit -> 503.
-# htpasswd -c auth booking-client && kubectl -n ml create secret generic risk-api-auth --from-file=auth
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: risk-api
-  namespace: ml
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-    nginx.ingress.kubernetes.io/auth-type: basic
-    nginx.ingress.kubernetes.io/auth-secret: risk-api-auth
-    nginx.ingress.kubernetes.io/auth-realm: "risk-api"
-    nginx.ingress.kubernetes.io/limit-rps: "100"
-spec:
-  ingressClassName: nginx
-  tls:
-    - hosts: [api.booking.example.com]
-      secretName: api-booking-tls
-  rules:
-    - host: api.booking.example.com
-      http:
-        paths: [{ path: /v1/cancel-risk, pathType: Prefix, backend: { service: { name: risk-api, port: { number: 80 } } } }]

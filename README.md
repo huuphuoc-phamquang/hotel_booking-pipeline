@@ -52,7 +52,6 @@ Nguồn sơ đồ: `docs/architecture/booking-overbooking.drawio`. Trạng thái
 │   └── tests/
 ├── edai2/            ML + agent platform
 │   ├── ml/           training pipeline (KFP, MLflow)
-│   ├── risk_api/     API dự báo cancel-risk
 │   ├── drift_api/    phát hiện drift theo thời gian thực
 │   ├── mcp_server/   MCP tool cho agent, tính số phòng bán vượt K
 │   ├── dags/         materialize, score_bookings, drift_monitor, RAG

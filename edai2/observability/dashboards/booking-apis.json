@@ -1,6 +1,6 @@
 {
  "uid": "booking-apis",
- "title": "Booking APIs (risk-api, drift-api, booking-mcp)",
+ "title": "Booking APIs (booking-mcp, drift-api)",
  "schemaVersion": 39,
  "time": {
   "from": "now-6h",
@@ -179,7 +179,7 @@
    "targets": [
     {
      "refId": "A",
-     "expr": "sum by (deployment) (kube_deployment_status_replicas{deployment=~\"risk-api|drift-api|booking-mcp|.*-agent.*\"})",
+     "expr": "sum by (deployment) (kube_deployment_status_replicas{deployment=~\"drift-api|booking-mcp|.*-agent.*\"})",
      "legendFormat": "{{deployment}}"
     }
    ]

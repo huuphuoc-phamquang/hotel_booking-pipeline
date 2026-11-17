@@ -57,22 +57,6 @@ spec:
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
-  name: risk-api
-  namespace: ml
-spec:
-  scaleTargetRef: { name: risk-api }
-  minReplicaCount: 2
-  maxReplicaCount: 10
-  triggers:
-    - type: prometheus
-      metadata:
-        serverAddress: http://kube-prometheus-stack-prometheus.monitoring:9090
-        query: sum(rate(http_requests_total{service="risk-api", handler=~"/v1/cancel-risk.*"}[1m]))
-        threshold: "50"
----
-apiVersion: keda.sh/v1alpha1
-kind: ScaledObject
-metadata:
   name: drift-api
   namespace: ml
 spec:

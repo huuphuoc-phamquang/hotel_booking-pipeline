@@ -1,4 +1,4 @@
-# Trace: Jaeger all-in-one nhận OTLP (gRPC 4317) từ risk-api (OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector.monitoring:4317)
+# Trace: Jaeger all-in-one nhận OTLP (gRPC 4317) từ booking-mcp (OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector.monitoring:4317)
 # và agentgateway; UI jaeger-query:16686 qua ingress jaeger.booking.local. Bộ nhớ in-memory: đủ cho demo 1 tuần.
 apiVersion: apps/v1
 kind: Deployment

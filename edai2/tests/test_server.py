@@ -1,24 +1,16 @@
 """Unit test cho mcp_server/server.py.
 
 Rubric edai-2 › Validation & Verification:
-  - Coverage > 90% + fixture + mock   : fixture `client`, `fake_features`; mock Feast và KServe bằng monkeypatch/respx
-  - Equivalence partitioning + BVA    : test_probability_bounds (biên 0 và 1); biên input ở test_risk_api.py
+  - Coverage > 90% + fixture + mock   : fixture `client`, `fake_features`; mock Feast bằng monkeypatch
+  - Equivalence partitioning + BVA    : test_probability_bounds, test_booking_id_bounds ở test_cancel_risk.py
   - Mutation testing (mutmut > 80%)   : chỉ mutate file thay đổi (mutmut 2.x --paths-to-mutate, xem Jenkinsfile)
-  - Idempotency bằng property-based   : test_predict_idempotent dùng hypothesis (có thể chạy backend crosshair)
+  - Idempotency bằng property-based   : test_predict_tool_idempotent ở test_cancel_risk.py (hypothesis)
 Cần pytest-asyncio với asyncio_mode = "auto" (pytest.ini) để chạy test async.
 Chạy: pytest --cov=mcp_server --cov-report=term-missing --cov-fail-under=90
 """
-import asyncio
-import json
 import numpy as np
-
 import pytest
-import respx
 from fastapi.testclient import TestClient
-from httpx import Response
-from hypothesis import given, settings
-from hypothesis import strategies as st
-from pydantic import ValidationError
 
 import server
 
@@ -48,39 +40,9 @@ def test_readyz_ok(client):
     assert client.get("/readyz").status_code == 200
 
 
-# Equivalence partitioning: [0, 1] -> trả nguyên xác suất ; ngoài [0, 1] (risk-api hỏng) -> ValidationError
-# Boundary value analysis: -0.001, 0.0, 1.0, 1.001
-@pytest.mark.parametrize("prob, ok", [(-0.001, False), (0.0, True), (0.5, True), (1.0, True), (1.001, False)])
-@respx.mock
-async def test_probability_bounds(prob, ok):
-    respx.post(server.RISK_API_URL).mock(return_value=Response(200, json={"booking_id": 7, "probability": prob}))
-    if ok:
-        assert (await server.predict_cancellation(7)).probability == prob
-    else:
-        with pytest.raises(ValidationError):
-            await server.predict_cancellation(7)
-
-
 def test_cancel_risk_has_no_per_customer_decision():
     """Không cá nhân hoá điều kiện đặt phòng: output chỉ có xác suất, không có field quyết định (cọc, giá) theo khách."""
-    assert set(server.CancelRisk.model_fields) == {"booking_id", "probability"}
-
-
-@respx.mock
-async def test_predict_delegates_to_risk_api():
-    """Tool không tự dựng input model: gửi đúng booking_id sang risk-api (logic dự báo chỉ ở một chỗ)."""
-    route = respx.post(server.RISK_API_URL).mock(return_value=Response(200, json={"booking_id": 7, "probability": 0.1}))
-    await server.predict_cancellation(7)
-    assert json.loads(route.calls.last.request.content) == {"booking_id": 7}
-
-
-@respx.mock
-async def test_predict_failure_counted():
-    respx.post(server.RISK_API_URL).mock(return_value=Response(404))
-    before = server.TOOL_FAILURES.labels("predict_cancellation")._value.get()
-    with pytest.raises(Exception):
-        await server.predict_cancellation(7)
-    assert server.TOOL_FAILURES.labels("predict_cancellation")._value.get() == before + 1
+    assert set(server.CancelRisk.model_fields) == {"booking_id", "probability", "model_version"}
 
 
 async def test_features_reads_online_store(monkeypatch):
@@ -132,18 +94,3 @@ async def test_search_policy_failure_counted(monkeypatch):
     with pytest.raises(RuntimeError):
         await server.search_policy("đổi ngày nhận phòng?")
     assert server.TOOL_FAILURES.labels("search_policy")._value.get() == before + 1
-
-
-@settings(max_examples=50, deadline=None)
-@given(booking_id=st.integers(min_value=1, max_value=10**13),
-       prob=st.floats(min_value=0.0, max_value=1.0, allow_nan=False))
-def test_predict_idempotent(booking_id, prob):
-    """Cùng input gọi 2 lần phải ra cùng kết quả (không có state ẩn / random)."""
-    async def call_twice():
-        with respx.mock:
-            respx.post(server.RISK_API_URL).mock(
-                return_value=Response(200, json={"booking_id": booking_id, "probability": prob}))
-            return await server.predict_cancellation(booking_id), await server.predict_cancellation(booking_id)
-
-    first, second = asyncio.run(call_twice())     # hypothesis không chạy trực tiếp test async
-    assert first == second

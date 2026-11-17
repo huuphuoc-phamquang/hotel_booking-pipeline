@@ -1,7 +1,7 @@
 """Định nghĩa Feast cho booking app: entity, feature view offline/streaming (có TTL) và chunk embedding cho RAG.
 
 Rubric edai-2:
-  - Web API kéo dữ liệu theo ID (final): booking_attributes theo booking_id cho risk-api
+  - Web API kéo dữ liệu theo ID (edai-2): booking_attributes theo booking_id cho tool predict_cancellation
   - Feature Store › streaming feature: Flink booking_events_window upsert offline gold.feat_hotel_realtime;
     DAG feast_materialize_realtime đưa lên online mỗi 5 phút. PushSource hotel_realtime_push để sẵn cho
     store.push(..., to=PushMode.ONLINE) khi cần độ tươi tính bằng giây (chưa có job gọi)
@@ -22,7 +22,7 @@ hotel = Entity(name="hotel", join_keys=["hotel_id"], value_type=ValueType.INT64)
 chunk = Entity(name="chunk", join_keys=["chunk_id"], value_type=ValueType.STRING)
 booking = Entity(name="booking", join_keys=["booking_id"], value_type=ValueType.INT64)
 
-# Thuộc tính của chính booking (risk-api nhận booking_id): lấy thẳng từ Gold, không cần bảng feat_ riêng.
+# Thuộc tính của chính booking (predict_cancellation nhận booking_id): lấy thẳng từ Gold, không cần bảng feat_ riêng.
 # TTL 365 ngày: booking cần chấm điểm tới ngày nhận phòng (lead time dài nhất < 1 năm).
 booking_source = PostgreSQLSource(
     name="booking_attributes",

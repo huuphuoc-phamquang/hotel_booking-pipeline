@@ -1,5 +1,5 @@
-# Chart dùng chung cho 3 FastAPI: booking-mcp, risk-api, drift-api (values-<tên>.yaml).
-# Rubric edai-2 / final › "Deploy ... to k8s with helm + rollingupdate + auto fallback":
+# Chart dùng chung cho FastAPI: booking-mcp, drift-api (values-<tên>.yaml).
+# Rubric edai-2 › "Deploy ... to k8s with helm + rollingupdate + auto fallback":
 #   - strategy RollingUpdate maxUnavailable 0 -> luôn còn pod cũ phục vụ trong lúc cập nhật
 #   - readinessProbe /readyz -> pod mới chỉ nhận traffic khi đọc được store / nạp xong reference
 #   - auto fallback: CI chạy `helm upgrade --install --atomic --timeout 5m` -> pod mới không Ready

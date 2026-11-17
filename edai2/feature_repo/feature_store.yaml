@@ -1,4 +1,4 @@
-# Feast repo dùng chung cho risk-api, booking-mcp, Airflow (materialize, RAG), Kubeflow (load_from_feast).
+# Feast repo dùng chung cho booking-mcp, Airflow (materialize, RAG), Kubeflow (load_from_feast).
 # Không deploy Feast feature server: các app nhúng SDK và đọc thẳng store. Mount vào pod bằng ConfigMap (k8s/feast.yaml),
 # thông tin kết nối lấy từ Secret qua biến môi trường (Feast thay ${VAR} lúc đọc file).
 #   - registry : bảng SQL trên PostgreSQL (nhiều app đọc cùng lúc, không dùng file registry.db)
