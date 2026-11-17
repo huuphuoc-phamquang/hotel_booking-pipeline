@@ -1,4 +1,4 @@
-# Novel ideas (edai-2 & final)
+# Novel ideas (edai-2)
 
 Mỗi ý tưởng gồm vấn đề, cách làm và minh chứng đã chạy.
 
@@ -30,27 +30,5 @@ Trước drift, xác suất dự báo lệch xác suất thật dưới 0,05 ở
 **Rubric:** edai-2 · dòng 57 · 2 điểm · nhóm *Novel ideas*
 
 **Cách làm:** Idea 2 - Human-in-the-loop cho bán vượt. Tool `propose_overbooking` tính K cho từng khách sạn × đêm bằng phân phối Poisson-binomial chính xác trên xác suất trong `gold.booking_risk`, với ngưỡng c_spoil / (c_spoil + c_walk). Việc ghi K bằng `apply_overbooking` phải qua `requireApproval` của kagent (Approve hoặc Reject trên UI). Minh chứng: trace phê duyệt và test giá trị biên.
-
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
-
-## Bổ sung final-coursework
-
-<a id="final-58"></a>
-### Idea 1 (final): Đo drift detector bằng drift biết trước
-
-**Rubric:** final · dòng 58 · 2 điểm · nhóm *Novel ideas*
-
-**Cần nộp (cả nhóm):** Document idea + proof it worked!
-
-**Cách làm:** Idea 1 - Đo drift detector bằng drift biết trước. Generator cài drift vào một ngày đã biết, nhờ đó đo được độ trễ phát hiện và tỉ lệ báo nhầm, đồng thời so sánh KS với PSI.
-
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
-
-<a id="final-59"></a>
-### Idea 2 (final): A/B có Brier thật
-
-**Rubric:** final · dòng 59 · 2 điểm · nhóm *Novel ideas*
-
-**Cách làm:** Idea 2 - A/B có Brier thật. Generator biết xác suất huỷ thật p của từng booking, nên có thể so v1 và v2 bằng Brier và log-loss so với p thật ngay khi có dự báo, không phải chờ nhãn sau ngày nhận phòng.
 
 **Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._

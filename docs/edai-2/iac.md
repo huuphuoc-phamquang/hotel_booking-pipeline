@@ -31,26 +31,3 @@ state quản lý 13 tài nguyên và 2 data source (4 API, budget, VPC, subnet, 
 **Cách làm:** [Đã có] `iac/ansible` gồm `site.yml` và các role common, docker, vault, jenkins (chạy dạng container); `--syntax-check` và `ansible-lint` profile production đều sạch. [Cần làm] chạy trên VM, chụp kết quả playbook.
 
 **Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
-
-## Bổ sung final-coursework
-
-<a id="final-44"></a>
-### Dùng Terraform để setup GKE hoặc các cloud services · final · IaC
-
-**Rubric:** final · dòng 44 · 2 điểm · nhóm *IaC*
-
-**Cần nộp (cả nhóm):** Capture màn hình thể hiện từng setup đã chạy thành công
-
-**Cách làm:** [Đã có] `iac/modules/{network,gke,registry,budget}` và `iac/envs/dev` (state lưu trên GCS); `terraform validate` sạch. [Cần làm] chụp `terraform apply`.
-
-**Kết quả:** `terraform apply` báo `No changes` và `terraform state list` liệt kê đủ tài nguyên, ảnh ở
-[mục edai-2 dòng 44](#edai-2-44).
-
-<a id="final-45"></a>
-### Dùng Ansible để configure và deploy các service lên VM · final · IaC
-
-**Rubric:** final · dòng 45 · 2 điểm · nhóm *IaC*
-
-**Cách làm:** [Đã có] `iac/ansible` gồm `site.yml` và các role common (ufw), docker, vault (container cùng `vault.hcl`), jenkins; `ansible-playbook --syntax-check` và `ansible-lint` profile production đều sạch. [Cần làm] chạy trên VM, chụp kết quả playbook.
-
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._

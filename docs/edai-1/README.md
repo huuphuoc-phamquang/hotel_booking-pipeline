@@ -8,7 +8,6 @@
 | [data_storage.md](data_storage.md) | Lakehouse trên Iceberg, data warehouse là tầng Gold trên PostgreSQL. |
 | [data_pipeline.md](data_pipeline.md) | Ba pipeline DP1–DP3 trên Airflow, mỗi pipeline gồm ingest và validate. |
 | [data_governance.md](data_governance.md) | Lineage và kết quả kiểm tra dữ liệu DP1–DP3 trên DataHub. |
-| [cicd.md](cicd.md) | Jenkins kiểm DAG và bộ Great Expectations, build image Spark, đồng bộ DAG lên Airflow. Cấu hình dùng chung ở [edai-2/cicd.md](../edai-2/cicd.md). |
 | [schema_design.md](schema_design.md) | Bảng theo zone, dimension SCD2, bảng feature, quan hệ dim–fact và quy ước đặt tên. |
 | [novel_ideas.md](novel_ideas.md) | Mỗi ý tưởng gồm vấn đề, cách làm và minh chứng đã chạy. |
 
@@ -54,14 +53,3 @@
 | 38 | 2 | Naming convention | [schema_design.md](schema_design.md#edai-1-38) | Đã có · Cần làm |
 | 39 | 10 | Idea 1 | [novel_ideas.md](novel_ideas.md#edai-1-39) | — |
 | 40 | 10 | Idea 2 | [novel_ideas.md](novel_ideas.md#edai-1-40) | chờ cluster |
-
-## Dòng rubric final
-
-| Dòng | Điểm | Mục | Tài liệu | Trạng thái |
-|---|---|---|---|---|
-| 16 | 2 | Simulate data drift | [data_generator.md](data_generator.md#final-16) | Đã có · chờ cluster |
-| 17 | 2 | Using generator configuration | [data_generator.md](data_generator.md#final-17) | Đã có · chờ cluster |
-| 18 | 2 | Tạo bảng label có 2 cột id và label | [data_generator.md](data_generator.md#final-18) | Đã có · chờ cluster |
-| 30 | 2 | DP 1 | [cicd.md](cicd.md#final-30) | Đã có · chờ cluster |
-| 31 | 2 | DP 2 | [cicd.md](cicd.md#final-31) | Đã có · chờ cluster |
-| 32 | 2 | DP 3 | [cicd.md](cicd.md#final-32) | Đã có · chờ cluster |

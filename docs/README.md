@@ -5,7 +5,7 @@ booking để đề xuất số phòng overbooking (revenue manager duyệt).
 
 - [problem_design.md](problem_design.md): thiết kế bài toán, từ xác suất huỷ tới số phòng bán vượt K.
 - [architecture/](architecture/): sơ đồ triển khai tổng thể (`booking-overbooking.drawio`, `booking-overbooking.png`).
-- [edai-1/](edai-1/README.md): data platform. [edai-2/](edai-2/README.md): nền tảng AI và agent. Các dòng của final-coursework nằm trong file cùng chủ đề ở hai thư mục này.
+- [edai-1/](edai-1/README.md): data platform. [edai-2/](edai-2/README.md): nền tảng AI và agent.
 - `images/edai-1/`, `images/edai-2/`: ảnh chụp minh chứng.
 
 Bảng dưới tra ngược từ dòng rubric (file `EDAI K11.xlsx`) sang mục tài liệu. Trạng thái tính lại mỗi lần đồng bộ với
@@ -120,65 +120,3 @@ Hiện toàn bộ hệ thống mới được chạy cục bộ (Docker, pyspark
 | 55 | 2 | README.md và documentation follow rule ở ô A2 | [edai-2/ml_design.md](edai-2/ml_design.md#edai-2-55) | Đã có |
 | 56 | 2 | Idea 1 | [edai-2/novel_ideas.md](edai-2/novel_ideas.md#edai-2-56) | chờ cluster |
 | 57 | 2 | Idea 2 | [edai-2/novel_ideas.md](edai-2/novel_ideas.md#edai-2-57) | — |
-
-## final
-
-| Dòng | Điểm | Mục | Tài liệu | Trạng thái |
-|---|---|---|---|---|
-| 3 | 2 | Có sử dụng FastAPI + data validation + healthcheck for k8s | [edai-2/web_api.md](edai-2/web_api.md#final-3) | Đã có · chờ cluster |
-| 4 | 2 | Sử dụng async | [edai-2/web_api.md](edai-2/web_api.md#final-4) | Đã có |
-| 5 | 2 | Deploy to k8s with helm + rollingupdate + auto fallback | [edai-2/web_api.md](edai-2/web_api.md#final-5) | Đã có · chờ cluster |
-| 6 | 2 | Có sử dụng FastAPI + data validation + healthcheck for k8s | [edai-2/web_api.md](edai-2/web_api.md#final-6) | Đã có · chờ cluster |
-| 7 | 2 | Sử dụng async | [edai-2/web_api.md](edai-2/web_api.md#final-7) | Đã có |
-| 8 | 2 | Deploy to k8s with helm + rollingupdate + auto fallback | [edai-2/web_api.md](edai-2/web_api.md#final-8) | Đã có · chờ cluster |
-| 9 | 2 | Web API kéo dữ liệu | [edai-2/web_api.md](edai-2/web_api.md#final-9) | Đã có · chờ cluster |
-| 10 | 2 | Web API cho drift detection | [edai-2/web_api.md](edai-2/web_api.md#final-10) | Đã có · chờ cluster |
-| 11 | 2 | Unit test với Test Coverage > 90% | [edai-2/testing.md](edai-2/testing.md#final-11) | Đã có · chờ cluster |
-| 12 | 2 | Có sử dụng kỹ thuật equivalence partitioning vs boundary value analysis khi thiết kế test… | [edai-2/testing.md](edai-2/testing.md#final-12) | Đã có · chờ cluster |
-| 13 | 2 | Có sử dụng mutation testing để đánh giá hiệu quả của các test | [edai-2/testing.md](edai-2/testing.md#final-13) | Đã có · chờ cluster |
-| 14 | 2 | Idempotency testing sử dụng property-based testing | [edai-2/testing.md](edai-2/testing.md#final-14) | Đã có · Thiết kế |
-| 15 | 2 | Load test the Web API to understand throughput and latency | [edai-2/testing.md](edai-2/testing.md#final-15) | Đã có · chờ cluster |
-| 16 | 2 | Simulate data drift | [edai-1/data_generator.md](edai-1/data_generator.md#final-16) | Đã có · chờ cluster |
-| 17 | 2 | Using generator configuration | [edai-1/data_generator.md](edai-1/data_generator.md#final-17) | Đã có · chờ cluster |
-| 18 | 2 | Tạo bảng label có 2 cột id và label | [edai-1/data_generator.md](edai-1/data_generator.md#final-18) | Đã có · chờ cluster |
-| 19 | 2 | Build data pipeline để incremental materialize dữ liệu mới nhất từ offline qua online… | [edai-2/feature_store.md](edai-2/feature_store.md#final-19) | Đã có · chờ cluster |
-| 20 | 1 | Deploy job chịu trách nhiệm push streaming feature vào OFFLINE store | [edai-2/feature_store.md](edai-2/feature_store.md#final-20) | Đã có · chờ cluster |
-| 21 | 1 | Deploy job chịu trách nhiệm push streaming feature vào ONLINE store | [edai-2/feature_store.md](edai-2/feature_store.md#final-21) | Đã có · chờ cluster |
-| 22 | 2 | Define TTL cho từng bảng feature, giải thích tại sao chọn TTL như thế | [edai-2/feature_store.md](edai-2/feature_store.md#final-22) | Đã có · Cần làm |
-| 23 | 2 | Jupyter notebook để kéo dữ liệu từ offline store để tạo ra model. | [edai-2/ml_pipeline.md](edai-2/ml_pipeline.md#final-23) | Đã có |
-| 24 | 2 | Chuyển đổi code từ Jupyter notebook thành training pipeline với số lượng step giống ở… | [edai-2/ml_pipeline.md](edai-2/ml_pipeline.md#final-24) | Đã có · chờ cluster |
-| 25 | 2 | Trong training pipeline, ở step train, thay bằng distributed training | [edai-2/ml_pipeline.md](edai-2/ml_pipeline.md#final-25) | Đã có · chờ cluster |
-| 26 | 2 | Khi training pipeline hoàn tất, thông tin của MODEL cần được lưu trữ lại ở Model Registry | [edai-2/ml_pipeline.md](edai-2/ml_pipeline.md#final-26) | Đã có |
-| 27 | 2 | Mỗi lần kéo dữ liệu từ Feast về để training, cần version lại DATA theo cơ chế incremental | [edai-2/ml_pipeline.md](edai-2/ml_pipeline.md#final-27) | Đã có · chờ cluster |
-| 28 | 2 | Materialize Pipeline | [edai-2/cicd.md](edai-2/cicd.md#final-28) | Đã có · chờ cluster |
-| 29 | 2 | Training Pipeline | [edai-2/cicd.md](edai-2/cicd.md#final-29) | Đã có · chờ cluster |
-| 30 | 2 | DP 1 | [edai-1/cicd.md](edai-1/cicd.md#final-30) | Đã có · chờ cluster |
-| 31 | 2 | DP 2 | [edai-1/cicd.md](edai-1/cicd.md#final-31) | Đã có · chờ cluster |
-| 32 | 2 | DP 3 | [edai-1/cicd.md](edai-1/cicd.md#final-32) | Đã có · chờ cluster |
-| 33 | 2 | Web API | [edai-2/cicd.md](edai-2/cicd.md#final-33) | Đã có · chờ cluster |
-| 34 | 1 | Inference Engine | [edai-2/cicd.md](edai-2/cicd.md#final-34) | Đã có · chờ cluster |
-| 35 | 1 | Cho real-time drift detection Web API | [edai-2/cicd.md](edai-2/cicd.md#final-35) | Đã có · chờ cluster |
-| 36 | 1 | Job 1: Push stream feature to OFFLINE store | [edai-2/cicd.md](edai-2/cicd.md#final-36) | Đã có · chờ cluster |
-| 37 | 1 | Job 2: Push stream feature to ONLINE store | [edai-2/cicd.md](edai-2/cicd.md#final-37) | Đã có · chờ cluster |
-| 38 | 2 | Service để coi metric | [edai-2/routing_gateway.md](edai-2/routing_gateway.md#final-38) | Đã có · chờ cluster |
-| 39 | 2 | Service để coi log | [edai-2/routing_gateway.md](edai-2/routing_gateway.md#final-39) | Đã có · chờ cluster |
-| 40 | 2 | Service để coi trace | [edai-2/routing_gateway.md](edai-2/routing_gateway.md#final-40) | Đã có · chờ cluster |
-| 41 | 2 | Web API kéo dữ liệu | [edai-2/routing_gateway.md](edai-2/routing_gateway.md#final-41) | Đã có · chờ cluster |
-| 42 | 2 | Setup authentication & rate limit cho Web API kéo dữ liệu | [edai-2/routing_gateway.md](edai-2/routing_gateway.md#final-42) | Đã có · chờ cluster |
-| 43 | 1 | Làm cái này cho Web API kéo dữ liệu | [edai-2/routing_gateway.md](edai-2/routing_gateway.md#final-43) | Đã có · chờ cluster |
-| 44 | 2 | Dùng Terraform để setup GKE hoặc các cloud services | [edai-2/iac.md](edai-2/iac.md#final-44) | Đã có · chờ cluster |
-| 45 | 2 | Dùng Ansible để configure và deploy các service lên VM | [edai-2/iac.md](edai-2/iac.md#final-45) | Đã có · chờ cluster |
-| 46 | 2 | Web API monitoring metrics such as req/s, num | [edai-2/observability.md](edai-2/observability.md#final-46) | Đã có · chờ cluster |
-| 47 | 2 | Collect và visualize metrics với Prometheus + Grafana | [edai-2/observability.md](edai-2/observability.md#final-47) | Đã có · chờ cluster |
-| 48 | 2 | Tương tự cho logs | [edai-2/observability.md](edai-2/observability.md#final-48) | Đã có · chờ cluster |
-| 49 | 2 | Tương tự cho traces | [edai-2/observability.md](edai-2/observability.md#final-49) | Đã có · chờ cluster |
-| 50 | 1 | Airflow data drift pipeline to periodically pull data from offline feature store and… | [edai-2/observability.md](edai-2/observability.md#final-50) | Đã có · chờ cluster |
-| 51 | 1 | Trigger retrain by calling Kubeflow API | [edai-2/observability.md](edai-2/observability.md#final-51) | Đã có · chờ cluster |
-| 52 | 1 | Perform A/B traffic split for 2 versions of inference service | [edai-2/ab_testing.md](edai-2/ab_testing.md#final-52) | Đã có |
-| 53 | 1 | Setup monitoring dashboard to monitor 2 versions. | [edai-2/ab_testing.md](edai-2/ab_testing.md#final-53) | Đã có · Cần làm |
-| 54 | 1 | Centralize secret management via Hashi Corp Vault so it will be used across the whole… | [edai-2/security.md](edai-2/security.md#final-54) | Đã có · chờ cluster |
-| 55 | 1 | Using service mesh to authorize access from service to service | [edai-2/security.md](edai-2/security.md#final-55) | Đã có · chờ cluster |
-| 56 | 2 | Clean Code + clean repo + demonstrate the use of Design Pattern | [edai-2/ml_design.md](edai-2/ml_design.md#final-56) | Đã có · chờ cluster |
-| 57 | 1 | Propose 5 key classes to present our main focus: | [edai-2/ml_design.md](edai-2/ml_design.md#final-57) | Đã có |
-| 58 | 2 | Idea 1 | [edai-2/novel_ideas.md](edai-2/novel_ideas.md#final-58) | — |
-| 59 | 2 | Idea 2 | [edai-2/novel_ideas.md](edai-2/novel_ideas.md#final-59) | — |

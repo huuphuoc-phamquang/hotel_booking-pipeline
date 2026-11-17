@@ -219,34 +219,3 @@ lại nhờ allowedLateness. Webhook không đi qua cửa sổ (chỉ dedup) nê
 Bản callback gửi lại giữ nguyên `event_id` như webhook at-least-once thật, nên đếm thẳng thì số thanh toán bị đếm hai
 lần; Flink giữ lần đầu theo `event_id` bằng keyed state có TTL 1 giờ (`DedupByEventId`). Double submit khác
 `event_id`, nên Flink dedup theo `idempotency_key` trước khi đếm booking, cùng quy tắc với Silver.
-
-## Bổ sung final-coursework
-
-<a id="final-16"></a>
-### Simulate data drift
-
-**Rubric:** final · dòng 16 · 2 điểm · nhóm *Improve the Data Generator* › *Simulate data drift*
-
-**Cần nộp (cả nhóm):** Capture màn hình thể hiện generator configuration và bảng sau khi merge id và label
-
-**Cách làm:** [Đã có] Concept drift (`label.drift`: hệ số `lead_time` tăng từ 0,8 lên 1,4) và covariate drift (`covariate_drift`: lead time ×1,5) cùng bắt đầu từ 2025-06-01. Mốc giữa năm để nhãn của booking sau drift kịp chín trong phạm vi 365 ngày dữ liệu. `profile_data` in lead time và tỉ lệ huỷ trước, sau drift. [Cần làm] chụp bảng số đo.
-
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
-
-<a id="final-17"></a>
-### Using generator configuration
-
-**Rubric:** final · dòng 17 · 2 điểm · nhóm *Improve the Data Generator* › *Simulate data drift*
-
-**Cách làm:** [Đã có] `edai1/generator/config.yaml` chứa seed, cấu hình skew, lỗi dữ liệu và nhãn. [Cần làm] chụp config và khối drift.
-
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
-
-<a id="final-18"></a>
-### Tạo bảng label có 2 cột id và label
-
-**Rubric:** final · dòng 18 · 2 điểm · nhóm *Improve the Data Generator*
-
-**Cách làm:** [Đã có] View Gold `labels_cancel(booking_id, is_cancelled)` đánh dấu booking huỷ trước ngày nhận phòng, dựa trên cancellations của landing. Training join view này và chỉ lấy booking đã chín nhãn. [Cần làm] chụp bảng sau khi join với feature (`get_historical_features`).
-
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
