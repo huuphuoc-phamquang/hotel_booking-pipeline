@@ -1,0 +1,22 @@
+# Ingest bảng Iceberg của Silver (lake.silver.stg_*) lên DataHub qua cùng JDBC catalog `lake` mà Spark dùng (bảng
+# iceberg_tables trên PostgreSQL). Tên dataset = silver.<bảng>, khớp ds_urn("iceberg:silver.<bảng>").
+# Chạy: datahub ingest -c iceberg_silver.yml   (POSTGRES_PASSWORD, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, DATAHUB_GMS)
+source:
+  type: iceberg
+  config:
+    env: PROD
+    catalog:
+      lake:                      # trùng catalog_name Spark ghi vào iceberg_tables
+        type: sql
+        uri: postgresql+psycopg2://postgres:${POSTGRES_PASSWORD}@postgres.data.svc.cluster.local:5432/warehouse
+        warehouse: s3://lake/
+        s3.endpoint: http://minio.data.svc.cluster.local:9000
+        s3.access-key-id: ${MINIO_ACCESS_KEY}
+        s3.secret-access-key: ${MINIO_SECRET_KEY}
+        s3.path-style-access: "true"
+    namespace_pattern:
+      allow: ["^silver$"]
+sink:
+  type: datahub-rest
+  config:
+    server: ${DATAHUB_GMS}

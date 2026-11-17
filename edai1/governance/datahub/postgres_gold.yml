@@ -1,0 +1,19 @@
+# Rubric edai-1 › Schema design: ingest schema Gold (cột, kiểu, PK, khoá ngoại fact -> dim) lên DataHub.
+# Tên dataset = warehouse.gold.<bảng>, khớp ds_urn("postgres:warehouse.gold.<bảng>") của governance/emit_datahub.py.
+# Chạy: datahub ingest -c postgres_gold.yml   (POSTGRES_PASSWORD, DATAHUB_GMS từ Secret)
+source:
+  type: postgres
+  config:
+    host_port: postgres.data.svc.cluster.local:5432
+    database: warehouse
+    username: postgres
+    password: ${POSTGRES_PASSWORD}
+    schema_pattern:
+      allow: ["^gold$"]
+    include_views: true          # labels_cancel
+    profiling:
+      enabled: false
+sink:
+  type: datahub-rest
+  config:
+    server: ${DATAHUB_GMS}
