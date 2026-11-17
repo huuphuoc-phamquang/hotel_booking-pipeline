@@ -28,6 +28,7 @@ import pandas as pd
 import pyarrow
 import yaml
 from minio import Minio
+from minio.error import S3Error
 
 from generator.demand import SEGMENT_OF_STARS, book_prob, season_of
 
@@ -376,7 +377,11 @@ def main(config_path: str = "generator/config.yaml", first_day: int = 0, last_da
                    secret_key=os.environ["MINIO_SECRET_KEY"], secure=False)
     for b in (BUCKET, TRUTH_BUCKET):
         if not client.bucket_exists(b):
-            client.make_bucket(b)
+            try:
+                client.make_bucket(b)
+            except S3Error as e:                             # pod song song của Indexed Job vừa tạo trước
+                if e.code != "BucketAlreadyOwnedByYou":
+                    raise
 
     dims = gen_dims(cfg)
     manifest = {"config_sha256": cfg["sha256"], "numpy": np.__version__, "pandas": pd.__version__,
