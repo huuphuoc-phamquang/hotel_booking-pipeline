@@ -4,7 +4,7 @@ Tài liệu của đồ án EDAI K11: nền tảng dữ liệu và AI cho ứng 
 booking để đề xuất số phòng overbooking (revenue manager duyệt).
 
 - [problem_design.md](problem_design.md): thiết kế bài toán, từ xác suất huỷ tới số phòng bán vượt K.
-- [architecture/](architecture/): sơ đồ triển khai tổng thể (`booking-overbooking.drawio`, `booking-overbooking.png`) và sơ đồ bảng (`booking-schema.drawio`).
+- [architecture/](architecture/): sơ đồ triển khai tổng thể (`booking-overbooking.drawio`, `booking-overbooking.png`).
 - [edai-1/](edai-1/README.md): data platform. [edai-2/](edai-2/README.md): nền tảng AI và agent. Các dòng của final-coursework nằm trong file cùng chủ đề ở hai thư mục này.
 - `images/edai-1/`, `images/edai-2/`: ảnh chụp minh chứng.
 
