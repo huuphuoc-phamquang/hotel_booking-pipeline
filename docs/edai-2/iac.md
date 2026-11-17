@@ -14,7 +14,14 @@ cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu �
 
 **Cách làm:** [Đã có] `iac/modules/{network,gke,registry,budget}` và `iac/envs/dev`: VPC với Cloud NAT, GKE node private, pool CPU spot và pool GPU L4 (tối thiểu 0 node), Artifact Registry, cảnh báo ngân sách. [Cần làm] chụp `terraform apply`.
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+**Kết quả:** hạ tầng dựng bằng `terraform apply` trong `iac/envs/dev` (project `hotel-booking-edai`, asia-southeast1).
+Chạy lại `terraform apply` (2026-11-18) báo `No changes`: hạ tầng thật khớp code, không có thay đổi tay ngoài
+Terraform. Output là cluster `booking-ai` và registry `asia-southeast1-docker.pkg.dev/hotel-booking-edai/booking`;
+state quản lý 13 tài nguyên và 2 data source (4 API, budget, VPC, subnet, router, Cloud NAT, cluster GKE, 2 node pool, Artifact Registry).
+
+![terraform apply](../images/edai-2/terraform-apply.png)
+
+![terraform state list](../images/edai-2/terraform-state.png)
 
 <a id="edai-2-45"></a>
 ## Dùng Ansible để configure và deploy các service lên VM · edai-2 · IaC
@@ -36,7 +43,8 @@ cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu �
 
 **Cách làm:** [Đã có] `iac/modules/{network,gke,registry,budget}` và `iac/envs/dev` (state lưu trên GCS); `terraform validate` sạch. [Cần làm] chụp `terraform apply`.
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+**Kết quả:** `terraform apply` báo `No changes` và `terraform state list` liệt kê đủ tài nguyên, ảnh ở
+[mục edai-2 dòng 44](#edai-2-44).
 
 <a id="final-45"></a>
 ### Dùng Ansible để configure và deploy các service lên VM · final · IaC
