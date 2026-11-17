@@ -1,0 +1,22 @@
+# Airflow trên GKE: helm install airflow apache-airflow/airflow --version 1.16.0 -n data -f k8s/airflow-values.yaml
+# KubernetesExecutor (mỗi task 1 pod, không cần Redis/Celery); metadata DB là database airflow trên Postgres sẵn có.
+# Connection và Variable tạo bằng CLI sau khi cài (lưu trong metadata DB, thấy được ở Admin > Connections).
+executor: KubernetesExecutor
+images:
+  airflow: { repository: REGISTRY/data/airflow-booking, tag: TAG, pullPolicy: IfNotPresent }
+postgresql: { enabled: false }
+redis: { enabled: false }
+statsd: { enabled: false }
+data:
+  metadataSecretName: airflow-metadata          # key connection = postgresql://postgres:<pw>@postgres.data.svc.cluster.local:5432/airflow
+env:
+  - { name: AIRFLOW__CORE__LOAD_EXAMPLES, value: "False" }
+  - { name: AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION, value: "True" }
+dags:
+  persistence: { enabled: false }
+  gitSync: { enabled: false }                   # DAG nằm trong image (k8s/airflow.Dockerfile)
+triggerer:
+  persistence: { enabled: false }
+workers:
+  # task pod: spark-submit chỉ chờ driver; validate_quotes đọc 1 partition quotes (~34 triệu dòng) vào pandas
+  resources: { requests: { cpu: 500m, memory: 4Gi } }
