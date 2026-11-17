@@ -35,5 +35,7 @@ spec:
     entryClass: org.apache.flink.client.python.PythonDriver
     # -pyfs: Python worker trên TaskManager không có thư mục của script trong sys.path -> thiếu module contract
     args: ["-py", "/opt/flink/usrlib/booking_events_window.py", "-pyfs", "/opt/flink/usrlib"]
-    parallelism: 2
+    # = số partition booking_events: watermark gán sau source, 1 subtask đọc nhiều partition thì watermark chạy theo
+    # partition nhanh nhất và event của partition chậm thành trễ giả (đo trên GKE với parallelism 2: 2.409 event trễ)
+    parallelism: 6
     upgradeMode: last-state

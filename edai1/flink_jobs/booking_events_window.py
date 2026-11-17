@@ -1,7 +1,7 @@
 """PyFlink job: đếm booking theo khách sạn trong 1 giờ qua (trượt mỗi 5 phút), xử lý late arrival và callback trùng.
 
 Rubric edai-1 › Processing Jobs › Flink job to handle streaming data problems:
-  - Baseline (without optimization)   : BASELINE=True -> watermark 0s, không dedup
+  - Baseline (without optimization)   : env BASELINE=1 -> watermark 0s, không dedup
   - Handle late arrival with explanation: watermark 10 phút + allowedLateness 5 phút + side output. Side output
     lấy ở nhánh đối soát tumbling 1 phút: với cửa sổ trượt 1 giờ, event chỉ rơi ra side output khi trễ hơn cả
     cửa sổ cuối chứa nó (> 1h15'), nên gần như không thấy. Đối soát: mỗi giờ
@@ -34,7 +34,7 @@ from contract import violation
 from pyflink.datastream.state import StateTtlConfig, ValueStateDescriptor
 from pyflink.datastream.window import SlidingEventTimeWindows, TumblingEventTimeWindows
 
-BASELINE = False
+BASELINE = os.environ.get("BASELINE") == "1"
 MAX_OUT_OF_ORDER = Duration.of_minutes(0 if BASELINE else 10)
 ALLOWED_LATENESS_MS = 5 * 60 * 1000
 LATE_TAG = OutputTag("too-late", Types.STRING())
