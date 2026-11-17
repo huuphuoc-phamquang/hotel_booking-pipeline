@@ -13,3 +13,4 @@ tfplan
 edai2/ml/training_pipeline.yaml
 # model tải về lúc build image KServe (ci/fetch_model.py)
 edai2/serving/model/
+edai1/docker/.env
