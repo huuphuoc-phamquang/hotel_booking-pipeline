@@ -53,10 +53,10 @@ Hiện toàn bộ hệ thống mới được chạy cục bộ (Docker, pyspark
 | 31 | 2 | Data validation | [edai-1/data_governance.md](edai-1/data_governance.md#edai-1-31) | Đã có · chờ cluster |
 | 32 | 2 | Lineage between the pipeline and tables | [edai-1/data_governance.md](edai-1/data_governance.md#edai-1-32) | Đã có · chờ cluster |
 | 33 | 2 | Data validation | [edai-1/data_governance.md](edai-1/data_governance.md#edai-1-33) | Đã có · chờ cluster |
-| 34 | 2 | Visualize tables on all zones | [edai-1/schema_design.md](edai-1/schema_design.md#edai-1-34) | Cần làm |
+| 34 | 2 | Visualize tables on all zones | [edai-1/schema_design.md](edai-1/schema_design.md#edai-1-34) | Đã có · chờ cluster |
 | 35 | 2 | Dim table with SCD 2 | [edai-1/schema_design.md](edai-1/schema_design.md#edai-1-35) | Đã có · chờ cluster |
 | 36 | 2 | Feature tables with 2 columns event_timestamp and created | [edai-1/schema_design.md](edai-1/schema_design.md#edai-1-36) | Đã có |
-| 37 | 2 | Relationship between dim & fact tables | [edai-1/schema_design.md](edai-1/schema_design.md#edai-1-37) | Cần làm |
+| 37 | 2 | Relationship between dim & fact tables | [edai-1/schema_design.md](edai-1/schema_design.md#edai-1-37) | Đã có · Cần làm |
 | 38 | 2 | Naming convention | [edai-1/schema_design.md](edai-1/schema_design.md#edai-1-38) | Đã có · Cần làm |
 | 39 | 10 | Idea 1 | [edai-1/novel_ideas.md](edai-1/novel_ideas.md#edai-1-39) | — |
 | 40 | 10 | Idea 2 | [edai-1/novel_ideas.md](edai-1/novel_ideas.md#edai-1-40) | chờ cluster |
