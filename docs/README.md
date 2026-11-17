@@ -27,7 +27,7 @@ Hiện toàn bộ hệ thống mới được chạy cục bộ (Docker, pyspark
 | 5 | 2 | Simulate skew | [edai-1/data_generator.md](edai-1/data_generator.md#edai-1-5) | Đã có · Cần làm |
 | 6 | 2 | Simulate schema evolution | [edai-1/data_generator.md](edai-1/data_generator.md#edai-1-6) | Đã có · Cần làm |
 | 7 | 2 | Simulate another offline data problem | [edai-1/data_generator.md](edai-1/data_generator.md#edai-1-7) | Đã có · Thêm cho novelty |
-| 8 | 2 | Store data after generating so that we can ingest to Bronze zone later | [edai-1/data_generator.md](edai-1/data_generator.md#edai-1-8) | Đã có · chờ cluster |
+| 8 | 2 | Store data after generating so that we can ingest to Bronze zone later | [edai-1/data_generator.md](edai-1/data_generator.md#edai-1-8) | Đã có |
 | 9 | 2 | Simulate late arrivals | [edai-1/data_generator.md](edai-1/data_generator.md#edai-1-9) | Đã có · Cần làm |
 | 10 | 2 | Simulate another streaming data problem | [edai-1/data_generator.md](edai-1/data_generator.md#edai-1-10) | Đã có |
 | 11 | 2 | Baseline | [edai-1/processing_jobs.md](edai-1/processing_jobs.md#edai-1-11) | Đã có · chờ cluster |
