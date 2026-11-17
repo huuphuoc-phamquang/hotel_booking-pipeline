@@ -68,7 +68,38 @@ Mẫu: ngày [15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345], đủ 16
 
 **Cách làm:** [Đã có] Lượt xem và booking lệch theo phân phối Zipf của khách sạn (`hotel_zipf_a`). 70% khách sạn tập trung ở 3 thành phố. Mùa cao điểm tính theo `stay_date` (Tết, 30/4, hè, cả năm 2026), sự kiện chỉ tác động từ `announce_date`. Độ lệch nặng nhất nằm ở các cặp (`hotel_id`, `stay_date`) nóng. Lệnh `python -m generator.profile_data` in các số đo top 1, top 1% và khách sạn trung vị. [Cần làm] vẽ histogram và tính cardinality từng cột.
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+**Kết quả:** `python -m generator.cardinality 195 <file png>` (2026-11-17) đo trên ngày 2025-07-15: quotes lấy shard 0
+(2.379.119 dòng; mỗi shard giữ 1/16 số khách sạn nên `hotel_id` ở đây chỉ có 3.125 giá trị), bookings landing đủ 16
+shard (409.892 dòng). Cardinality = số giá trị khác nhau / số dòng; high ≥ 50%, low < 1%.
+
+| quotes: cột | Số giá trị khác nhau | Tỉ lệ / số dòng | Mức |
+|---|---|---|---|
+| `quote_id` | 2.379.119 | 100% | high |
+| `quoted_at` | 86.400 | 3,63% | medium |
+| `price` | 6.457 | 0,27% | low |
+| `hotel_id` | 3.125 | 0,13% | low |
+| `stay_date` | 226 | 0,0095% | low |
+| `nights`, `room_type`, `rate_plan`, `available`, `booked` | 2–5 | < 0,001% | low |
+
+| bookings: cột | Số giá trị khác nhau | Tỉ lệ / số dòng | Mức |
+|---|---|---|---|
+| `booking_id` | 409.892 | 100% | high |
+| `idempotency_key` | 401.912 | 98,05% | high (1,95% là bản gửi trùng) |
+| `customer_id` | 391.447 | 95,50% | high |
+| `created_at` | 85.980 | 20,98% | medium |
+| `hotel_id` | 47.057 | 11,48% | medium |
+| `price` | 5.171 | 1,26% | medium |
+| `checkin` | 201 | 0,049% | low |
+| `nights`, `room_category`, `channel`, `cancellation_policy` | 2–5 | < 0,002% | low |
+
+Cột high cardinality (`quote_id`, `booking_id`, `idempotency_key`, `customer_id`) không dùng làm khoá partition: mỗi
+giá trị thành một thư mục nhỏ. Partition theo ngày (`dt`, `days(quoted_at)`), key Kafka là `hotel_id`. `customer_id`
+đo trên 1 ngày nên gần 100%; cả năm thấp hơn nhiều vì khách đặt lại (trung bình 4,6 booking/khách, khách có đặt trung vị 3, bảng Khách ở trên).
+`hotel_id` có cardinality thấp nhưng lệch: số dòng theo hạng khách sạn là đường thẳng trên trục log–log (Zipf), khách
+sạn đứng đầu có khoảng 10⁶ lượt xem/ngày, khách sạn cuối khoảng 10². Trong shard 0, ô (`hotel_id`, `room_type`,
+`stay_date`) trung vị có 2 lượt xem, p99 có 55, ô nóng nhất 2.723: đây là khoá join gây skew ở `silver_quotes`.
+
+![Skew theo khách sạn và theo ô](../images/edai-1/skew-hotel.png)
 
 <a id="edai-1-6"></a>
 ## Simulate schema evolution
