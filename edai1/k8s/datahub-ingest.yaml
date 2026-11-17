@@ -1,0 +1,35 @@
+# Ingest schema 3 zone lên DataHub (governance/datahub/*.yml) rồi emit lineage + mô tả + tag (governance/emit_datahub.py),
+# chạy trong cluster nên recipe dùng thẳng DNS nội bộ. Recipe và script lấy từ ConfigMap:
+#   kubectl -n data create configmap datahub-recipes --from-file=governance/datahub/ --from-file=governance/emit_datahub.py
+# Chạy lại sau mỗi lần DAG tạo thêm bảng: kubectl -n data delete job datahub-ingest; kubectl apply -f k8s/datahub-ingest.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: datahub-ingest
+  namespace: data
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: ingest
+          image: python:3.12-slim
+          command: ["sh", "-c"]
+          args:
+            - pip install -q "acryl-datahub[postgres,iceberg,s3]==1.7.0.19" &&
+              for f in /recipes/*.yml; do echo "== $f"; datahub ingest -c "$f" || exit 1; done &&
+              cd /recipes && python emit_datahub.py
+          env:
+            - { name: DATAHUB_GMS, value: http://datahub-datahub-gms:8080 }
+            - name: POSTGRES_PASSWORD
+              valueFrom: { secretKeyRef: { name: data-secrets, key: POSTGRES_PASSWORD } }
+            - name: MINIO_ACCESS_KEY
+              valueFrom: { secretKeyRef: { name: data-secrets, key: MINIO_ACCESS_KEY } }
+            - name: MINIO_SECRET_KEY
+              valueFrom: { secretKeyRef: { name: data-secrets, key: MINIO_SECRET_KEY } }
+          volumeMounts: [{ name: recipes, mountPath: /recipes }]
+          resources: { requests: { cpu: 500m, memory: 2Gi } }
+      volumes:
+        - name: recipes
+          configMap: { name: datahub-recipes }
