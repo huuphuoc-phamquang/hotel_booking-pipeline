@@ -14,7 +14,7 @@ cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu �
 
 **Cần nộp (cả nhóm):** Document show ảnh pipeline đã chạy thành công trên KF Pipelines + link tới code pipeline
 
-**Cách làm:** [Đã có] Pipeline KFP 4 step cho cancel-risk. Dữ liệu lấy theo cửa sổ [`since`, `until`): v1 dùng [2025-01-01, 2025-06-01), v2 bắt đầu từ mốc phát hiện drift; lấy mẫu `sample_pct` theo `booking_id`. Nhãn đến từ view `gold.labels_cancel`, chỉ gồm booking đã chín nhãn. Input có `loyalty_tier` và `has_customer_history`. DSN warehouse lấy từ Secret `ml-warehouse`.
+**Cách làm:** [Đã có] Pipeline KFP 4 step cho cancel-risk. Dữ liệu lấy theo cửa sổ [`since`, `until`): v1 dùng [2025-01-01, 2025-06-01), v2 dùng dữ liệu sau mốc drift 2025-06-01 (retrain bằng tay khi nhãn đã chín); lấy mẫu `sample_pct` theo `booking_id`. Nhãn đến từ view `gold.labels_cancel`, chỉ gồm booking đã chín nhãn. Input có `loyalty_tier` và `has_customer_history`. DSN warehouse lấy từ Secret `ml-warehouse`.
 
 **Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
 

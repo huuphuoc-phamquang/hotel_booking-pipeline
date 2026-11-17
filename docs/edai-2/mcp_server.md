@@ -15,7 +15,7 @@ cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu �
 
 **Cần nộp (cả nhóm):** Document phải show được Agent đã có trên registry, được deploy với multi-replica, giới hạn quyền thông qua Sandbox và màn hình UI chat với Agent + link tới YAML file deploy Agent
 
-**Cách làm:** [Đã có] Model pydantic `BookingFeatures`, `CancelRisk` ở MCP và `RiskRequest`, `CancelRisk` ở risk-api; có `/healthz`, `/readyz`.
+**Cách làm:** [Đã có] Model pydantic `BookingFeatures`, `RiskRequest`, `CancelRisk`, `BatchRisk` ở booking-mcp; tool `predict_cancellation` lấy feature theo `booking_id` từ Feast online rồi gọi thẳng KServe `cancel-risk`, cùng logic mở REST `/v1/cancel-risk` và `/v1/cancel-risk/batch`; có `/healthz`, `/readyz`.
 
 **Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
 

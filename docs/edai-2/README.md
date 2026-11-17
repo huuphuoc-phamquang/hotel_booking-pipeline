@@ -10,7 +10,7 @@
 | [ml_pipeline.md](ml_pipeline.md) | Notebook, Kubeflow pipeline, training phân tán, MLflow và versioning dữ liệu train. |
 | [ml_inference_service.md](ml_inference_service.md) | Model được phục vụ bằng KServe theo mô hình model-inside-image. |
 | [mcp_server.md](mcp_server.md) | booking-mcp viết bằng FastAPI, xử lý bất đồng bộ, deploy bằng Helm; agent gọi MCP tool, chạy trong sandbox và được đăng ký trên registry. |
-| [second_agent.md](second_agent.md) | Agent thứ hai dùng tool ML (`predict_cancellation` qua risk-api) và tool RAG (`search_policy`). |
+| [second_agent.md](second_agent.md) | Agent thứ hai dùng tool ML (`predict_cancellation`: Feast online + KServe) và tool RAG (`search_policy`). |
 | [mcp_gateway.md](mcp_gateway.md) | agentgateway là điểm vào duy nhất cho MCP server. |
 | [a2a_gateway.md](a2a_gateway.md) | agentgateway là điểm vào duy nhất cho các agent. |
 | [coordinator_agent.md](coordinator_agent.md) | Coordinator điều phối các agent con; tài liệu gồm số replica, autoscale và registry. |

@@ -41,7 +41,7 @@ cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu �
 
 **Rubric:** edai-2 · dòng 49 · 1 điểm · nhóm *Observability* › *Computing telemetry data (such as CPU, RAM, disk, network, etc.)*
 
-**Cách làm:** [Đã có] `observability/stack/jaeger.yaml` nhận OTLP gRPC cổng 4317, UI qua ingress; risk-api đã gửi trace. [Cần làm] bổ sung OTel cho booking-mcp và tracing cho agentgateway; chụp một trace A2A → MCP → KServe.
+**Cách làm:** [Đã có] `observability/stack/jaeger.yaml` nhận OTLP gRPC cổng 4317, UI qua ingress; booking-mcp gửi trace (FastAPI, httpx tới KServe, span đọc Feast). [Cần làm] tracing cho agentgateway; chụp một trace A2A → MCP → KServe.
 
 **Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
 
