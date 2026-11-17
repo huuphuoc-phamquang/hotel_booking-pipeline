@@ -12,15 +12,19 @@ cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu �
 
 **Cần nộp (cả nhóm):** Document capture màn hình thể hiện các bảng và quan hệ giữa chúng trên mỗi zone, giải thích từng bảng có nhiệm vụ gì
 
-**Cách làm:** [Đã có] `docs/edai-1/schema_design.md` có ERD cho từng zone (Bronze `raw_`, Silver `stg_`, Gold) vẽ bằng Mermaid từ schema trong code (`generator/offline_gen.py`, `storage/optimize.sql`, `schema/gold_schema.sql`), mỗi bảng một dòng mô tả vai trò. Trên DataHub: 3 recipe `governance/datahub/` (postgres Gold, iceberg Silver, s3 Bronze) ingest schema; `emit_datahub.emit_table_docs` gắn mô tả và tag zone cho 25 bảng; `tests/test_datahub_recipes.py` kiểm tên dataset khớp lineage. [Cần làm] chụp ERD từ DBeaver và trang Schema, lọc theo tag zone trên DataHub.
+**Cách làm:** [Đã có] `docs/edai-1/schema_design.md` có ERD cho từng zone (Bronze `raw_`, Silver `stg_`, Gold) vẽ bằng draw.io (ảnh trong `docs/images/edai-1/schema-*.png`, kèm bản Mermaid cùng quan hệ) từ schema trong code (`generator/offline_gen.py`, `storage/optimize.sql`, `schema/gold_schema.sql`), mỗi bảng một dòng mô tả vai trò. Trên DataHub: 3 recipe `governance/datahub/` (postgres Gold, iceberg Silver, s3 Bronze) ingest schema; `emit_datahub.emit_table_docs` gắn mô tả và tag zone cho 25 bảng; `tests/test_datahub_recipes.py` kiểm tên dataset khớp lineage. [Cần làm] chụp ERD từ DBeaver và trang Schema, lọc theo tag zone trên DataHub.
 
-**Kết quả:** ERD dưới đây vẽ từ schema trong code. Bronze và Silver là file Parquet và bảng Iceberg nên không có ràng
+**Kết quả:** ERD dưới đây vẽ bằng draw.io từ schema trong code, mỗi zone một ảnh; bản Mermaid có cùng bảng và quan hệ nằm trong phần thu gọn bên dưới mỗi ảnh. Bronze và Silver là file Parquet và bảng Iceberg nên không có ràng
 buộc khoá; các đường nối ở hai zone này là quan hệ logic theo cột cùng tên. Ở Gold, chỉ hai đường nối của `fact_bookings`
 là khoá ngoại thật. _Chưa có ảnh ERD xuất từ DBeaver trên cluster._
 
 ### Bronze (`s3a://lake/bronze/raw_*`, Parquet)
 
 DP1 chép nguyên dữ liệu từ landing, không biến đổi. Bốn bảng sự kiện chia theo `dt=<ngày>`; bốn bảng dim chép một lần.
+
+![ERD Bronze](../images/edai-1/schema-bronze.png)
+
+<details><summary>Cùng sơ đồ dạng Mermaid</summary>
 
 ```mermaid
 erDiagram
@@ -96,6 +100,8 @@ erDiagram
     }
 ```
 
+</details>
+
 | Bảng | Nhiệm vụ |
 |---|---|
 | `raw_quotes` | log lượt xem giá, một dòng mỗi lượt; bảng lớn nhất (mốc 100GB), dùng cho bài skew |
@@ -110,6 +116,10 @@ erDiagram
 ### Silver (`lake.silver.stg_*`, Iceberg)
 
 Dữ liệu đã làm sạch: dedup, hợp nhất schema, gắn trạng thái huỷ. Hai bảng chia partition theo ngày.
+
+![ERD Silver](../images/edai-1/schema-silver.png)
+
+<details><summary>Cùng sơ đồ dạng Mermaid</summary>
 
 ```mermaid
 erDiagram
@@ -147,12 +157,18 @@ erDiagram
     }
 ```
 
+</details>
+
 | Bảng | Nhiệm vụ |
 |---|---|
 | `stg_bookings` | một dòng mỗi booking sau dedup theo `idempotency_key`; `room_type` và `room_category` gộp thành một cột; có `city`, `stars` từ `raw_hotels`; `status` và `cancelled_at` cập nhật bằng MERGE mỗi ngày |
 | `stg_quotes` | lượt xem giá kèm số phòng mở bán (`rooms`) của ô `hotel × room_type × stay_date`, kết quả của bài join lệch |
 
 ### Gold (`gold.*`, PostgreSQL)
+
+![ERD Gold](../images/edai-1/schema-gold.png)
+
+<details><summary>Cùng sơ đồ dạng Mermaid</summary>
 
 ```mermaid
 erDiagram
@@ -254,6 +270,8 @@ erDiagram
         timestamp logged_at
     }
 ```
+
+</details>
 
 | Bảng | Nhiệm vụ |
 |---|---|
