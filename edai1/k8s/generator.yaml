@@ -44,6 +44,7 @@ spec:
   template:
     spec:
       restartPolicy: OnFailure
+      securityContext: { fsGroup: 1000 }           # PVC mới thuộc root; image chạy bằng appuser (uid 1000)
       containers:
         - name: replay
           image: REGISTRY/data/generator:TAG
