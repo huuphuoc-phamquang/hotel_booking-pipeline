@@ -1,6 +1,6 @@
 """Data versioning cho tập train của cancel-risk: Iceberg ml.train_cancel_risk, upsert theo booking_id.
 
-Rubric final › Data versioning (incremental): mỗi lần train ghi tập train vào cùng bảng bằng upsert (chỉ dòng mới hoặc
+Data versioning (incremental, edai-2 › MLflow lưu data + metadata của mỗi run): mỗi lần train ghi tập train vào cùng bảng bằng upsert (chỉ dòng mới hoặc
 đổi nhãn sinh file mới, dòng giống hệt không ghi lại), MLflow log snapshot_id; tái lập đúng tập đã train bằng
 scan(snapshot_id=...) (= VERSION AS OF của Spark SQL). Catalog `lake` = Iceberg JDBC/SQL catalog trên PostgreSQL như Spark.
 """

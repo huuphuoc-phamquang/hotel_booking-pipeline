@@ -1,7 +1,7 @@
 """DAG drift_monitor: mỗi ngày so lead_days 7 ngày gần nhất với reference của model production (PSI + KS) và tỉ lệ huỷ
 dự báo với thực tế, đẩy PushGateway -> Grafana; lệch quá ngưỡng thì gọi Kubeflow chạy lại training_pipeline.
 
-Rubric final › Drift detection (batch) + ML telemetry; bổ sung cho drift-api (realtime, KServe logger).
+Phát hiện drift tự động (ngoài phạm vi rubric edai-1/edai-2, giữ làm mở rộng); bổ sung cho drift-api (realtime, KServe logger).
   - reference : artifact reference_lead_days.npy của run đã đăng ký version alias production (MLflow)
   - current   : gold.fact_bookings, booking_date trong 7 ngày tới hết ngày ds
   - calibration: booking nhận phòng trong 7 ngày qua (đã có kết cục), chỉ booking do đúng version production chấm

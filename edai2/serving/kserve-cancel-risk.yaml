@@ -1,7 +1,7 @@
 # Rubric edai-2 › ML Inference Service: KServe + model-inside-image pattern.
 # Model dự đoán xác suất huỷ phòng. Image registry.booking.local/ml/cancel-risk được CI build: tải model alias `production` từ MLflow,
 # COPY vào image (không kéo model lúc pod start) -> pod khởi động nhanh, version model = tag image.
-# Rubric final › drift: logger gửi mọi request dạng CloudEvent tới KNative Broker, Trigger chuyển cho drift-api
+# Drift (ngoài phạm vi rubric edai-1/edai-2): logger gửi mọi request dạng CloudEvent tới KNative Broker, Trigger chuyển cho drift-api
 # (k8s/drift-eventing.yaml).
 # A/B: Jenkins apply tag image mới + canaryTrafficPercent: 50 -> KServe giữ revision cũ làm stable, chia 50/50;
 # promote = bỏ canaryTrafficPercent, rollback = đặt 0 (cần KServe chế độ Serverless/Knative).

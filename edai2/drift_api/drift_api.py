@@ -1,6 +1,6 @@
 """drift-api: phát hiện drift realtime trên request của cancel-risk (KServe logger -> KNative Broker -> Trigger -> đây).
 
-Rubric final › Drift detection:
+Phát hiện drift realtime (ngoài phạm vi rubric edai-1/edai-2, giữ làm mở rộng):
   - FastAPI + pydantic + healthcheck k8s : InferenceRequest (payload CloudEvent), /healthz, /readyz, /metrics
   - async                                : handler async, KSDrift chạy trong threadpool để không chặn event loop
   - alibi-detect                         : KSDrift chỉ trên lead_days (cột 0 của MODEL_INPUTS); nights không đổi

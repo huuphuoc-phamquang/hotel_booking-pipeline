@@ -1,7 +1,7 @@
 // CI/CD cho model cancel-risk: training pipeline (KFP) -> image KServe model-inside-image -> canary A/B.
-// Rubric final › CI/CD: Training pipeline (test component -> build image train -> compile KFP -> upload + tạo run qua
+// Training pipeline (test component -> build image train -> compile KFP -> upload + tạo run qua
 // KFP API), Inference engine (kéo model alias production từ MLflow -> build image -> apply InferenceService).
-// Rubric final › A/B: CANARY_PERCENT > 0 thì revision mới nhận phần traffic đó, revision cũ là stable; 100 = promote.
+// Canary (ngoài phạm vi rubric edai-1/edai-2): CANARY_PERCENT > 0 thì revision mới nhận phần traffic đó, revision cũ là stable; 100 = promote.
 pipeline {
   agent { kubernetes { yamlFile 'ci/pod-template.yaml'; defaultContainer 'tools' } }
   parameters {

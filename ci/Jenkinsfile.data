@@ -1,5 +1,5 @@
 // CI/CD cho data pipeline: DP1-DP3, 2 DAG materialize, RAG, score_bookings, drift_monitor (Airflow) + Flink Job 1.
-// Rubric final › CI/CD: DP1/DP2/DP3, Materialize Pipeline, Job 1 stream; edai-2 › CI/CD RAG + stream jobs.
+// Rubric edai-2 › CI/CD: RAG data pipeline + stream feature jobs; DP1/DP2/DP3 và materialize đi cùng pipeline này.
 //   Test   : generator (bất biến stream = landing, contract), Spark (pyspark local), SQL DP2/DP3 trên Postgres thật,
 //            Great Expectations Bronze, DAG integrity trong image Airflow, e2e stream (Kafka -> Flink -> Postgres)
 //   Build  : image generator, Spark (Iceberg + s3a + JDBC), Flink (PyFlink + connector + contract)
