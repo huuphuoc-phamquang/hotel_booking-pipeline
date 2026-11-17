@@ -27,7 +27,7 @@ Bài toán gồm hai tầng, tầng sau dùng kết quả của tầng trước.
 
 | Tầng | Đầu vào | Đầu ra | Thành phần |
 |---|---|---|---|
-| Dự báo | thuộc tính của một booking, lịch sử của khách và của khách sạn | xác suất huỷ $p_i$ của booking đó | model `cancel-risk` (XGBoost), phục vụ qua KServe và `risk-api` |
+| Dự báo | thuộc tính của một booking, lịch sử của khách và của khách sạn | xác suất huỷ $p_i$ của booking đó | model `cancel-risk` (XGBoost) phục vụ bằng KServe; tool `predict_cancellation` của `booking-mcp` lấy feature từ Feast online rồi gọi KServe |
 | Quyết định | các $p_i$ của mọi booking đang giữ phòng cho một `hotel × stay_date`, cùng hai chi phí | số phòng bán vượt $K$ | `mcp_server/overbooking.py`, tool `propose_overbooking` |
 
 Hai điểm cần lưu ý về phạm vi:
@@ -181,15 +181,17 @@ Tỉ lệ huỷ tăng từ 32,9% lên 47,4%. Model v1 train trên dữ liệu tr
 
 Vòng đời của model được thiết kế quanh sự kiện này:
 
-1. **Train v1** trên dữ liệu `[2025-01-01, 2025-06-01)`, qua cổng promote, đưa lên KServe.
-2. **Phát hiện drift.** Nhãn chưa chín nên không thể phát hiện qua độ chính xác. Hệ thống theo dõi phân phối của input:
-   `drift-api` chạy kiểm định KS trên `lead_days` theo thời gian thực; DAG `drift_monitor` tính PSI và KS mỗi ngày.
-   Theo thiết kế, PSI vượt 0,2 sau khoảng 6 ngày.
-3. **Chờ nhãn chín rồi mới retrain.** Nếu retrain ngay ngày phát hiện, tập train vẫn gần như toàn dữ liệu trước drift
-   và v2 có xu hướng giống v1. `drift_monitor` vì vậy chờ 120 ngày kể từ mốc phát hiện: 30 ngày booking sau drift cộng
-   90 ngày cho nhãn chín.
-4. **Canary và promote.** v2 chạy song song với v1 theo tỉ lệ 50/50 trên cùng InferenceService. Sau khi promote, DAG
-   `rescore_active` chấm lại các booking còn hiệu lực bằng v2.
+1. **Train v1** trên dữ liệu `[2025-01-01, 2025-06-01)` bằng training pipeline Kubeflow, lưu model và metadata lên
+   MLflow, qua cổng promote rồi đóng vào image KServe (model-inside-image).
+2. **Chờ nhãn chín rồi mới retrain.** Nếu retrain ngay sau mốc drift, tập train vẫn gần như toàn dữ liệu trước drift
+   và v2 có xu hướng giống v1. Cần khoảng 120 ngày sau mốc: 30 ngày booking sau drift cộng 90 ngày cho nhãn chín.
+3. **Train v2** bằng cùng pipeline trên dữ liệu sau mốc drift, qua cổng promote, build image KServe mới. DAG
+   `score_bookings` chấm booking mới bằng v2; `rescore_active` (chạy tay) chấm lại các booking còn giữ phòng.
+4. **So v1 với v2** bằng ground truth (mục 7): lệch calibration, Brier so với p thật và sai số K.
+
+Mốc drift được biết trước nên retrain v2 là bước chạy tay. Phát hiện drift tự động (kiểm định KS theo thời gian thực
+ở `drift-api`, PSI hằng ngày ở DAG `drift_monitor`) và canary 50/50 giữa hai phiên bản không thuộc rubric edai-1,
+edai-2; code của chúng vẫn nằm trong repo nhưng không triển khai.
 
 ## 7. Đánh giá bằng ground truth
 
@@ -231,6 +233,8 @@ câu hỏi cho policy-agent và data-agent; các agent gọi tool qua agentgatew
 - **Dữ liệu giả lập.** Mọi kết quả phụ thuộc công thức nhãn của generator. Ưu điểm là có ground truth để chấm; hạn chế
   là chưa kiểm chứng trên dữ liệu thật.
 - **Không định giá.** Phần tối ưu giá đã được cắt khỏi phạm vi; hệ thống chỉ có một model `cancel-risk`.
+- **Không tự động hoá vòng đời model.** Không phát hiện drift tự động, không canary giữa hai phiên bản model (mục 6);
+  A/B chỉ áp cho agent và phiên bản LLM trên nền tảng LLM.
 
 ## 10. Thuật ngữ
 
