@@ -21,8 +21,8 @@ from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 from datahub_airflow_plugin.entities import Dataset
 
-# image Spark (Iceberg + s3a + JDBC) do Jenkins đặt vào Variable spark_image mỗi lần build (ci/Jenkinsfile.data)
-SPARK_CONF = {"spark.kubernetes.container.image": "{{ var.value.get('spark_image', 'spark-booking:latest') }}"}
+from spark_conf import SPARK_CONF, job
+
 
 TABLES = Variable.get("bronze_tables", deserialize_json=True, default_var=["quotes", "bookings", "payments", "cancellations"])
 # cancellations partition theo ngày huỷ: copy dt=ds chỉ lấy lần huỷ đã xảy ra trong ngày ds (như CDC từ nguồn)
@@ -86,7 +86,7 @@ with DAG(
         ingest = SparkSubmitOperator(
             task_id=f"ingest_{t}",
             conn_id="spark_default", conf=SPARK_CONF,
-            application="/opt/jobs/landing_to_bronze.py",
+            application=job("landing_to_bronze.py"),
             application_args=["--table", t, "--ds", "{{ ds }}"],
             inlets=[Dataset("s3", f"landing/{t}")],
             outlets=[Dataset("s3", f"lake/bronze/raw_{t}")],
@@ -98,6 +98,6 @@ with DAG(
 with DAG(dag_id="dp1_load_dims", start_date=datetime(2025, 1, 1), schedule=None, catchup=False,
          default_args=default_args, tags=["dp1", "bronze", "booking"]) as dims_dag:
     for t in ["hotels", "hotel_changes", "customers", "inventory"]:
-        SparkSubmitOperator(task_id=f"ingest_{t}", conn_id="spark_default", conf=SPARK_CONF, application="/opt/jobs/landing_to_bronze.py",
+        SparkSubmitOperator(task_id=f"ingest_{t}", conn_id="spark_default", conf=SPARK_CONF, application=job("landing_to_bronze.py"),
                             application_args=["--table", t],
                             inlets=[Dataset("s3", f"landing/{t}")], outlets=[Dataset("s3", f"lake/bronze/raw_{t}")])

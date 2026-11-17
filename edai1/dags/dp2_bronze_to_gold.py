@@ -17,10 +17,8 @@ from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.sensors.external_task import ExternalTaskSensor
 from datahub_airflow_plugin.entities import Dataset
 
-# image Spark (Iceberg + s3a + JDBC) do Jenkins đặt vào Variable spark_image mỗi lần build (ci/Jenkinsfile.data)
-SPARK_CONF = {"spark.kubernetes.container.image": "{{ var.value.get('spark_image', 'spark-booking:latest') }}"}
-
 from gold_checks import GOLD_CHECKS
+from spark_conf import SPARK_CONF, job
 from governance.emit_datahub import validate_sql
 
 
@@ -37,13 +35,13 @@ with DAG(
     wait_dp1 = ExternalTaskSensor(task_id="wait_dp1", external_dag_id="dp1_ingest_bronze", external_task_id=None,
                                   mode="reschedule", timeout=6 * 3600)
     silver = SparkSubmitOperator(
-        task_id="silver_bookings", conn_id="spark_default", conf=SPARK_CONF, application="/opt/jobs/silver_bookings.py",
+        task_id="silver_bookings", conn_id="spark_default", conf=SPARK_CONF, application=job("silver_bookings.py"),
         application_args=["incr", "s3a://lake/bronze", "{{ ds }}"],
         inlets=[Dataset("s3", "lake/bronze/raw_bookings"), Dataset("s3", "lake/bronze/raw_hotels"),
                 Dataset("s3", "lake/bronze/raw_cancellations")],
         outlets=[Dataset("iceberg", "silver.stg_bookings")])
     stage = SparkSubmitOperator(
-        task_id="stage_gold", conn_id="spark_default", conf=SPARK_CONF, application="/opt/jobs/stage_gold.py",
+        task_id="stage_gold", conn_id="spark_default", conf=SPARK_CONF, application=job("stage_gold.py"),
         application_args=["--ds", "{{ ds }}"],
         inlets=[Dataset("iceberg", "silver.stg_bookings")],
         outlets=[Dataset("postgres", f"warehouse.gold.{t}")
