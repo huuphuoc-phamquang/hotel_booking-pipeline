@@ -28,9 +28,9 @@
 | 13 | 3 | Handle schema evolution with explanation | [processing_jobs.md](processing_jobs.md#edai-1-13) | Đã có · chờ cluster |
 | 14 | 3 | Handle other offline data problem with explanation | [processing_jobs.md](processing_jobs.md#edai-1-14) | Đã có · chờ cluster |
 | 15 | 2 | Spark job được tích hợp vào các data pipeline | [processing_jobs.md](processing_jobs.md#edai-1-15) | Đã có |
-| 16 | 2 | Baseline | [processing_jobs.md](processing_jobs.md#edai-1-16) | Đã có · chờ cluster |
-| 17 | 3 | Handle late arrival with explanation | [processing_jobs.md](processing_jobs.md#edai-1-17) | Đã có · Cần làm |
-| 18 | 3 | Handle other streaming problem with explanation | [processing_jobs.md](processing_jobs.md#edai-1-18) | Đã có · chờ cluster |
+| 16 | 2 | Baseline | [processing_jobs.md](processing_jobs.md#edai-1-16) | Đã có |
+| 17 | 3 | Handle late arrival with explanation | [processing_jobs.md](processing_jobs.md#edai-1-17) | Đã có |
+| 18 | 3 | Handle other streaming problem with explanation | [processing_jobs.md](processing_jobs.md#edai-1-18) | Đã có |
 | 19 | 2 | Window processing | [processing_jobs.md](processing_jobs.md#edai-1-19) | Đã có |
 | 20 | 3 | Lakehouse | [data_storage.md](data_storage.md#edai-1-20) | Đã có · Thiết kế · Cần làm |
 | 21 | 3 | Datawarehouse | [data_storage.md](data_storage.md#edai-1-21) | Đã có · Cần làm |
@@ -52,4 +52,4 @@
 | 37 | 2 | Relationship between dim & fact tables | [schema_design.md](schema_design.md#edai-1-37) | Đã có · Cần làm |
 | 38 | 2 | Naming convention | [schema_design.md](schema_design.md#edai-1-38) | Đã có · Cần làm |
 | 39 | 10 | Idea 1 | [novel_ideas.md](novel_ideas.md#edai-1-39) | — |
-| 40 | 10 | Idea 2 | [novel_ideas.md](novel_ideas.md#edai-1-40) | chờ cluster |
+| 40 | 10 | Idea 2 | [novel_ideas.md](novel_ideas.md#edai-1-40) | — |

@@ -35,9 +35,9 @@ Hiện toàn bộ hệ thống mới được chạy cục bộ (Docker, pyspark
 | 13 | 3 | Handle schema evolution with explanation | [edai-1/processing_jobs.md](edai-1/processing_jobs.md#edai-1-13) | Đã có · chờ cluster |
 | 14 | 3 | Handle other offline data problem with explanation | [edai-1/processing_jobs.md](edai-1/processing_jobs.md#edai-1-14) | Đã có · chờ cluster |
 | 15 | 2 | Spark job được tích hợp vào các data pipeline | [edai-1/processing_jobs.md](edai-1/processing_jobs.md#edai-1-15) | Đã có |
-| 16 | 2 | Baseline | [edai-1/processing_jobs.md](edai-1/processing_jobs.md#edai-1-16) | Đã có · chờ cluster |
-| 17 | 3 | Handle late arrival with explanation | [edai-1/processing_jobs.md](edai-1/processing_jobs.md#edai-1-17) | Đã có · Cần làm |
-| 18 | 3 | Handle other streaming problem with explanation | [edai-1/processing_jobs.md](edai-1/processing_jobs.md#edai-1-18) | Đã có · chờ cluster |
+| 16 | 2 | Baseline | [edai-1/processing_jobs.md](edai-1/processing_jobs.md#edai-1-16) | Đã có |
+| 17 | 3 | Handle late arrival with explanation | [edai-1/processing_jobs.md](edai-1/processing_jobs.md#edai-1-17) | Đã có |
+| 18 | 3 | Handle other streaming problem with explanation | [edai-1/processing_jobs.md](edai-1/processing_jobs.md#edai-1-18) | Đã có |
 | 19 | 2 | Window processing | [edai-1/processing_jobs.md](edai-1/processing_jobs.md#edai-1-19) | Đã có |
 | 20 | 3 | Lakehouse | [edai-1/data_storage.md](edai-1/data_storage.md#edai-1-20) | Đã có · Thiết kế · Cần làm |
 | 21 | 3 | Datawarehouse | [edai-1/data_storage.md](edai-1/data_storage.md#edai-1-21) | Đã có · Cần làm |
@@ -59,7 +59,7 @@ Hiện toàn bộ hệ thống mới được chạy cục bộ (Docker, pyspark
 | 37 | 2 | Relationship between dim & fact tables | [edai-1/schema_design.md](edai-1/schema_design.md#edai-1-37) | Đã có · Cần làm |
 | 38 | 2 | Naming convention | [edai-1/schema_design.md](edai-1/schema_design.md#edai-1-38) | Đã có · Cần làm |
 | 39 | 10 | Idea 1 | [edai-1/novel_ideas.md](edai-1/novel_ideas.md#edai-1-39) | — |
-| 40 | 10 | Idea 2 | [edai-1/novel_ideas.md](edai-1/novel_ideas.md#edai-1-40) | chờ cluster |
+| 40 | 10 | Idea 2 | [edai-1/novel_ideas.md](edai-1/novel_ideas.md#edai-1-40) | — |
 
 ## edai-2
 

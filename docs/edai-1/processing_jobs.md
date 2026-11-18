@@ -71,40 +71,77 @@ chạy tiếp. Log task đọc lại được trên Airflow UI nhờ remote logg
 
 **Cần nộp (cả nhóm):** Document giải thích từng step optimize từ baseline như thế nào, dùng Flink UI như thế nào (nhớ show hình ảnh để thấy rõ các vấn đề, và giải thích vấn đề)
 
-**Cách làm:** [Đã có] Cờ `BASELINE=True` chạy Flink với watermark 0 giây, không khử trùng. [Cần làm] chụp Flink UI: số event trễ bị bỏ và kết quả window sai.
+**Cách làm:** [Đã có] Cờ `BASELINE=True` chạy Flink với watermark 0 giây, không khử trùng. Chạy cả baseline và bản tối ưu trên GKE: baseline thừa đúng số bản gửi trùng (7.547 ngày 2026-01-01) và đẩy 8.326 event ra side output; bản tối ưu lệch truth 0,011%. Bảng đối soát, Flink UI (graph, backpressure) trong docs.
 
-**Kết quả:** bản tối ưu chạy trên GKE (2026-11-17, FlinkDeployment `booking-events-window`, parallelism 2, replay 30 ngày
-`booking_events` vào Kafka 6 partition, khoảng 83.600 event lúc chụp). Chưa chạy bản `BASELINE=True` để so sánh.
+**Kết quả:** Cả hai bản chạy trên GKE với cùng dữ liệu: replay `booking_events` (30 ngày, Kafka 6 partition) từ đầu topic,
+FlinkDeployment `booking-events-window` parallelism 6. Baseline chạy ngày 2026-11-17 (`BASELINE=1`, image
+`flink-booking:9850a46-2`), bản tối ưu chạy ngày 2026-11-18 (image `c93fff3-1`). Mỗi lần xoá 3 bảng stream rồi
+đọc lại từ offset đầu. `got` của một ngày = tổng `gold.stream_bookings_1m` + số dòng `gold.stream_late_bookings`
+có `event_time` trong ngày; truth là số booking hợp lệ đã khử trùng do `generator/stream_truth.py` tính từ event
+log, cắt tại 2026-01-03 01:00.
 
-![Offset 6 partition của topic booking_events](../images/edai-1/kafka-offsets.png)
+![Đối soát baseline, bản tối ưu và truth](../images/edai-1/flink-perday-compare.png)
 
-Đọc Flink UI: graph cho thấy source bị backpressure 98% trong khi `SlidingEventTimeWindows` bận 100%. Cửa sổ trượt
-1 giờ bước 5 phút đưa mỗi event vào 12 cửa sổ và chạy bằng Python, nên đây là nút cổ chai khi job đọc dồn backlog
-từ đầu topic. Khi đã đuổi kịp tốc độ replay, các operator về trạng thái OK (ảnh BackPressure).
+Baseline (watermark 0 giây, không khử trùng) cho thấy hai vấn đề:
+
+- **Đếm thừa.** Ngày 2026-01-01 baseline đếm 384.084, truth là 376.537: thừa đúng 7.547, bằng số bản gửi trùng
+  (double submit cùng `idempotency_key`) generator cài vào; ngày 2026-01-02 thừa 7.852 so với 7.437 bản trùng.
+- **Coi event lệch thứ tự là trễ.** Không chờ event đến lệch thứ tự nên 8.326 booking của ngày 01-01 (2,2%) bị đẩy
+  ra side output thay vì vào đúng cửa sổ phút.
+
+Các bước tối ưu, mỗi bước một vấn đề:
+
+1. **Parallelism = số partition Kafka (6).** Timestamp gán sau source; một subtask đọc nhiều partition thì watermark
+   chạy theo partition nhanh nhất, event của partition chậm thành trễ giả (đo với parallelism 2: 2.409 event trễ giả).
+2. **Watermark lệch 10 phút + allowed lateness 5 phút** (dòng 17): số event bị đẩy ra side output ngày 01-01 giảm từ
+   8.326 xuống 1.719.
+3. **Khử trùng theo `idempotency_key`** trước cửa sổ (dòng 18): phần đếm thừa từ 7.547 còn 43 (0,011%).
+4. **Contract trước watermark:** event sai (`event_time` ở tương lai) ra DLQ trước khi kịp đẩy watermark.
+5. **Đếm tăng dần bằng `AggregateFunction`**: state mỗi cửa sổ là một số nguyên thay vì danh sách event.
+6. **Unaligned checkpoint** và chặn autoscaler gỡ pod Flink: lúc đọc dồn backlog, barrier aligned kẹt sau buffer
+   đầy nên checkpoint không xong; restart khi đó mất toàn bộ tiến độ.
+
+Đọc Flink UI lúc đọc dồn backlog: source bị backpressure, `SlidingEventTimeWindows` bận 100% ở cả 6 subtask vì mỗi
+event vào 12 cửa sổ chồng nhau và chạy bằng Python, đó là nút cổ chai (ảnh BackPressure). Watermark của 6 subtask
+bằng nhau vì sau `key_by` mỗi subtask nhận watermark nhỏ nhất của các subtask phía trước.
 
 ![Job graph](../images/edai-1/flink-job-graph.png)
 
 ![BackPressure](../images/edai-1/flink-backpressure.png)
 
-Ba lỗi phải sửa để job chạy trên Kubernetes: jar connector tải bằng `ADD` có quyền 600 nên user `flink` không đọc
-được (`--chmod=644`); Python worker trên TaskManager không thấy module `contract` (`-pyfs /opt/flink/usrlib`); và sau
-`-pyfs` đường dẫn tương đối tới JSON Schema sai (`CONTRACT_PATH`).
+![Offset 6 partition của topic booking_events](../images/edai-1/kafka-offsets.png)
+
+Lỗi phải sửa để job chạy trên Kubernetes: jar connector tải bằng `ADD` có quyền 600 nên user `flink` không đọc được
+(`--chmod=644`); Python worker trên TaskManager không thấy module `contract` (`-pyfs /opt/flink/usrlib`); sau
+`-pyfs` đường dẫn tương đối tới JSON Schema sai (`CONTRACT_PATH`); `on_timer` của bước khử trùng trả `None` làm task
+lỗi khi timer dọn state kích hoạt (PyFlink cần iterable); autoscaler GKE gỡ JobManager khi thu node spot.
 
 <a id="edai-1-17"></a>
 ## Handle late arrival with explanation
 
 **Rubric:** edai-1 · dòng 17 · 3 điểm · nhóm *Processing Jobs* › *Flink job to handle streaming data problems (later in final coursework, we will merge this streaming pipeline into the feature store)*
 
-**Cách làm:** [Đã có] Nhánh đối soát tumbling 1 phút dùng watermark 10 phút, allowed lateness 5 phút và side output ghi vào `gold.stream_late_bookings`; cửa sổ trượt 1 giờ chỉ đẩy event ra side output khi trễ quá 1 giờ 15 phút. Test e2e trên Docker xác nhận số đếm cộng side output bằng tổng thật của từng phút. Trên PyFlink 1.20, timestamp được gán sau source và không dùng `with_idleness`, vì thực nghiệm cho thấy idleness làm watermark đứng yên. [Cần làm] lập bảng số event vào side output của baseline và bản tối ưu theo từng nguồn trễ; giải thích lý do chọn 10 phút.
+**Cách làm:** [Đã có] Nhánh đối soát tumbling 1 phút dùng watermark 10 phút, allowed lateness 5 phút và side output ghi vào `gold.stream_late_bookings`; cửa sổ trượt 1 giờ chỉ đẩy event ra side output khi trễ quá 1 giờ 15 phút. Test e2e trên Docker xác nhận số đếm cộng side output bằng tổng thật của từng phút. Trên PyFlink 1.20, timestamp được gán sau source và không dùng `with_idleness`, vì thực nghiệm cho thấy idleness làm watermark đứng yên. Bảng số event vào side output của baseline (8.326) và bản tối ưu (1.719) ngày 2026-01-01, lý do chọn 10 phút theo phân phối độ trễ từng nguồn, ảnh watermark 6 subtask trong docs.
 
-**Kết quả:** watermark của hai subtask đi đều nhau (ảnh Watermarks). Lúc chụp, `gold.stream_bookings_1m` có 2.819 dòng
-(hotel × phút) và side output `gold.stream_late_bookings` có 2.409 event trễ quá watermark 10 phút + allowed lateness
-5 phút. Tỉ lệ trễ này cao hơn nhiều so với lượng trễ generator cài vào. Giả thuyết (chưa kiểm chứng): job đọc dồn
-backlog từ đầu topic, watermark gán sau source nên lấy theo partition đọc nhanh nhất trong subtask, event của
-partition đọc chậm hơn bị tính là trễ. Cần đối chiếu với cột `violation`/độ trễ trong event log, và đếm lại khi
-job đã đuổi kịp replay.
+**Kết quả:** cùng lần chạy ở dòng 16. Số event bị đẩy ra side output (`late`) theo ngày:
 
-![Watermarks](../images/edai-1/flink-watermarks.png)
+| Ngày | Baseline (watermark 0s) | Tối ưu (10 phút + 5 phút) | Truth: trễ > 15 phút theo `ingest_time − event_time` |
+|---|---|---|---|
+| 2026-01-01 | 8.326 | 1.719 | 25.934 |
+| 2026-01-02 | 7.339 | 615 | 25.881 |
+
+Watermark 10 phút cộng allowed lateness 5 phút nhận lại event trễ tới 15 phút: theo bảng độ trễ ở dòng 9, phần lớn
+event mobile trễ 5–20 phút (trễ quá 10 phút: 20,09%, quá 15 phút: 10,03% số event mobile), webhook thanh toán trễ
+tối đa 15 phút. Chờ lâu hơn làm feature `bookings_1h` chậm thêm tương ứng; chờ 1–4 giờ cho channel manager (1% booking)
+thì feature không còn "realtime", nên các event đó đi vào side output và vẫn được ghi lại để đối soát.
+
+Số event vào side output của bản tối ưu thấp hơn nhiều so với số trễ quá 15 phút theo giờ ingest (truth). Lý do: job
+đọc dồn backlog từ đầu topic, 6 partition được đọc với tốc độ khác nhau và watermark sau `key_by` là watermark nhỏ nhất,
+nên khi một event trễ tới thì watermark thường chưa vượt qua cửa sổ của nó. Khi chạy theo kịp tốc độ replay, số
+`late` sẽ tiến về con số truth. Bảng `stream_late_bookings` không lưu nguồn (channel) của event nên chưa tách được
+số trễ theo từng nguồn.
+
+![Watermarks của 6 subtask](../images/edai-1/flink-watermarks.png)
 
 ![gold.stream_late_bookings](../images/edai-1/flink-late-bookings.png)
 
@@ -113,11 +150,23 @@ job đã đuổi kịp replay.
 
 **Rubric:** edai-1 · dòng 18 · 3 điểm · nhóm *Processing Jobs* › *Flink job to handle streaming data problems (later in final coursework, we will merge this streaming pipeline into the feature store)*
 
-**Cách làm:** [Đã có] `DedupByEventId` với state TTL 1 giờ. [Cần làm] chạy và đếm event trùng trước, sau khi khử; chụp state size trên Flink UI.
+**Cách làm:** [Đã có] `DedupByEventId` theo `idempotency_key`, timer xoá state khi watermark qua `event_time` + 5 giờ. Trên GKE phần đếm thừa giảm từ 7.547 (baseline) còn 43; checkpoint unaligned 20,2 MB, ảnh trong docs.
 
-**Kết quả:** data contract chặn event sai trước watermark: event thiếu `event_time` vào topic `booking_events_dlq`
-kèm `reason`. Checkpoint EXACTLY_ONCE lên MinIO hoàn tất (checkpoint 1: 22,6 MB, 10/10 task). Chưa đếm event trùng
-trước và sau dedup.
+**Kết quả:** cùng lần chạy ở dòng 16.
+
+| Ngày | Bản gửi trùng (truth) | Baseline thừa | Tối ưu thừa |
+|---|---|---|---|
+| 2026-01-01 | 7.547 | +7.547 | +43 |
+| 2026-01-02 | 7.437 | +7.852 | −18 |
+
+Baseline đếm cả bản gửi lại, nên thừa đúng bằng số bản trùng. `DedupByEventId` giữ một cờ `seen` cho mỗi
+`idempotency_key` và đăng ký timer xoá cờ khi watermark qua `event_time` + 5 giờ, nên state không tăng mãi; bản tối ưu
+còn lệch 0,011% và 0,005%. Phần lệch nhỏ còn lại do job restart 3 lần trong lúc chạy (lỗi timer, autoscaler gỡ
+JobManager, apply cấu hình): sink JDBC là at-least-once, event đã ghi vào `stream_late_bookings` trước restart có thể
+được đếm lại trong cửa sổ khi đọc lại từ checkpoint với watermark khác. Ngày 2025-12-31 là biên đầu replay (+173).
+
+Data contract chặn event sai trước watermark: event thiếu `event_time` vào topic `booking_events_dlq` kèm `reason`.
+Checkpoint unaligned EXACTLY_ONCE lên MinIO hoàn tất đều đặn (khoảng 1 phút mỗi lần, 20,2 MB, 5 operator đều 6/6).
 
 ![DLQ](../images/edai-1/flink-dlq.png)
 

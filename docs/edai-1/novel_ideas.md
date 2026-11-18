@@ -21,6 +21,14 @@ cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu �
 
 **Rubric:** edai-1 · dòng 40 · 10 điểm · nhóm *Novel ideas*
 
-**Cách làm:** Idea 2 - Đối soát batch và stream có ground truth. Generator biết chính xác mọi event, nên với mỗi phút, `sum(gold.stream_bookings_1m)` (nhánh tumbling 1 phút) cộng `count(gold.stream_late_bookings)` (side output) phải bằng số booking hợp lệ, đã khử trùng theo `idempotency_key`, có `event_time` trong phút đó. Minh chứng: `tests/test_stream_e2e.py` chạy replayer → Kafka → Flink (image `k8s/flink.Dockerfile`) → Postgres trên Docker, khớp từng phút trên 919 phút và khớp DLQ theo loại lỗi; `tests/test_stream_gen.py` kiểm tính bất biến stream = landing. [Cần làm] chạy cùng phép đối soát trên GKE, chụp bảng kết quả.
+**Cách làm:** Idea 2 - Đối soát batch và stream có ground truth. Generator biết chính xác mọi event, nên với mỗi phút, `sum(gold.stream_bookings_1m)` (nhánh tumbling 1 phút) cộng `count(gold.stream_late_bookings)` (side output) phải bằng số booking hợp lệ, đã khử trùng theo `idempotency_key`, có `event_time` trong phút đó. Minh chứng: `tests/test_stream_e2e.py` chạy replayer → Kafka → Flink (image `k8s/flink.Dockerfile`) → Postgres trên Docker, khớp từng phút trên 919 phút và khớp DLQ theo loại lỗi; `tests/test_stream_gen.py` kiểm tính bất biến stream = landing. Đã chạy cùng phép đối soát trên GKE: bản tối ưu khớp truth tới 0,011%, baseline thừa đúng số bản trùng; bảng trong docs.
 
-**Kết quả:** `tests/test_stream_e2e.py` chạy cục bộ trên Docker. Với mọi phút đã đóng (hơn 900 phút), `stream_bookings_1m` cộng `stream_late_bookings` khớp đúng số booking do generator sinh; không phút nào lệch. _Chưa chạy trên GKE, chưa có ảnh chụp._
+**Kết quả:** `tests/test_stream_e2e.py` chạy cục bộ trên Docker: với mọi phút đã đóng (hơn 900 phút),
+`stream_bookings_1m` cộng `stream_late_bookings` khớp đúng số booking do generator sinh; không phút nào lệch.
+
+Trên GKE (2026-11-18) cùng phép đối soát theo ngày, so baseline và bản tối ưu với ground truth của generator
+(`generator/stream_truth.py`): bản tối ưu khớp truth tới 0,011% (ngày 01-01) và 0,005% (ngày 01-02), còn baseline thừa
+đúng số bản gửi trùng. Nhờ có truth, phép đối soát chỉ ra đúng lỗi nào nằm ở đâu: phần thừa của baseline bằng `dup`,
+phần lệch nhỏ của bản tối ưu khớp với các lần restart (dòng 18).
+
+![Đối soát baseline, bản tối ưu và truth](../images/edai-1/flink-perday-compare.png)
