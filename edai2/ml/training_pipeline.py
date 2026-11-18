@@ -18,7 +18,8 @@ BASE_IMAGE = "registry.booking.local/ml/train-base:1.4"   # có sẵn ml/data_ve
 MLFLOW_URI = "http://mlflow.mlops.svc.cluster.local:5000"
 MODEL_NAME = "cancel-risk"
 # Cổng promote: AUC >= MIN_AUC (sàn chặn model hỏng), lệch calibration <= MAX_CALIB_GAP (overbooking dùng thẳng
-# xác suất), và AUC >= bản production chấm trên cùng tập validation. MIN_AUC là sàn chặn model hỏng, đặt dưới mức
+# xác suất), và Brier <= bản production chấm trên cùng tập validation. So Brier chứ không so AUC: sau drift AUC của
+# bản cũ gần như giữ nguyên, chỉ calibration lệch (docs/problem_design.md mục 4, 6). MIN_AUC là sàn chặn model hỏng, đặt dưới mức
 # model đạt trên generator (số đo nằm trong docs, chạy lại generator/profile_data.py khi đổi config).
 MIN_AUC = 0.60
 MAX_CALIB_GAP = 0.03
@@ -144,8 +145,8 @@ def evaluate_and_register(model: Input[Model], valid: Input[Dataset], train_data
                           metrics: Output[Metrics], inputs: list, label: str,
                           mlflow_uri: str, model_name: str, min_auc: float, max_calib_gap: float,
                           train_snapshot_id: int):
-    """Chấm AUC + calibration trên validation, log lên MLflow (tag release=latest); gắn alias production khi
-    AUC >= min_auc, lệch calibration <= max_calib_gap và không kém bản production trên cùng tập validation."""
+    """Chấm AUC + calibration + Brier trên validation, log lên MLflow (tag release=latest); gắn alias production khi
+    AUC >= min_auc, lệch calibration <= max_calib_gap và Brier không cao hơn bản production trên cùng tập validation."""
     import joblib
     import mlflow
     import pandas as pd
@@ -157,18 +158,21 @@ def evaluate_and_register(model: Input[Model], valid: Input[Dataset], train_data
     p = clf.predict_proba(df[inputs])[:, 1]
     auc = roc_auc_score(df[label], p)
     calib_gap = abs(p.mean() - df[label].mean())               # tỉ lệ huỷ dự báo so với thật
-    for k, v in {"val_auc": auc, "val_calib_gap": calib_gap, "val_brier": brier_score_loss(df[label], p)}.items():
+    brier = brier_score_loss(df[label], p)
+    for k, v in {"val_auc": auc, "val_calib_gap": calib_gap, "val_brier": brier}.items():
         metrics.log_metric(k, v)
 
     mlflow.set_tracking_uri(mlflow_uri)
     try:                                                       # bản production hiện tại, chấm lại trên cùng validation
         prod = mlflow.sklearn.load_model(f"models:/{model_name}@production")
-        prod_auc = roc_auc_score(df[label], prod.predict_proba(df[inputs])[:, 1])
+        prod_p = prod.predict_proba(df[inputs])[:, 1]
+        prod_auc, prod_brier = roc_auc_score(df[label], prod_p), brier_score_loss(df[label], prod_p)
     except MlflowException:                                    # lần đầu: chưa có alias production
-        prod_auc = 0.0
+        prod_auc, prod_brier = 0.0, 1.0
     with mlflow.start_run():
         mlflow.log_params({**clf.get_params(), "train_snapshot_id": train_snapshot_id})
-        mlflow.log_metrics({"val_auc": auc, "val_calib_gap": calib_gap, "prod_auc_same_valid": prod_auc})
+        mlflow.log_metrics({"val_auc": auc, "val_calib_gap": calib_gap, "val_brier": brier,
+                            "prod_auc_same_valid": prod_auc, "prod_brier_same_valid": prod_brier})
         mlflow.log_dict(dict(zip(inputs, clf.feature_importances_.tolist())), "feature_importance.json")
         train_df = pd.read_parquet(train_data.path)
         mlflow.log_input(mlflow.data.from_pandas(train_df, name="train"), context="training")
@@ -180,7 +184,7 @@ def evaluate_and_register(model: Input[Model], valid: Input[Dataset], train_data
     client = MlflowClient()
     version = info.registered_model_version
     client.set_model_version_tag(model_name, version, "release", "latest")   # MLflow cấm alias tên "latest"
-    if auc >= min_auc and calib_gap <= max_calib_gap and auc >= prod_auc:
+    if auc >= min_auc and calib_gap <= max_calib_gap and brier <= prod_brier:
         client.set_registered_model_alias(model_name, "production", version)
 
 

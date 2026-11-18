@@ -124,7 +124,8 @@ Có hai hệ quả trong thiết kế:
 - **Trần AUC thấp là có chủ đích.** Nhãn huỷ phụ thuộc một biến ẩn (`propensity`, mục 5.2) mà model không quan sát
   được. Ngay cả khi biết công thức nhãn thật, AUC chỉ đạt 0,734; với các input model có thì trần là khoảng 0,68.
 - **Cổng promote không dùng ngưỡng AUC cao.** Model chỉ được gán alias `production` khi AUC ≥ 0,60 (sàn chặn model
-  hỏng), lệch calibration ≤ 0,03 và không kém bản production trên cùng tập validation.
+  hỏng), lệch calibration ≤ 0,03 và Brier không cao hơn bản production trên cùng tập validation. Cổng so Brier chứ
+  không so AUC với bản production: sau drift, AUC của v1 gần như giữ nguyên, chỉ calibration lệch nặng (mục 6).
 
 ## 5. Dữ liệu và nhãn
 
