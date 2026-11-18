@@ -18,6 +18,7 @@ offline_store:
   db_schema: gold
   user: ${FEAST_PG_USER}
   password: ${FEAST_PG_PASSWORD}
+  sslmode: disable              # Postgres trong cluster không bật TLS, kết nối không ra ngoài cluster
 online_store:
   type: postgres
   host: ${FEAST_PG_HOST}
@@ -26,6 +27,6 @@ online_store:
   db_schema: feast_online
   user: ${FEAST_PG_USER}
   password: ${FEAST_PG_PASSWORD}
+  sslmode: disable              # Postgres trong cluster không bật TLS, kết nối không ra ngoài cluster
   vector_enabled: true
-  vector_len: 1024              # bge-m3
 entity_key_serialization_version: 3

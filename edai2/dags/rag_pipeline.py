@@ -21,7 +21,7 @@ from datahub_airflow_plugin.entities import Dataset
 
 CHUNK_TOKENS, OVERLAP_TOKENS = 512, 64
 EMBED_MODEL = "BAAI/bge-m3"                  # 1024 chiều, đa ngôn ngữ: tài liệu tiếng Việt không cần tách từ
-EMBED_DIM = 1024                              # = vector_len của online store (feature_repo/feature_store.yaml)
+EMBED_DIM = 1024                              # = vector_length của policy_chunks (feature_repo/features.py)
 # bge-m3 ~2,2GB trong RAM: pod riêng cho task embed (KubernetesExecutor), không chạy trong worker mặc định 1Gi
 EMBED_POD = {"pod_override": k8s.V1Pod(spec=k8s.V1PodSpec(containers=[k8s.V1Container(
     name="base", resources=k8s.V1ResourceRequirements(requests={"memory": "4Gi", "cpu": "1"}, limits={"memory": "6Gi"}))]))}

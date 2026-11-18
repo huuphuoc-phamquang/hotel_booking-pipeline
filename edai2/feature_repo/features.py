@@ -112,7 +112,8 @@ policy_chunks_fv = FeatureView(
         Field(name="source", dtype=String),
         Field(name="doc_sha256", dtype=String),                  # version tài liệu nguồn (governance RAG)
         Field(name="embed_model", dtype=String),
-        Field(name="embedding", dtype=Array(Float32), vector_index=True, vector_search_metric="COSINE"),
+        Field(name="embedding", dtype=Array(Float32), vector_index=True, vector_length=1024,   # bge-m3
+              vector_search_metric="COSINE"),
     ],
     source=chunks_source,
     online=True,
