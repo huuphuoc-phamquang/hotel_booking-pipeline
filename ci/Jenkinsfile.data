@@ -2,9 +2,9 @@
 // Rubric edai-2 › CI/CD: RAG data pipeline + stream feature jobs; DP1/DP2/DP3 và materialize đi cùng pipeline này.
 //   Test   : generator (bất biến stream = landing, contract), Spark (pyspark local), SQL DP2/DP3 trên Postgres thật,
 //            Great Expectations Bronze, DAG integrity trong image Airflow, e2e stream (Kafka -> Flink -> Postgres)
-//   Build  : image generator, Spark (Iceberg + s3a + JDBC), Flink (PyFlink + connector + contract)
-//   Deploy : DAG đi bằng git-sync của Airflow (nhánh main, thư mục dags/sql/governance) -> Jenkins chỉ đợi Airflow
-//            parse xong không lỗi; Variable spark_image trỏ image mới; FlinkDeployment đổi image (upgradeMode last-state)
+//   Build  : image generator, Spark (Iceberg + s3a + JDBC), Flink (PyFlink + connector + contract), Airflow (DAG)
+//   Deploy : DAG nằm trong image Airflow (edai1/k8s/airflow.Dockerfile) -> helm upgrade đổi tag trong namespace data,
+//            đợi parse không lỗi; Variable spark_image trỏ image mới; FlinkDeployment đổi image (upgradeMode last-state)
 // Secret: registry + kubeconfig từ Vault. Chạy từ gốc repo.
 pipeline {
   agent { kubernetes { yamlFile 'edai2/ci/pod-template.yaml'; defaultContainer 'tools' } }
@@ -48,6 +48,8 @@ pipeline {
               docker tag $REGISTRY/data/flink-booking:$TAG booking-flink:local
             '''
           }
+          // Airflow build từ gốc repo: image chứa DAG của cả edai1 lẫn edai2
+          sh 'docker build -f edai1/k8s/airflow.Dockerfile -t $REGISTRY/data/airflow-booking:$TAG . && docker push $REGISTRY/data/airflow-booking:$TAG'
         }
       }
     }
@@ -57,15 +59,16 @@ pipeline {
     stage('Deploy DAG') {
       when { branch 'main' }
       steps {
+        // DAG nằm trong image airflow-booking (edai1/k8s/airflow.Dockerfile, không git-sync): đổi tag image của chart
+        // trong namespace data, --atomic tự rollback nếu pod mới không Ready; rồi trỏ Variable spark_image sang image
+        // Spark cùng commit và kiểm không có DAG nào lỗi import.
         sh '''
-          kubectl -n airflow exec deploy/airflow-scheduler -- airflow variables set spark_image $REGISTRY/data/spark-booking:$TAG
-          # git-sync kéo main mỗi 60s: đợi commit này xuất hiện rồi kiểm không có DAG nào lỗi import
-          for i in $(seq 1 20); do
-            kubectl -n airflow exec deploy/airflow-scheduler -c git-sync -- sh -c "git -C /git/repo rev-parse HEAD" | grep -q ${GIT_COMMIT} && break
-            sleep 15
-          done
-          kubectl -n airflow exec deploy/airflow-scheduler -- airflow dags reserialize
-          test -z "$(kubectl -n airflow exec deploy/airflow-scheduler -- airflow dags list-import-errors -o plain | tail -n +2)"
+          helm upgrade airflow apache-airflow/airflow --version 1.16.0 -n data -f edai1/k8s/airflow-values.yaml \
+            --set images.airflow.repository=$REGISTRY/data/airflow-booking --set images.airflow.tag=$TAG --atomic --timeout 15m
+          af() { kubectl -n data exec deploy/airflow-scheduler -c scheduler -- airflow "$@"; }
+          af variables set spark_image $REGISTRY/data/spark-booking:$TAG
+          af dags reserialize
+          test -z "$(af dags list-import-errors -o plain | tail -n +2)"
         '''
       }
     }

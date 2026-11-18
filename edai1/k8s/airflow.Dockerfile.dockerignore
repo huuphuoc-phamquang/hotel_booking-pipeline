@@ -1,0 +1,7 @@
+*
+!edai1/dags/
+!edai1/sql/
+!edai1/governance/
+!edai2/dags/
+!edai2/feature_repo/
+**/__pycache__
