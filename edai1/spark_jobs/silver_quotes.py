@@ -57,8 +57,10 @@ def enrich_quotes(quotes: DataFrame, inventory: DataFrame, mode: str) -> DataFra
     if mode == "salt":
         # shortcut: hot_keys quét quotes thêm 1 lần trước join (không cache được ~104GB); dùng mẫu vài ngày để tìm
         # khoá nóng nếu salting trở thành chế độ chạy thật thay vì chế độ so sánh
-        return salted_join(q, inv, hot_keys(q, KEYS, HOT_CELLS), keys=KEYS)
-    return q.join(inv, list(KEYS))
+        out = salted_join(q, inv, hot_keys(q, KEYS, HOT_CELLS), keys=KEYS)
+    else:
+        out = q.join(inv, list(KEYS))
+    return out.select(*QUOTE_COLS, "rooms")             # = thứ tự cột DDL stg_quotes: writeTo ghi theo vị trí
 
 
 def enrich_hotels(quotes: DataFrame, hotels: DataFrame, mode: str) -> DataFrame:
