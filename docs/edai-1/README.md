@@ -32,7 +32,7 @@
 | 17 | 3 | Handle late arrival with explanation | [processing_jobs.md](processing_jobs.md#edai-1-17) | Đã có |
 | 18 | 3 | Handle other streaming problem with explanation | [processing_jobs.md](processing_jobs.md#edai-1-18) | Đã có |
 | 19 | 2 | Window processing | [processing_jobs.md](processing_jobs.md#edai-1-19) | Đã có |
-| 20 | 3 | Lakehouse | [data_storage.md](data_storage.md#edai-1-20) | Đã có · Thiết kế · Cần làm |
+| 20 | 3 | Lakehouse | [data_storage.md](data_storage.md#edai-1-20) | Đã có · Thiết kế |
 | 21 | 3 | Datawarehouse | [data_storage.md](data_storage.md#edai-1-21) | Đã có |
 | 22 | 2 | Ingest stage | [data_pipeline.md](data_pipeline.md#edai-1-22) | Đã có |
 | 23 | 2 | Validate stage | [data_pipeline.md](data_pipeline.md#edai-1-23) | Đã có |

@@ -39,7 +39,7 @@ edai-1 đã chạy trên GKE (2026-11-17/18): generator 111 GiB, Kafka + Flink, 
 | 17 | 3 | Handle late arrival with explanation | [edai-1/processing_jobs.md](edai-1/processing_jobs.md#edai-1-17) | Đã có |
 | 18 | 3 | Handle other streaming problem with explanation | [edai-1/processing_jobs.md](edai-1/processing_jobs.md#edai-1-18) | Đã có |
 | 19 | 2 | Window processing | [edai-1/processing_jobs.md](edai-1/processing_jobs.md#edai-1-19) | Đã có |
-| 20 | 3 | Lakehouse | [edai-1/data_storage.md](edai-1/data_storage.md#edai-1-20) | Đã có · Thiết kế · Cần làm |
+| 20 | 3 | Lakehouse | [edai-1/data_storage.md](edai-1/data_storage.md#edai-1-20) | Đã có · Thiết kế |
 | 21 | 3 | Datawarehouse | [edai-1/data_storage.md](edai-1/data_storage.md#edai-1-21) | Đã có |
 | 22 | 2 | Ingest stage | [edai-1/data_pipeline.md](edai-1/data_pipeline.md#edai-1-22) | Đã có |
 | 23 | 2 | Validate stage | [edai-1/data_pipeline.md](edai-1/data_pipeline.md#edai-1-23) | Đã có |
