@@ -1,0 +1,42 @@
+# Spark History Server: mở lại Spark UI của job đã xong từ event log trên MinIO (spark.eventLog.dir=s3a://lake/spark-events)
+# để chụp straggler, shuffle của silver_quotes (rubric edai-1 dòng 11-12).
+#   kubectl apply -f k8s/spark-history.yaml   (thay REGISTRY/TAG như các manifest khác)
+#   kubectl -n data port-forward svc/spark-history 18080:18080   -> http://localhost:18080
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: spark-history, namespace: data }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: spark-history } }
+  template:
+    metadata: { labels: { app: spark-history } }
+    spec:
+      containers:
+        - name: history
+          image: REGISTRY/data/spark-booking:TAG
+          command: ["bash", "-c"]
+          args:
+            - >-
+              /opt/spark/bin/spark-class org.apache.spark.deploy.history.HistoryServer
+          env:
+            - name: MINIO_ACCESS_KEY
+              valueFrom: { secretKeyRef: { name: data-secrets, key: MINIO_ACCESS_KEY } }
+            - name: MINIO_SECRET_KEY
+              valueFrom: { secretKeyRef: { name: data-secrets, key: MINIO_SECRET_KEY } }
+            - name: SPARK_HISTORY_OPTS
+              value: >-
+                -Dspark.history.fs.logDirectory=s3a://lake/spark-events
+                -Dspark.hadoop.fs.s3a.endpoint=http://minio.data.svc.cluster.local:9000
+                -Dspark.hadoop.fs.s3a.access.key=$(MINIO_ACCESS_KEY)
+                -Dspark.hadoop.fs.s3a.secret.key=$(MINIO_SECRET_KEY)
+                -Dspark.hadoop.fs.s3a.path.style.access=true
+                -Dspark.hadoop.fs.s3a.connection.ssl.enabled=false
+          ports: [{ containerPort: 18080 }]
+          resources: { requests: { cpu: 500m, memory: 2Gi }, limits: { memory: 4Gi } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: spark-history, namespace: data }
+spec:
+  selector: { app: spark-history }
+  ports: [{ port: 18080, targetPort: 18080 }]
