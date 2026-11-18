@@ -92,7 +92,7 @@ edai-1 đã chạy trên GKE (2026-11-17/18): generator 111 GiB, Kafka + Flink, 
 | 27 | 2 | Cài đặt hệ thống ở chế độ Warm Up cho agent theo hướng dẫn sau để tối ưu chi phí, đồng… | [edai-2/warm_up.md](edai-2/warm_up.md#edai-2-27) | Thiết kế · chờ cluster |
 | 28 | 1 | Unit test với Test Coverage > 90% | [edai-2/testing.md](edai-2/testing.md#edai-2-28) | Đã có |
 | 29 | 2 | Có sử dụng kỹ thuật equivalence partitioning vs boundary value analysis khi thiết kế test… | [edai-2/testing.md](edai-2/testing.md#edai-2-29) | Đã có |
-| 30 | 2 | Có sử dụng mutation testing để đánh giá hiệu quả của các test | [edai-2/testing.md](edai-2/testing.md#edai-2-30) | Đã có · chờ cluster |
+| 30 | 2 | Có sử dụng mutation testing để đánh giá hiệu quả của các test | [edai-2/testing.md](edai-2/testing.md#edai-2-30) | Đã có |
 | 31 | 2 | Idempotency testing sử dụng property-based testing | [edai-2/testing.md](edai-2/testing.md#edai-2-31) | Đã có |
 | 32 | 2 | Load test the Web API to understand throughput and latency | [edai-2/testing.md](edai-2/testing.md#edai-2-32) | Đã có · chờ cluster |
 | 33 | 2 | RAG Data Pipeline | [edai-2/cicd.md](edai-2/cicd.md#edai-2-33) | Đã có · chờ cluster |

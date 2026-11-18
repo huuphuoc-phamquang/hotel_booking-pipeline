@@ -36,9 +36,15 @@ cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu �
 
 > PR Testing Có sử dụng mutation testing để đánh giá hiệu quả của các test (cái này đã dạy ở lớp rồi nha cả nhà, là cái https://mutmut.readthedocs.io/). Note that you mutate only code changed, not the whole code base everytime you push your commit! Mutation score > 80%.
 
-**Cách làm:** [Đã có] Jenkins chạy mutmut chỉ trên các file thay đổi; `ci/check_mutation_score.py` chặn build khi score dưới 80%. [Cần làm] chụp score trên 80%.
+**Cách làm:** [Đã có] Jenkins chạy mutmut chỉ trên các file thay đổi; `ci/check_mutation_score.py` chặn build khi score dưới 80%.
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+**Kết quả:** chạy ngày 2026-11-18 trong container `python:3.12-slim` với `requirements-dev.txt`, mutate file `mcp_server/overbooking.py`
+(file đổi gần nhất có logic): 46 mutant, 40 bị test giết, 6 sống sót, **mutation score 87,0%** (ngưỡng 80%). Cả 6 mutant sống sót
+không làm đổi hành vi: 2 mutant chỉ đổi chuỗi thông báo `ValueError`; 2 mutant đổi epsilon `1e-12` (±1e-12, 2e-12) quá nhỏ để
+đổi K; mutant `len(probs) + 2` cắt quá cuối mảng `below` (dài đúng n + 2, phần tử cuối bằng 1, còn `ratio` < 1 vì hai chi phí đều dương) nên không đổi kết quả; mutant `<` thay `<=`
+chỉ khác khi `P(N < k)` bằng đúng `ratio + 1e-12`, test không có ca nào như vậy.
+
+![mutmut trên overbooking.py: score 87,0%](../images/edai-2/mutmut-overbooking.png)
 
 <a id="edai-2-31"></a>
 ## Idempotency testing sử dụng property-based testing · edai-2 · Validation & Verification
