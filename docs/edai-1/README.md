@@ -33,7 +33,7 @@
 | 18 | 3 | Handle other streaming problem with explanation | [processing_jobs.md](processing_jobs.md#edai-1-18) | Đã có |
 | 19 | 2 | Window processing | [processing_jobs.md](processing_jobs.md#edai-1-19) | Đã có |
 | 20 | 3 | Lakehouse | [data_storage.md](data_storage.md#edai-1-20) | Đã có · Thiết kế · Cần làm |
-| 21 | 3 | Datawarehouse | [data_storage.md](data_storage.md#edai-1-21) | Đã có · Cần làm |
+| 21 | 3 | Datawarehouse | [data_storage.md](data_storage.md#edai-1-21) | Đã có |
 | 22 | 2 | Ingest stage | [data_pipeline.md](data_pipeline.md#edai-1-22) | Đã có |
 | 23 | 2 | Validate stage | [data_pipeline.md](data_pipeline.md#edai-1-23) | Đã có |
 | 24 | 2 | Ingest stage | [data_pipeline.md](data_pipeline.md#edai-1-24) | Đã có |
@@ -47,7 +47,7 @@
 | 32 | 2 | Lineage between the pipeline and tables | [data_governance.md](data_governance.md#edai-1-32) | Đã có |
 | 33 | 2 | Data validation | [data_governance.md](data_governance.md#edai-1-33) | Đã có |
 | 34 | 2 | Visualize tables on all zones | [schema_design.md](schema_design.md#edai-1-34) | Đã có |
-| 35 | 2 | Dim table with SCD 2 | [schema_design.md](schema_design.md#edai-1-35) | Đã có · chờ cluster |
+| 35 | 2 | Dim table with SCD 2 | [schema_design.md](schema_design.md#edai-1-35) | Đã có |
 | 36 | 2 | Feature tables with 2 columns event_timestamp and created | [schema_design.md](schema_design.md#edai-1-36) | Đã có |
 | 37 | 2 | Relationship between dim & fact tables | [schema_design.md](schema_design.md#edai-1-37) | Đã có |
 | 38 | 2 | Naming convention | [schema_design.md](schema_design.md#edai-1-38) | Đã có |

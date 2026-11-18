@@ -301,9 +301,16 @@ erDiagram
 
 > Dim table with SCD 2 (valid_from_ts, valid_to_ts, is_current)
 
-**Cách làm:** [Đã có] `dim_hotel` có `valid_from_ts`, `valid_to_ts`, `is_current`, cập nhật bằng `sql/dp2_upsert_gold.sql`. `tests/test_gold_sql.py` chạy 40 ngày trên Postgres thật. Kết quả: mỗi khách sạn có số phiên bản bằng 1 cộng số lần đổi giá (có khách sạn từ 3 phiên bản trở lên), đúng một bản hiện hành, fact trỏ đúng phiên bản tại thời điểm đặt, chạy lại cùng ngày không làm thay đổi dữ liệu. [Cần làm] chụp một khách sạn có 3 dòng phiên bản.
+**Cách làm:** [Đã có] `dim_hotel` có `valid_from_ts`, `valid_to_ts`, `is_current`, cập nhật bằng `sql/dp2_upsert_gold.sql`. `tests/test_gold_sql.py` chạy 40 ngày trên Postgres thật. Kết quả: mỗi khách sạn có số phiên bản bằng 1 cộng số lần đổi giá (có khách sạn từ 3 phiên bản trở lên), đúng một bản hiện hành, fact trỏ đúng phiên bản tại thời điểm đặt, chạy lại cùng ngày không làm thay đổi dữ liệu. Trên GKE sau backfill 13 ngày: 311 khách sạn có 3 phiên bản, booking trỏ đúng phiên bản theo ngày; ảnh trong docs.
 
-**Kết quả:** các test `edai1/tests/test_gold_sql.py` chạy cục bộ và đạt (2026-11-16). Chưa có ảnh chụp trên cluster.
+**Kết quả:** chạy trên GKE sau khi backfill DP1–DP3 cho 2025-01-01 → 2025-01-13 (2026-11-18). Phân bố số phiên
+bản mỗi khách sạn trong `gold.dim_hotel`: 44.237 khách sạn 1 phiên bản, 5.442 có 2, 311 có 3, 8 có 4, 2 có 5; mỗi
+khách sạn đúng một dòng `is_current` (partial unique index `dim_hotel_one_current`). Khách sạn 123 có 3 phiên bản giá,
+`valid_to_ts` của bản trước bằng `valid_from_ts` của bản sau, và booking của từng ngày trỏ đúng `hotel_key` của phiên
+bản còn hiệu lực ngày đó (29 booking 01–05/01 vào bản 353.000, 22 booking 06–08/01 vào bản 311.000, 20 booking từ
+09/01 vào bản hiện hành 388.000).
+
+![SCD2: 3 phiên bản của một khách sạn](../images/edai-1/scd2-hotel-versions.png)
 
 <a id="edai-1-36"></a>
 ## Feature tables with 2 columns event_timestamp and created
