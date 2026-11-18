@@ -20,6 +20,8 @@ cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu �
 `curl -H "Host: grafana.booking.local" http://34.87.100.157/` trả 302 (chuyển tới trang đăng nhập). Service không mở port ra ngoài, chỉ đi qua
 ingress.
 
+![Grafana qua ingress](../images/edai-2/ingress-grafana.png)
+
 <a id="edai-2-38"></a>
 ## Service để coi log · edai-2 · External Routing & Gateway (NGINX Ingress Controll
 
@@ -32,6 +34,8 @@ ingress.
 **Kết quả:** NGINX Ingress Controller 4.15.1 (LoadBalancer `34.87.100.157`, `loadBalancerSourceRanges` chỉ mở cho IP của nhóm) và Ingress `observability` trong `k8s/ingress.yaml`. Host `kibana.booking.local` trỏ vào service `kibana-kibana:5601`;
 `curl -H "Host: kibana.booking.local" http://34.87.100.157/` trả 302 (chuyển tới trang đăng nhập). Service không mở port ra ngoài, chỉ đi qua
 ingress.
+
+![Kibana qua ingress](../images/edai-2/ingress-kibana.png)
 
 <a id="edai-2-39"></a>
 ## Service để coi trace · edai-2 · External Routing & Gateway (NGINX Ingress Controll
