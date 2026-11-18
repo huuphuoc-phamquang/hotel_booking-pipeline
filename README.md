@@ -10,7 +10,6 @@ khách sạn × đêm nhận phòng để đề xuất số phòng bán vượt 
 - [Kiến trúc](#kiến-trúc)
 - [Cấu trúc repo](#cấu-trúc-repo)
 - [Luồng dữ liệu theo ngày](#luồng-dữ-liệu-theo-ngày-airflow)
-- [Tài liệu theo rubric](docs/README.md)
 
 ## Bài toán
 
@@ -30,8 +29,7 @@ phát hiện drift đều so được với ground truth.
 
 ![Kiến trúc](docs/architecture/booking-overbooking.png)
 
-Nguồn sơ đồ: `docs/architecture/booking-overbooking.drawio`. Trạng thái từng dòng rubric:
-[docs/README.md](docs/README.md).
+Nguồn sơ đồ: `docs/architecture/booking-overbooking.drawio`.
 
 ## Cấu trúc repo
 
