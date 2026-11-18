@@ -1,3 +1,5 @@
+# pod không có GPU: lấy torch bản CPU (sentence-transformers kéo theo), image nhẹ hơn vài GB
+--extra-index-url https://download.pytorch.org/whl/cpu
 fastapi==0.162.7
 uvicorn==0.54.0
 httpx==0.28.1
