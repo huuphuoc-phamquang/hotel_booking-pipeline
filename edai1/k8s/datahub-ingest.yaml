@@ -22,6 +22,8 @@ spec:
               cd /recipes && python emit_datahub.py
           env:
             - { name: DATAHUB_GMS, value: http://datahub-datahub-gms:8080 }
+            - name: DATAHUB_TOKEN                # Personal Access Token: GMS bật xác thực
+              valueFrom: { secretKeyRef: { name: datahub-token, key: token } }
             - name: POSTGRES_PASSWORD
               valueFrom: { secretKeyRef: { name: data-secrets, key: POSTGRES_PASSWORD } }
             - name: MINIO_ACCESS_KEY

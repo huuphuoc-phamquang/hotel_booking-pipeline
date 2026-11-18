@@ -12,7 +12,16 @@ from datahub.configuration.config_loader import load_config_file  # noqa: E402
 from governance import emit_datahub as ed  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
-ENV = {"POSTGRES_PASSWORD": "x", "MINIO_ACCESS_KEY": "k", "MINIO_SECRET_KEY": "s", "DATAHUB_GMS": "http://gms:8080"}
+ENV = {"POSTGRES_PASSWORD": "x", "MINIO_ACCESS_KEY": "k", "MINIO_SECRET_KEY": "s", "DATAHUB_GMS": "http://gms:8080",
+       "DATAHUB_TOKEN": "t"}
+
+
+def test_recipes_send_token(monkeypatch):
+    """GMS bật xác thực: sink thiếu token thì ingest bị 401."""
+    for k, v in ENV.items():
+        monkeypatch.setenv(k, v)
+    for f in (ROOT / "governance/datahub").glob("*.yml"):
+        assert load_config_file(f)["sink"]["config"]["token"] == "t", f.name
 
 
 @pytest.fixture

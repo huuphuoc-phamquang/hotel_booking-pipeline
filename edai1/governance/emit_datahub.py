@@ -132,7 +132,8 @@ def emit_validation(emitter: DatahubRestEmitter, table_ref: str, check: str, pas
 
 
 def emit_from_airflow(table_ref: str, check: str, passed: bool) -> None:
-    """Gọi trong task Airflow: GMS lấy từ Connection datahub_rest_default (governance/ deploy cạnh dags/)."""
+    """Gọi trong task Airflow: GMS lấy từ Connection datahub_rest_default (governance/ deploy cạnh dags/), password
+    của Connection là Personal Access Token (GMS bật xác thực)."""
     import re
 
     from airflow.hooks.base import BaseHook
@@ -140,11 +141,12 @@ def emit_from_airflow(table_ref: str, check: str, passed: bool) -> None:
     # host có thể đã gồm scheme + cổng (http://gms:8080) hoặc chỉ tên host, cổng nằm ở trường port của Connection
     gms = conn.host if "://" in conn.host else f"http://{conn.host}"
     gms = gms if not conn.port or re.search(r":\d+$", gms) else f"{gms}:{conn.port}"
-    emit_validation(DatahubRestEmitter(gms_server=gms), table_ref, check, passed)
+    emit_validation(DatahubRestEmitter(gms_server=gms, token=conn.password or None), table_ref, check, passed)
 
 
 if __name__ == "__main__":
-    em = DatahubRestEmitter(gms_server=os.environ.get("DATAHUB_GMS", "http://datahub-gms:8080"))
+    em = DatahubRestEmitter(gms_server=os.environ.get("DATAHUB_GMS", "http://datahub-gms:8080"),
+                            token=os.environ.get("DATAHUB_TOKEN") or None)
     emit_lineage(em)
     emit_table_docs(em)
     # Kết quả validation không emit ở đây: task validate_* của DAG gửi kết quả GX thật (dags/dp1_ingest_bronze.py)
