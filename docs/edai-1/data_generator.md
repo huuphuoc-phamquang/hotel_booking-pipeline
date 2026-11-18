@@ -3,15 +3,15 @@
 Generator tái lập được (cùng seed cho cùng dữ liệu), sinh lỗi dữ liệu offline, lỗi streaming, data drift và
 bảng nhãn.
 
-Mỗi mục dưới đây ứng với một dòng của rubric. Phần **Cách làm** mô tả giải pháp đã triển khai, đồng bộ từ
-cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu đo được hoặc ảnh chụp (`docs/images/`).
+Mỗi mục ứng với một dòng của rubric, gồm phần **Thực thi** (đã làm gì, chạy ở đâu) và **Kết quả** (số liệu đo được,
+ảnh chụp trong `docs/images/`).
 
 ## Đặc tính dữ liệu đo được
 
-Các bảng dưới đây do `python -m generator.profile_data` (chạy trong thư mục `edai1/`) in ra. Mẫu gồm đủ 16 shard của
+`python -m generator.profile_data` (chạy trong thư mục `edai1/`) in ra các bảng dưới đây. Mẫu gồm đủ 16 shard của
 12 ngày cách nhau 30 ngày, rải đều các mùa trong năm, rồi ngoại suy ra cả năm. Với `quotes_per_cell` 580 và `conversion`
-0,01267, dữ liệu đạt khoảng 108GB, cao hơn mốc 100GB khoảng 8%; tích hai tham số được giữ nguyên nên số booking không
-đổi. Khi sửa `config.yaml`, cần chạy lại lệnh và thay các bảng này. Số đo không được ghi vào config hay comment.
+0,01267, dữ liệu đạt khoảng 108GB, cao hơn mốc 100GB khoảng 8%. Tích hai tham số này được giữ nguyên nên số booking không
+đổi. Khi sửa `config.yaml`, cần chạy lại lệnh và thay các bảng này; số đo không ghi vào config hay comment.
 
 Mẫu: ngày [15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345], đủ 16 shard; số cả năm = mẫu × 30. config_sha256 94e5c466f09d
 
@@ -62,15 +62,14 @@ Mẫu: ngày [15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345], đủ 16
 <a id="edai-1-5"></a>
 ## Simulate skew
 
-**Rubric:** edai-1 · dòng 5 · 2 điểm · nhóm *Implement Data Generator* › *Simulate offline data problems (Tối thiểu 100GB, nếu mọi người cảm thấy chưa đủ để thể hiện rõ các optimization thì mọi người hãy tăng lên nhé. Ví dụ: mọi người cố gắng xử lý data skew, nhưng để data quá bé thì hầu như thời gian xử lý không thay đổi nhiều)*
+**Thực thi:** lượt xem và booking lệch theo phân phối Zipf của khách sạn (`hotel_zipf_a`); 70% khách sạn tập trung ở
+3 thành phố. Mùa cao điểm tính theo `stay_date` (Tết, 30/4, hè, cả năm 2026), còn sự kiện chỉ tác động từ
+`announce_date`. Độ lệch nặng nhất nằm ở các cặp (`hotel_id`, `stay_date`) nóng. `generator/cardinality.py` đo
+cardinality từng cột: `python -m generator.cardinality 195 <file png>` chạy ngày 2026-11-17 trên dữ liệu ngày 2025-07-15.
+Quotes lấy shard 0 (2.379.119 dòng); mỗi shard chỉ giữ 1/16 số khách sạn nên `hotel_id` ở đây có 3.125 giá trị.
+Bookings lấy đủ 16 shard trên landing (409.892 dòng).
 
-**Cần nộp (cả nhóm):** Document thể hiện data characteristics sau khi generate - Cột nào skew, tỉ lệ như thế nào - Cột nào có high cardinality (tỉ lệ số unique values/tổng số values trong cột) - Schema trước và sau evolution là gì - Tỉ lệ duplicate - Data volume là bao nhiêu
-
-**Cách làm:** [Đã có] Lượt xem và booking lệch theo phân phối Zipf của khách sạn (`hotel_zipf_a`). 70% khách sạn tập trung ở 3 thành phố. Mùa cao điểm tính theo `stay_date` (Tết, 30/4, hè, cả năm 2026), sự kiện chỉ tác động từ `announce_date`. Độ lệch nặng nhất nằm ở các cặp (`hotel_id`, `stay_date`) nóng. Lệnh `python -m generator.profile_data` in các số đo top 1, top 1% và khách sạn trung vị. Bảng cardinality từng cột của quotes và bookings (`generator/cardinality.py`) cùng biểu đồ skew theo khách sạn và theo ô (`hotel_id`, `room_type`, `stay_date`) trong `docs/edai-1/data_generator.md`.
-
-**Kết quả:** `python -m generator.cardinality 195 <file png>` (2026-11-17) đo trên ngày 2025-07-15: quotes lấy shard 0
-(2.379.119 dòng; mỗi shard giữ 1/16 số khách sạn nên `hotel_id` ở đây chỉ có 3.125 giá trị), bookings landing đủ 16
-shard (409.892 dòng). Cardinality = số giá trị khác nhau / số dòng; high ≥ 50%, low < 1%.
+**Kết quả:** cardinality bằng số giá trị khác nhau chia số dòng; mức high từ 50% trở lên, low dưới 1%.
 
 | quotes: cột | Số giá trị khác nhau | Tỉ lệ / số dòng | Mức |
 |---|---|---|---|
@@ -92,24 +91,26 @@ shard (409.892 dòng). Cardinality = số giá trị khác nhau / số dòng; hi
 | `checkin` | 201 | 0,049% | low |
 | `nights`, `room_category`, `channel`, `cancellation_policy` | 2–5 | < 0,002% | low |
 
-Cột high cardinality (`quote_id`, `booking_id`, `idempotency_key`, `customer_id`) không dùng làm khoá partition: mỗi
-giá trị thành một thư mục nhỏ. Partition theo ngày (`dt`, `days(quoted_at)`), key Kafka là `hotel_id`. `customer_id`
-đo trên 1 ngày nên gần 100%; cả năm thấp hơn nhiều vì khách đặt lại (trung bình 4,6 booking/khách, khách có đặt trung vị 3, bảng Khách ở trên).
-`hotel_id` có cardinality thấp nhưng lệch: số dòng theo hạng khách sạn là đường thẳng trên trục log–log (Zipf), khách
-sạn đứng đầu có khoảng 10⁶ lượt xem/ngày, khách sạn cuối khoảng 10². Trong shard 0, ô (`hotel_id`, `room_type`,
-`stay_date`) trung vị có 2 lượt xem, p99 có 55, ô nóng nhất 2.723: đây là khoá join gây skew ở `silver_quotes`.
+Các cột high cardinality (`quote_id`, `booking_id`, `idempotency_key`, `customer_id`) không dùng làm khoá partition, vì
+mỗi giá trị sẽ thành một thư mục nhỏ. Dữ liệu partition theo ngày (`dt`, `days(quoted_at)`), còn key Kafka là
+`hotel_id`. `customer_id` đo trên 1 ngày nên gần 100%. Tính cả năm, tỉ lệ này thấp hơn nhiều vì khách đặt lại (trung bình
+4,6 booking/khách, trung vị 3 với khách có đặt, xem bảng Khách ở trên).
+
+`hotel_id` có cardinality thấp nhưng lệch mạnh. Trên trục log–log, số dòng theo hạng khách sạn là một đường thẳng
+(Zipf): khách sạn đứng đầu có khoảng 10⁶ lượt xem/ngày, khách sạn cuối khoảng 10². Trong shard 0, ô (`hotel_id`,
+`room_type`, `stay_date`) trung vị có 2 lượt xem, p99 có 55, ô nóng nhất có 2.723. Đây là khoá join gây skew ở
+`silver_quotes`.
 
 ![Skew theo khách sạn và theo ô](../images/edai-1/skew-hotel.png)
 
 <a id="edai-1-6"></a>
 ## Simulate schema evolution
 
-**Rubric:** edai-1 · dòng 6 · 2 điểm · nhóm *Implement Data Generator* › *Simulate offline data problems (Tối thiểu 100GB, nếu mọi người cảm thấy chưa đủ để thể hiện rõ các optimization thì mọi người hãy tăng lên nhé. Ví dụ: mọi người cố gắng xử lý data skew, nhưng để data quá bé thì hầu như thời gian xử lý không thay đổi nhiều)*
+**Thực thi:** từ 2025-07-01, bảng `landing/bookings` chuyển sang schema v2 (`anomalies.schema_v2_date`,
+`apply_schema_version` trong `generator/offline_gen.py`): thêm cột `channel`, đổi `room_type` thành `room_category`. Cột
+`cancellation_policy` có ở cả hai phiên bản, nên thay đổi schema không ảnh hưởng tới công thức nhãn.
 
-**Cách làm:** [Đã có] Từ 2025-07-01, bảng bookings chuyển sang schema v2: thêm cột `channel`, đổi `room_type` thành `room_category`. Cột `cancellation_policy` có ở cả hai phiên bản, nên thay đổi schema không ảnh hưởng tới công thức nhãn. `profile_data` in số dòng của từng phiên bản. Bảng so sánh schema v1 và v2 trong `docs/edai-1/data_generator.md`.
-
-**Kết quả:** bảng `landing/bookings` đổi schema tại `dt=2025-07-01` (`anomalies.schema_v2_date`,
-`apply_schema_version` trong `generator/offline_gen.py`):
+**Kết quả:**
 
 | Cột | v1 (trước 2025-07-01) | v2 (từ 2025-07-01) |
 |---|---|---|
@@ -120,28 +121,24 @@ sạn đứng đầu có khoảng 10⁶ lượt xem/ngày, khách sạn cuối k
 | `nights` | BIGINT | BIGINT |
 | `cancellation_policy`, `price` | STRING, DOUBLE | STRING, DOUBLE |
 
-Trong mẫu 12 ngày của `profile_data` (bảng Đặc tính dữ liệu ở trên) có 2.359.953 dòng v1 và 2.284.456 dòng v2; cả năm
-khoảng 181 ngày v1 và 214 ngày v2 trên landing. Đọc cả hai phiên bản cùng lúc mà không xử lý thì Parquet báo thiếu cột
-hoặc tách thành hai cột khác tên cho cùng một ý nghĩa; Silver xử lý bằng `mergeSchema`, gộp
+Mẫu 12 ngày của `profile_data` (bảng Đặc tính dữ liệu ở trên) có 2.359.953 dòng v1 và 2.284.456 dòng v2. Tính cả năm,
+landing có khoảng 181 ngày v1 và 214 ngày v2. Nếu đọc cả hai phiên bản cùng lúc mà không xử lý, Parquet báo thiếu cột
+hoặc tách thành hai cột khác tên cho cùng một ý nghĩa. Silver xử lý bằng `mergeSchema`, gộp
 `coalesce(room_category, room_type)` và thêm `channel` null cho dữ liệu v1 (`spark_jobs/silver_bookings.py`, mục
 Handle schema evolution ở `processing_jobs.md`).
 
 <a id="edai-1-7"></a>
 ## Simulate another offline data problem
 
-**Rubric:** edai-1 · dòng 7 · 2 điểm · nhóm *Implement Data Generator* › *Simulate offline data problems (Tối thiểu 100GB, nếu mọi người cảm thấy chưa đủ để thể hiện rõ các optimization thì mọi người hãy tăng lên nhé. Ví dụ: mọi người cố gắng xử lý data skew, nhưng để data quá bé thì hầu như thời gian xử lý không thay đổi nhiều)*
+**Thực thi:** 2% booking bị gửi hai lần với cùng `idempotency_key`. Mỗi bản thừa có `booking_id` mới và `created_at`
+lệch 1–3 giây, nên khoá chính không trùng dù vẫn là cùng một lần đặt. Ở nhánh stream, khoảng 0,5% bản sao của
+`booking_created` vi phạm data contract (giá âm, `hotel_id` không tồn tại, thiếu `event_time`).
 
-> Simulate another offline data problem (Ví dụ: 2% duplicate rate)
+**Kết quả:** `profile_data` đo trên mẫu 12 ngày cho tỉ lệ double submit **1,99%** dòng thừa trên mỗi booking (config 2%).
+Ngày 2025-07-15, `idempotency_key` có 401.912 giá trị khác nhau trên 409.892 dòng (bảng cardinality ở mục Simulate skew).
+Silver dedup theo `idempotency_key`, giữ dòng có `created_at` nhỏ nhất.
 
-**Cách làm:** [Đã có] 2% booking bị gửi hai lần với cùng `idempotency_key`. [Thêm cho novelty] Khoảng 0,5% bản ghi vi phạm data contract (giá âm, `hotel_id` không tồn tại, thiếu `event_time`); ghi lại tỉ lệ đo được.
-
-**Kết quả:** double submit đo bằng `profile_data` trên mẫu 12 ngày: **1,99%** dòng thừa trên mỗi booking (config 2%).
-Mỗi bản thừa có `booking_id` mới, cùng `idempotency_key`, `created_at` lệch 1–3 giây, nên khoá chính không trùng mà
-vẫn là cùng một lần đặt; trên ngày 2025-07-15, `idempotency_key` có 401.912 giá trị khác nhau trên 409.892 dòng
-(bảng cardinality ở mục Simulate skew). Silver dedup theo `idempotency_key`, giữ dòng `created_at` nhỏ nhất.
-
-Vi phạm data contract (chỉ ở nhánh stream, bản sao lỗi của `booking_created`), đo bằng
-`python -m generator.stream_profile 195` trên ngày 2025-07-15, đủ 16 shard:
+Vi phạm data contract đo bằng `python -m generator.stream_profile 195` trên ngày 2025-07-15, đủ 16 shard:
 
 | Loại vi phạm | Số event | Tỉ lệ trên booking_created |
 |---|---|---|
@@ -150,21 +147,23 @@ Vi phạm data contract (chỉ ở nhánh stream, bản sao lỗi của `booking
 | `price` (giá âm) | 692 | 0,169% |
 | **tổng** | **2.039** | **0,497%** (config 0,5%) |
 
-Trên GKE các event này vào topic `booking_events_dlq` kèm `reason` (mục Handle other streaming problem ở
+Trên GKE, các event này vào topic `booking_events_dlq` kèm `reason` (mục Handle other streaming problem ở
 `processing_jobs.md`).
 
 <a id="edai-1-8"></a>
 ## Store data after generating so that we can ingest to Bronze zone later
 
-**Rubric:** edai-1 · dòng 8 · 2 điểm · nhóm *Implement Data Generator* › *Simulate offline data problems (Tối thiểu 100GB, nếu mọi người cảm thấy chưa đủ để thể hiện rõ các optimization thì mọi người hãy tăng lên nhé. Ví dụ: mọi người cố gắng xử lý data skew, nhưng để data quá bé thì hầu như thời gian xử lý không thay đổi nhiều)*
+**Thực thi:** generator ghi Parquet nén zstd lên MinIO landing theo `dt=`/`shard=`, kèm manifest sha256, cho các bảng
+append-only: quotes, bookings, cancellations, payments. Xác suất huỷ thật `p_cancel_true` nằm ở bucket riêng
+`truth/p_cancel/`, ngoài landing, và pipeline không đọc. Quote là dữ liệu gốc, nên dung lượng trên 100GB đến từ quotes
+(`demand.quotes_per_cell`) thay vì tăng số booking. Trên GKE, Indexed Job `offline-generator` (`k8s/generator.yaml`)
+chạy 8 pod song song, mỗi pod một khoảng ngày.
 
-> Store data after generating so that we can ingest to Bronze zone later (Ví dụ: Dùng MinIO/PostgreSQL để mô phỏng data đang ở department khác và mình cần kéo về)
+**Kết quả:** chạy trên GKE ngày 2026-11-17. Job `offline-generator` hoàn thành 8/8 pod trong 70 phút, trải trên 3 node
+`cpu-spot`. Bucket `landing` đạt **111 GiB, 42.830 object**, vượt mốc 100GB của rubric.
 
-**Cách làm:** [Đã có] Generator ghi Parquet nén zstd lên MinIO landing theo `dt=`/`shard=`, kèm manifest sha256, cho các bảng append-only: quotes, bookings, cancellations, payments. Xác suất huỷ thật `p_cancel_true` nằm ở bucket riêng `truth/p_cancel/`, ngoài landing, pipeline không đọc. Quote là dữ liệu gốc, nên dung lượng ≥ 100GB đến từ quotes (`demand.quotes_per_cell`) thay vì tăng số booking. `profile_data` ước tính dung lượng một năm từ 12 ngày rải đều trong năm. Trên GKE, Indexed Job `offline-generator` (`k8s/generator.yaml`) chạy 8 pod song song, mỗi pod một khoảng ngày.
-
-**Kết quả:** chạy trên GKE ngày 2026-11-17. Job `offline-generator` hoàn thành 8/8 pod trong 70 phút, trải trên 3 node `cpu-spot`. Bucket `landing` đạt **111 GiB, 42.830 object**, vượt mốc 100GB của rubric.
-
-Pod số 0 khởi động lại một lần: 8 pod cùng tạo bucket `landing`, pod chậm hơn nhận lỗi `BucketAlreadyOwnedByYou` rồi chạy lại bình thường. Bản sửa trong `generator/offline_gen.py` bỏ qua đúng lỗi này.
+Pod số 0 khởi động lại một lần. Nguyên nhân là 8 pod cùng tạo bucket `landing`, pod chậm hơn nhận lỗi
+`BucketAlreadyOwnedByYou` rồi chạy lại bình thường. Bản sửa trong `generator/offline_gen.py` bỏ qua đúng lỗi này.
 
 ![8 pod generator chạy song song](../images/edai-1/generator-pods-running.png)
 
@@ -175,15 +174,19 @@ Pod số 0 khởi động lại một lần: 8 pod cùng tạo bucket `landing`,
 <a id="edai-1-9"></a>
 ## Simulate late arrivals
 
-**Rubric:** edai-1 · dòng 9 · 2 điểm · nhóm *Implement Data Generator* › *Simulate online data problems*
+**Thực thi:** generator tạo ba nguồn event trễ:
 
-**Cần nộp (cả nhóm):** Tương tự cái trên: - Dữ liệu nào late, late bao lâu - Tỷ lệ duplicate như nào...
+- 30% booking từ mobile offline trễ 5–20 phút; một phần vượt watermark 10 phút cộng lateness 5 phút nên rơi ra side output.
+- Webhook thanh toán trễ 1–15 phút.
+- 1% booking qua channel manager trễ 1–4 giờ.
 
-**Cách làm:** [Đã có] Ba nguồn event trễ: 30% booking từ mobile offline trễ 5–20 phút (một phần vượt watermark 10 phút cộng lateness 5 phút nên rơi ra side output), webhook thanh toán trễ 1–15 phút, 1% booking qua channel manager trễ 1–4 giờ. Replay chỉ phát event có `ingest_time` trong cửa sổ. Generator lùi 150 ngày để có event huỷ của booking tạo trước cửa sổ, mỗi `idempotency_key` huỷ đúng một lần. Event log gom mỗi ngày ingest thành một file đã sắp theo `ingest_time`, nên replay chỉ mở vài file cùng lúc. Lần chạy đầu sinh khoảng 2.900 partition song song bằng `GEN_WORKERS` process, thay cho cách sinh tuần tự mất khoảng 3 giờ. Bảng độ trễ theo nguồn (trung vị, p99, tỉ lệ vượt watermark) và histogram của (`ingest_time` − `event_time`) đo bằng `generator/stream_profile.py` trong `docs/edai-1/data_generator.md`.
+Replay chỉ phát event có `ingest_time` trong cửa sổ. Generator lùi 150 ngày để có event huỷ của các booking tạo trước
+cửa sổ; mỗi `idempotency_key` huỷ đúng một lần. Event log gom mỗi ngày ingest thành một file đã sắp theo `ingest_time`,
+nên replay chỉ mở vài file cùng lúc. Lần chạy đầu sinh khoảng 2.900 partition song song bằng `GEN_WORKERS` process, thay
+cho cách sinh tuần tự mất khoảng 3 giờ. Độ trễ đo bằng `python -m generator.stream_profile 195 <file png>` (2026-11-18)
+trên event của mọi booking tạo ngày 2025-07-15, đủ 16 shard (1.009.407 event).
 
-**Kết quả:** `python -m generator.stream_profile 195 <file png>` (2026-11-18) trên event của mọi booking tạo ngày
-2025-07-15, đủ 16 shard (1.009.407 event). Độ trễ = `ingest_time` − `event_time`; mốc so sánh là watermark 10 phút
-và allowedLateness 5 phút của Flink:
+**Kết quả:** độ trễ bằng `ingest_time` − `event_time`, so với watermark 10 phút và allowedLateness 5 phút của Flink:
 
 | Nguồn | Event | Trễ trung vị | p99 | Max | Trễ > 10 phút | Trễ > 15 phút |
 |---|---|---|---|---|---|---|
@@ -193,29 +196,25 @@ và allowedLateness 5 phút của Flink:
 | payment_callback (webhook) | 408.016 | 8,0 phút | 14,9 phút | 15 phút | 35,79% | 0,03% |
 | booking_cancelled | 189.460 | 0 | 0 | 0 | 0% | 0% |
 
-Dữ liệu trễ là `booking_created` từ mobile (30% bị trễ 5–20 phút do mất mạng) và từ channel manager (trễ 1–4 giờ),
-cùng webhook thanh toán (1–15 phút). Với booking, 10,03% event mobile và toàn bộ event channel manager trễ quá
-watermark + lateness, nên nhánh tumbling 1 phút đẩy chúng ra side output; event trễ 10–15 phút vẫn được cửa sổ nhận
-lại nhờ allowedLateness. Webhook không đi qua cửa sổ (chỉ dedup) nên độ trễ của nó không làm mất event.
+Với booking, 10,03% event mobile và toàn bộ event channel manager trễ quá watermark + lateness, nên nhánh tumbling
+1 phút đẩy chúng ra side output. Event trễ 10–15 phút vẫn được cửa sổ nhận lại nhờ allowedLateness. Webhook không đi qua
+cửa sổ (chỉ dedup), nên độ trễ của nó không làm mất event.
 
 ![Độ trễ event theo nguồn](../images/edai-1/stream-delay.png)
 
 <a id="edai-1-10"></a>
 ## Simulate another streaming data problem
 
-**Rubric:** edai-1 · dòng 10 · 2 điểm · nhóm *Implement Data Generator* › *Simulate online data problems*
+**Thực thi:** 1,5% callback thanh toán bị gửi lặp (at-least-once). Bản gửi lại giữ nguyên `event_id` như webhook thật
+và tới sau bản gốc 1–30 giây. Tỉ lệ đo bằng `python -m generator.stream_profile 195` trên ngày 2025-07-15, đủ 16 shard.
 
-> Simulate another streaming data problem (Ví dụ: 1.5% duplicate rate)
-
-**Cách làm:** [Đã có] 1,5% callback thanh toán bị gửi lặp (at-least-once); Flink khử trùng theo `event_id`. `generator/profile_data` in tỉ lệ đo được.
-
-**Kết quả:** `python -m generator.stream_profile 195` trên ngày 2025-07-15, đủ 16 shard:
+**Kết quả:**
 
 | Lỗi | Số event lặp | Tỉ lệ |
 |---|---|---|
 | `payment_callback` gửi lại (cùng `event_id`, tới sau bản gốc 1–30 giây) | 6.104 | 1,52% callback (config 1,5%) |
 | `booking_created` double submit (cùng `idempotency_key`, khác `booking_id`) | 7.980 | 1,99% booking (config 2%) |
 
-Bản callback gửi lại giữ nguyên `event_id` như webhook at-least-once thật, nên đếm thẳng thì số thanh toán bị đếm hai
-lần; Flink giữ lần đầu theo `event_id` bằng keyed state (`DedupByEventId`), timer xoá state khi watermark qua `event_time` + 5 giờ. Double submit khác
-`event_id`, nên Flink dedup theo `idempotency_key` trước khi đếm booking, cùng quy tắc với Silver.
+Nếu đếm thẳng, các khoản thanh toán gửi lại bị đếm hai lần. Flink giữ lần đầu theo `event_id` bằng keyed state
+(`DedupByEventId`); timer xoá state khi watermark vượt `event_time` + 5 giờ. Double submit có `event_id` khác nhau, nên
+Flink dedup theo `idempotency_key` trước khi đếm booking, cùng quy tắc với Silver.

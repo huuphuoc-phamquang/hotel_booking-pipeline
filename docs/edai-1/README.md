@@ -9,4 +9,4 @@
 | [data_pipeline.md](data_pipeline.md) | Ba pipeline DP1–DP3 trên Airflow, mỗi pipeline gồm ingest và validate. |
 | [data_governance.md](data_governance.md) | Lineage và kết quả kiểm tra dữ liệu DP1–DP3 trên DataHub. |
 | [schema_design.md](schema_design.md) | Bảng theo zone, dimension SCD2, bảng feature, quan hệ dim–fact và quy ước đặt tên. |
-| [novel_ideas.md](novel_ideas.md) | Mỗi ý tưởng gồm vấn đề, cách làm và minh chứng đã chạy. |
+| [novel_ideas.md](novel_ideas.md) | Data contract với DLQ, và đối soát batch–stream có ground truth. |

@@ -2,22 +2,24 @@
 
 Thiết kế bảng theo zone, dimension SCD2, bảng feature, quan hệ dim–fact và quy ước đặt tên.
 
-Mỗi mục dưới đây ứng với một dòng của rubric. Phần **Cách làm** mô tả giải pháp đã triển khai, đồng bộ từ
-cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu đo được hoặc ảnh chụp (`docs/images/`).
+Mỗi mục ứng với một dòng của rubric. Mục đã hoàn thành gồm phần **Thực thi** (đã làm gì, chạy ở đâu) và **Kết quả**
+(số liệu đo được, ảnh chụp trong `docs/images/`). Mục chưa hoàn thành giữ trích rubric và phần **Cách làm** đồng bộ từ
+cột F của rubric.
 
 <a id="edai-1-34"></a>
 ## Visualize tables on all zones
 
-**Rubric:** edai-1 · dòng 34 · 2 điểm · nhóm *Documentation* › *Schema design*
+**Thực thi:** ERD của từng zone (Bronze `raw_`, Silver `stg_`, Gold) vẽ bằng draw.io từ schema trong code
+(`generator/offline_gen.py`, `storage/optimize.sql`, `schema/gold_schema.sql`); bản Mermaid có cùng bảng và quan hệ nằm
+trong phần thu gọn bên dưới mỗi ảnh. Mỗi bảng có một dòng mô tả vai trò. Trên DataHub, 3 recipe trong
+`governance/datahub/` (postgres cho Gold, iceberg cho Silver, s3 cho Bronze) ingest schema, và
+`emit_datahub.emit_table_docs` gắn mô tả cùng tag zone cho 26 bảng; `tests/test_datahub_recipes.py` kiểm tên dataset
+khớp với lineage. Phần DataHub chạy trên GKE ngày 2026-11-18.
 
-**Cần nộp (cả nhóm):** Document capture màn hình thể hiện các bảng và quan hệ giữa chúng trên mỗi zone, giải thích từng bảng có nhiệm vụ gì
-
-**Cách làm:** [Đã có] `docs/edai-1/schema_design.md` có ERD cho từng zone (Bronze `raw_`, Silver `stg_`, Gold) vẽ bằng draw.io (ảnh trong `docs/images/edai-1/schema-*.png`, kèm bản Mermaid cùng quan hệ) từ schema trong code (`generator/offline_gen.py`, `storage/optimize.sql`, `schema/gold_schema.sql`), mỗi bảng một dòng mô tả vai trò. Trên DataHub: 3 recipe `governance/datahub/` (postgres Gold, iceberg Silver, s3 Bronze) ingest schema; `emit_datahub.emit_table_docs` gắn mô tả và tag zone cho 26 bảng; `tests/test_datahub_recipes.py` kiểm tên dataset khớp lineage. Trang Schema và danh sách bảng lọc theo tag zone trên DataHub: Đã chạy trên GKE (2026-11-18, ds 2025-01-01), ảnh trong docs.
-
-**Kết quả:** ERD dưới đây vẽ bằng draw.io từ schema trong code, mỗi zone một ảnh; bản Mermaid có cùng bảng và quan hệ nằm trong phần thu gọn bên dưới mỗi ảnh. Bronze và Silver là file Parquet và bảng Iceberg nên không có ràng
-buộc khoá; các đường nối ở hai zone này là quan hệ logic theo cột cùng tên. Ở Gold, chỉ hai đường nối của `fact_bookings`
-là khoá ngoại thật. Trên DataHub (GKE, 2026-11-18), lọc theo tag zone ra đủ 26 bảng: 8 Bronze trên S3, 2 Silver trên Iceberg, 16 Gold
-trên PostgreSQL; tab Columns của bảng Gold hiện khoá chính, khoá ngoại.
+**Kết quả:** lọc theo tag zone trên DataHub ra đủ 26 bảng: 8 bảng Bronze trên S3, 2 bảng Silver trên Iceberg, 16 bảng
+Gold trên PostgreSQL. Tab Columns của bảng Gold hiện khoá chính và khoá ngoại. Bronze và Silver là file Parquet và bảng
+Iceberg nên không có ràng buộc khoá; các đường nối ở hai zone này là quan hệ logic theo cột cùng tên. Ở Gold, chỉ hai
+đường nối của `fact_bookings` là khoá ngoại thật.
 
 ![Bảng theo zone trên DataHub](../images/edai-1/datahub-zones.png)
 
@@ -25,7 +27,7 @@ trên PostgreSQL; tab Columns của bảng Gold hiện khoá chính, khoá ngo�
 
 ### Bronze (`s3a://lake/bronze/raw_*`, Parquet)
 
-DP1 chép nguyên dữ liệu từ landing, không biến đổi. Bốn bảng sự kiện chia theo `dt=<ngày>`; bốn bảng dim chép một lần.
+DP1 chép nguyên dữ liệu từ landing, không biến đổi. Bốn bảng sự kiện chia partition theo `dt=<ngày>`; bốn bảng dim chép một lần.
 
 ![ERD Bronze](../images/edai-1/schema-bronze.png)
 
@@ -297,18 +299,20 @@ erDiagram
 <a id="edai-1-35"></a>
 ## Dim table with SCD 2
 
-**Rubric:** edai-1 · dòng 35 · 2 điểm · nhóm *Documentation* › *Schema design*
+**Thực thi:** `dim_hotel` có `valid_from_ts`, `valid_to_ts`, `is_current`, cập nhật bằng `sql/dp2_upsert_gold.sql`.
+`tests/test_gold_sql.py` chạy 40 ngày trên Postgres thật và xác nhận bốn điều: mỗi khách sạn có số phiên bản bằng 1 cộng
+số lần đổi giá; mỗi khách sạn có đúng một bản hiện hành; fact trỏ đúng phiên bản tại thời điểm đặt; chạy lại cùng ngày
+không làm thay đổi dữ liệu. Trên GKE, DP1–DP3 được backfill cho 2025-01-01 → 2025-01-13 (ngày 2026-11-18).
 
-> Dim table with SCD 2 (valid_from_ts, valid_to_ts, is_current)
+**Kết quả:** phân bố số phiên bản mỗi khách sạn trong `gold.dim_hotel`: 44.237 khách sạn có 1 phiên bản, 5.442 có 2,
+311 có 3, 8 có 4 và 2 có 5. Mỗi khách sạn có đúng một dòng `is_current` (partial unique index `dim_hotel_one_current`).
 
-**Cách làm:** [Đã có] `dim_hotel` có `valid_from_ts`, `valid_to_ts`, `is_current`, cập nhật bằng `sql/dp2_upsert_gold.sql`. `tests/test_gold_sql.py` chạy 40 ngày trên Postgres thật. Kết quả: mỗi khách sạn có số phiên bản bằng 1 cộng số lần đổi giá (có khách sạn từ 3 phiên bản trở lên), đúng một bản hiện hành, fact trỏ đúng phiên bản tại thời điểm đặt, chạy lại cùng ngày không làm thay đổi dữ liệu. Trên GKE sau backfill 13 ngày: 311 khách sạn có 3 phiên bản, booking trỏ đúng phiên bản theo ngày; ảnh trong docs.
+Ví dụ khách sạn 123 có 3 phiên bản giá; `valid_to_ts` của bản trước bằng `valid_from_ts` của bản sau. Booking của từng
+ngày trỏ đúng `hotel_key` của phiên bản còn hiệu lực ngày đó:
 
-**Kết quả:** chạy trên GKE sau khi backfill DP1–DP3 cho 2025-01-01 → 2025-01-13 (2026-11-18). Phân bố số phiên
-bản mỗi khách sạn trong `gold.dim_hotel`: 44.237 khách sạn 1 phiên bản, 5.442 có 2, 311 có 3, 8 có 4, 2 có 5; mỗi
-khách sạn đúng một dòng `is_current` (partial unique index `dim_hotel_one_current`). Khách sạn 123 có 3 phiên bản giá,
-`valid_to_ts` của bản trước bằng `valid_from_ts` của bản sau, và booking của từng ngày trỏ đúng `hotel_key` của phiên
-bản còn hiệu lực ngày đó (29 booking 01–05/01 vào bản 353.000, 22 booking 06–08/01 vào bản 311.000, 20 booking từ
-09/01 vào bản hiện hành 388.000).
+- 29 booking ngày 01–05/01 vào bản giá 353.000;
+- 22 booking ngày 06–08/01 vào bản giá 311.000;
+- 20 booking từ ngày 09/01 vào bản hiện hành, giá 388.000.
 
 ![SCD2: 3 phiên bản của một khách sạn](../images/edai-1/scd2-hotel-versions.png)
 
@@ -326,17 +330,13 @@ bản còn hiệu lực ngày đó (29 booking 01–05/01 vào bản 353.000, 22
 <a id="edai-1-37"></a>
 ## Relationship between dim & fact tables
 
-**Rubric:** edai-1 · dòng 37 · 2 điểm · nhóm *Documentation* › *Schema design*
+**Thực thi:** `schema/gold_schema.sql` khai báo hai khoá ngoại của `fact_bookings`: tới `dim_hotel` (`hotel_key`) và
+`dim_customer` (`customer_key`). Recipe postgres của DataHub đọc được khoá ngoại khi ingest schema.
 
-> Relationship between dim & fact tables (You can simply export via DBeaver or similar tools)
-
-**Cách làm:** [Đã có] `fact_bookings` có khoá ngoại tới `dim_hotel` (`hotel_key`) và `dim_customer` (`customer_key`) trong `schema/gold_schema.sql`; ERD dim–fact nằm ở `docs/edai-1/schema_design.md`. Recipe postgres đọc được khoá ngoại nên tab Schema của `fact_bookings` trên DataHub hiện nhãn Foreign Key trỏ sang `dim_hotel`, `dim_customer`. Tab Schema của `fact_bookings` trên DataHub (Primary Key, Foreign Key) đã chụp, ảnh trong docs.
-
-**Kết quả:** `fact_bookings` có hai khoá ngoại khai báo trong `schema/gold_schema.sql`. Trên DataHub, tab Columns của `fact_bookings` đánh dấu `booking_id` là Primary Key, `hotel_key` và `customer_key` là
-Foreign Key.
+**Kết quả:** trên DataHub, tab Columns của `fact_bookings` đánh dấu `booking_id` là Primary Key, `hotel_key` và
+`customer_key` là Foreign Key trỏ sang `dim_hotel`, `dim_customer`.
 
 ![Schema fact_bookings trên DataHub](../images/edai-1/datahub-schema-gold.png)
-
 
 ```mermaid
 erDiagram
@@ -368,7 +368,7 @@ erDiagram
 
 - Fact trỏ tới dim bằng surrogate key (`hotel_key`, `customer_key`), không bằng natural key.
 - Với `dim_hotel` (SCD2), `sql/dp2_upsert_gold.sql` chọn phiên bản bằng join theo khoảng: `created_at` của booking nằm
-  trong `[valid_from_ts, valid_to_ts)`. Mỗi booking vì vậy giữ đúng giá niêm yết tại thời điểm đặt.
+  trong `[valid_from_ts, valid_to_ts)`. Nhờ vậy, mỗi booking giữ đúng giá niêm yết tại thời điểm đặt.
 - Các bảng `feat_*`, `booking_risk`, `hotel_rooms` nối với dim qua natural key (`hotel_id`, `customer_id`) và không khai
   báo khoá ngoại, vì chúng được ghi bởi job khác (DP3, Flink, `score_bookings`) và đọc theo natural key.
 
