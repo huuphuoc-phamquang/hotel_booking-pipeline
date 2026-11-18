@@ -8,10 +8,13 @@ ON CONFLICT (customer_id) DO UPDATE SET home_city = EXCLUDED.home_city, loyalty_
 
 -- Cập nhật SCD2 từ gold.stg_hotel_changes (change feed: mỗi dòng là 1 lần đổi thật, có thể nhiều lần / khách sạn).
 -- Chạy lại cùng batch không đổi gì: chỉ áp các thay đổi mới hơn phiên bản mới nhất đã có của khách sạn đó.
+-- shortcut: lần đổi đến trễ (valid_from cũ hơn bản mới nhất) bị bỏ qua; generator biết trước mọi lần đổi nên không
+-- xảy ra, nguồn thật cần chèn phiên bản vào giữa (tách khoảng hiệu lực) thay vì bỏ.
 CREATE TEMP TABLE new_versions ON COMMIT DROP AS
 SELECT s.hotel_id, s.city, s.stars, s.price, s.valid_from,
        LEAD(s.valid_from, 1, TIMESTAMP '9999-12-31') OVER (PARTITION BY s.hotel_id ORDER BY s.valid_from) AS valid_to
-FROM (SELECT DISTINCT ON (hotel_id, valid_from) * FROM gold.stg_hotel_changes ORDER BY hotel_id, valid_from) s
+FROM (SELECT DISTINCT ON (hotel_id, valid_from) * FROM gold.stg_hotel_changes
+      ORDER BY hotel_id, valid_from, price) s                       -- price: chọn tất định khi trùng valid_from
 WHERE s.valid_from > COALESCE((SELECT max(d.valid_from_ts) FROM gold.dim_hotel d WHERE d.hotel_id = s.hotel_id),
                               TIMESTAMP '-infinity');
 
@@ -27,6 +30,7 @@ SELECT hotel_id, city, stars, price, valid_from, valid_to, valid_to = TIMESTAMP 
 FROM new_versions;
 
 -- Fact: hotel_key = phiên bản dim_hotel có hiệu lực lúc đặt (join khoảng). Booking cũ bị huỷ hôm nay chỉ cập nhật status.
+-- Huỷ không đảo ngược: chạy lại 1 ngày cũ (staging chưa biết lần huỷ sau ngày đó) không đưa booking đã huỷ về confirmed.
 -- lead_days lấy phần ngày nguyên của checkin - created_at, giống generator/profile_data.
 INSERT INTO gold.fact_bookings (booking_id, hotel_key, customer_key, booking_date, checkin_date, lead_days, nights,
                                 amount, cancellation_policy, channel, status, cancelled_at)
@@ -36,6 +40,13 @@ SELECT b.booking_id, h.hotel_key, c.customer_key, b.created_at::date, b.checkin:
 FROM gold.stg_bookings b
 JOIN gold.dim_customer c USING (customer_id)
 JOIN gold.dim_hotel h ON h.hotel_id = b.hotel_id AND b.created_at >= h.valid_from_ts AND b.created_at < h.valid_to_ts
-ON CONFLICT (booking_id) DO UPDATE SET status = EXCLUDED.status, cancelled_at = EXCLUDED.cancelled_at;
+ON CONFLICT (booking_id) DO UPDATE
+SET cancelled_at = COALESCE(gold.fact_bookings.cancelled_at, EXCLUDED.cancelled_at),
+    status = CASE WHEN COALESCE(gold.fact_bookings.cancelled_at, EXCLUDED.cancelled_at) IS NULL
+                  THEN 'confirmed' ELSE 'cancelled' END;
+
+INSERT INTO gold.hotel_rooms (hotel_id, stay_date, rooms)
+SELECT hotel_id, stay_date, rooms FROM gold.stg_hotel_rooms
+ON CONFLICT (hotel_id, stay_date) DO UPDATE SET rooms = EXCLUDED.rooms;
 
 COMMIT;

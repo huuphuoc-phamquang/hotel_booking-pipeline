@@ -97,7 +97,13 @@ def test_changed_bookings_for_ds(bronze):
     s = silver.toPandas()
     day = pd.Timestamp("2025-07-01")
     want = s[(s["created_at"].dt.normalize() == day) | (s["cancelled_at"].dt.normalize() == day)]
-    assert set(got["booking_id"]) == set(want["booking_id"]) and len(got) > 0
+    assert set(got["booking_id"]) == set(want["booking_id"]) and len(got) > 0 and got["booking_id"].is_unique
+    # silver dựng từ cả Bronze nên biết lần huỷ sau ds: staging phải nhìn như lúc hết ngày ds, không rò tương lai
+    end = day + pd.Timedelta(days=1)
+    known = want.set_index("booking_id")["cancelled_at"].where(lambda c: c < end)
+    got = got.set_index("booking_id").loc[known.index]
+    assert (got["cancelled_at"].isna() == known.isna()).all() and (s["cancelled_at"] >= end).any()
+    assert (got["status"] == known.notna().map({True: "cancelled", False: "confirmed"})).all()
 
 
 def test_incremental_equals_full_rebuild(bronze):

@@ -102,9 +102,11 @@ CREATE TABLE gold.booking_risk (
     PRIMARY KEY (booking_id, scored_date)
 );
 CREATE INDEX booking_risk_hotel_stay ON gold.booking_risk (hotel_id, stay_date, scored_date);
+CREATE INDEX booking_risk_stay ON gold.booking_risk (stay_date);   -- drift_monitor: calibration 7 ngày nhận phòng
 
--- Số phòng mở bán theo hotel × đêm trong 30 đêm tới (stage_gold.py tổng inventory các loại phòng, ghi đè mỗi ngày):
--- propose_overbooking so số booking đang giữ với rooms + K
+-- Số phòng mở bán theo hotel × đêm (stage_gold.py tổng inventory các loại phòng của 30 đêm tới vào stg_hotel_rooms,
+-- dp2_upsert_gold.sql upsert vào đây trong 1 transaction): propose_overbooking so số booking đang giữ với rooms + K.
+-- Upsert dồn theo ngày nên đêm đã qua vẫn còn, chạy lại ngày cũ không xoá số phòng của các đêm khác.
 CREATE TABLE gold.hotel_rooms (
     hotel_id   BIGINT NOT NULL,
     stay_date  DATE   NOT NULL,
@@ -160,8 +162,18 @@ CREATE TABLE gold.stg_customers (
     loyalty_tier  SMALLINT
 );
 
--- Index cho các truy vấn thật: DP3 quét fact theo khách / khách sạn trong cửa sổ ngày, score_bookings lọc theo checkin.
+CREATE TABLE gold.stg_hotel_rooms (
+    hotel_id   BIGINT NOT NULL,
+    stay_date  DATE   NOT NULL,
+    rooms      INT    NOT NULL
+);
+
+-- Index cho các truy vấn thật: DP3 quét fact theo khách / khách sạn trong cửa sổ ngày, score_bookings lọc theo checkin;
+-- DP3, score_bookings, validate_gold lọc booking_date của 1 ngày, DP3 tìm lần huỷ trong ngày theo cancelled_at.
+-- shortcut: fact 1 năm ~140 triệu dòng chưa partition theo booking_date; cần PARTITION BY RANGE khi dữ liệu nhiều năm.
 -- feat_* đã có PK (entity, event_timestamp) = đúng thứ tự Feast point-in-time join cần.
 CREATE INDEX fact_bookings_customer_date ON gold.fact_bookings (customer_key, booking_date);
 CREATE INDEX fact_bookings_hotel_date ON gold.fact_bookings (hotel_key, booking_date);
 CREATE INDEX fact_bookings_checkin ON gold.fact_bookings (checkin_date);
+CREATE INDEX fact_bookings_date ON gold.fact_bookings (booking_date);
+CREATE INDEX fact_bookings_cancelled ON gold.fact_bookings (cancelled_at) WHERE cancelled_at IS NOT NULL;
