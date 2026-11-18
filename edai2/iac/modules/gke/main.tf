@@ -1,5 +1,8 @@
-# GKE zonal (1 cluster zonal được miễn phí quản lý). 2 node pool:
+# GKE zonal (1 cluster zonal được miễn phí quản lý). 3 node pool:
 #   - cpu : spot e2-standard-8 (rẻ hơn ~60-70%, có thể bị thu hồi -> mọi workload đều chạy lại được), autoscale
+#   - spark : spot n2-standard-8 + 1 Local SSD 375GB làm ephemeral storage cho shuffle của job Spark ≥100GB (node cpu
+#             chỉ còn ~47GB đĩa trống; pd-balanced 375GB vượt quota SSD_TOTAL_GB vùng, Local SSD không tính quota đó),
+#             label pool=spark, Spark chọn bằng spark.kubernetes.node.selector.pool; min 0 nên chỉ tốn tiền khi chạy
 #   - gpu : g2-standard-8 + 1 L4 cho vLLM, min 0 -> chỉ tốn tiền khi có pod xin GPU
 variable "name" { type = string }
 variable "zone" { type = string }
@@ -7,6 +10,7 @@ variable "network" { type = string }
 variable "subnetwork" { type = string }
 variable "cpu_max_nodes" { type = number }
 variable "gpu_max_nodes" { type = number }
+variable "spark_max_nodes" { type = number }
 
 resource "google_container_cluster" "main" {
   name                     = var.name
@@ -43,6 +47,26 @@ resource "google_container_node_pool" "cpu" {
     spot         = true
     disk_size_gb = 100
     disk_type    = "pd-balanced"
+    oauth_scopes = ["https://www.googleapis.com/auth/cloud-platform"]
+    workload_metadata_config { mode = "GKE_METADATA" }
+  }
+}
+
+resource "google_container_node_pool" "spark" {
+  name     = "spark-spot"
+  cluster  = google_container_cluster.main.name
+  location = var.zone
+  autoscaling {
+    min_node_count = 0
+    max_node_count = var.spark_max_nodes
+  }
+  node_config {
+    machine_type = "n2-standard-8"
+    spot         = true
+    disk_size_gb = 50
+    disk_type    = "pd-balanced"
+    labels       = { pool = "spark" }
+    ephemeral_storage_local_ssd_config { local_ssd_count = 1 }
     oauth_scopes = ["https://www.googleapis.com/auth/cloud-platform"]
     workload_metadata_config { mode = "GKE_METADATA" }
   }

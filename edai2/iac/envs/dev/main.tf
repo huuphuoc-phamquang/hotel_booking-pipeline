@@ -49,13 +49,14 @@ module "network" {
 }
 
 module "gke" {
-  source        = "../../modules/gke"
-  name          = "booking-ai"
-  zone          = var.zone
-  network       = module.network.network
-  subnetwork    = module.network.subnetwork
-  cpu_max_nodes = 6
-  gpu_max_nodes = 1
+  source          = "../../modules/gke"
+  name            = "booking-ai"
+  zone            = var.zone
+  network         = module.network.network
+  subnetwork      = module.network.subnetwork
+  cpu_max_nodes   = 6
+  gpu_max_nodes   = 1
+  spark_max_nodes = 6 # 48 + 48 vCPU, dưới quota CPUS vùng = 100
 }
 
 module "registry" {
