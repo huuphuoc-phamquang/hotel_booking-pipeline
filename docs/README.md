@@ -99,9 +99,9 @@ edai-1 đã chạy trên GKE (2026-11-17/18): generator 111 GiB, Kafka + Flink, 
 | 34 | 2 | Agent kéo dữ liệu | [edai-2/cicd.md](edai-2/cicd.md#edai-2-34) | Đã có · chờ cluster |
 | 35 | 2 | Agent để làm coordinator | [edai-2/cicd.md](edai-2/cicd.md#edai-2-35) | Đã có · chờ cluster |
 | 36 | 2 | CI/CD cho stream feature jobs | [edai-2/cicd.md](edai-2/cicd.md#edai-2-36) | Đã có · chờ cluster |
-| 37 | 2 | Service để coi metric | [edai-2/routing_gateway.md](edai-2/routing_gateway.md#edai-2-37) | Đã có · chờ cluster |
-| 38 | 2 | Service để coi log | [edai-2/routing_gateway.md](edai-2/routing_gateway.md#edai-2-38) | Đã có · chờ cluster |
-| 39 | 2 | Service để coi trace | [edai-2/routing_gateway.md](edai-2/routing_gateway.md#edai-2-39) | Đã có · chờ cluster |
+| 37 | 2 | Service để coi metric | [edai-2/routing_gateway.md](edai-2/routing_gateway.md#edai-2-37) | Đã có |
+| 38 | 2 | Service để coi log | [edai-2/routing_gateway.md](edai-2/routing_gateway.md#edai-2-38) | Đã có |
+| 39 | 2 | Service để coi trace | [edai-2/routing_gateway.md](edai-2/routing_gateway.md#edai-2-39) | Đã có |
 | 40 | 2 | UI để test agent | [edai-2/routing_gateway.md](edai-2/routing_gateway.md#edai-2-40) | Đã có · chờ cluster |
 | 41 | 2 | UI cho agent registry | [edai-2/routing_gateway.md](edai-2/routing_gateway.md#edai-2-41) | Đã có · chờ cluster |
 | 42 | 2 | Setup authentication cho UI test agent ở trên | [edai-2/routing_gateway.md](edai-2/routing_gateway.md#edai-2-42) | Đã có · chờ cluster |
@@ -109,8 +109,8 @@ edai-1 đã chạy trên GKE (2026-11-17/18): generator 111 GiB, Kafka + Flink, 
 | 44 | 1 | Dùng Terraform để setup GKE hoặc các cloud services | [edai-2/iac.md](edai-2/iac.md#edai-2-44) | Đã có · chờ cluster |
 | 45 | 1 | Dùng Ansible để configure và deploy các service lên VM | [edai-2/iac.md](edai-2/iac.md#edai-2-45) | Đã có · chờ cluster |
 | 46 | 1 | Web API monitoring metrics such as req/s, num of reqs, num of failures, etc. | [edai-2/observability.md](edai-2/observability.md#edai-2-46) | Đã có · chờ cluster |
-| 47 | 1 | Collect và visualize metrics với Prometheus + Grafana | [edai-2/observability.md](edai-2/observability.md#edai-2-47) | Đã có · chờ cluster |
-| 48 | 1 | Tương tự cho logs | [edai-2/observability.md](edai-2/observability.md#edai-2-48) | Đã có · chờ cluster |
+| 47 | 1 | Collect và visualize metrics với Prometheus + Grafana | [edai-2/observability.md](edai-2/observability.md#edai-2-47) | Đã có |
+| 48 | 1 | Tương tự cho logs | [edai-2/observability.md](edai-2/observability.md#edai-2-48) | Đã có |
 | 49 | 1 | Tương tự cho traces | [edai-2/observability.md](edai-2/observability.md#edai-2-49) | Đã có · Cần làm |
 | 50 | 2 | Đảm bảo ít nhất các metrics | [edai-2/observability.md](edai-2/observability.md#edai-2-50) | Đã có |
 | 51 | 2 | Đảm bảo ít nhất các metrics | [edai-2/observability.md](edai-2/observability.md#edai-2-51) | Đã có · chờ cluster |

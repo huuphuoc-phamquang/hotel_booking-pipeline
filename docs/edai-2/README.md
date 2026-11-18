@@ -63,9 +63,9 @@
 | 34 | 2 | Agent kéo dữ liệu | [cicd.md](cicd.md#edai-2-34) | Đã có · chờ cluster |
 | 35 | 2 | Agent để làm coordinator | [cicd.md](cicd.md#edai-2-35) | Đã có · chờ cluster |
 | 36 | 2 | CI/CD cho stream feature jobs | [cicd.md](cicd.md#edai-2-36) | Đã có · chờ cluster |
-| 37 | 2 | Service để coi metric | [routing_gateway.md](routing_gateway.md#edai-2-37) | Đã có · chờ cluster |
-| 38 | 2 | Service để coi log | [routing_gateway.md](routing_gateway.md#edai-2-38) | Đã có · chờ cluster |
-| 39 | 2 | Service để coi trace | [routing_gateway.md](routing_gateway.md#edai-2-39) | Đã có · chờ cluster |
+| 37 | 2 | Service để coi metric | [routing_gateway.md](routing_gateway.md#edai-2-37) | Đã có |
+| 38 | 2 | Service để coi log | [routing_gateway.md](routing_gateway.md#edai-2-38) | Đã có |
+| 39 | 2 | Service để coi trace | [routing_gateway.md](routing_gateway.md#edai-2-39) | Đã có |
 | 40 | 2 | UI để test agent | [routing_gateway.md](routing_gateway.md#edai-2-40) | Đã có · chờ cluster |
 | 41 | 2 | UI cho agent registry | [routing_gateway.md](routing_gateway.md#edai-2-41) | Đã có · chờ cluster |
 | 42 | 2 | Setup authentication cho UI test agent ở trên | [routing_gateway.md](routing_gateway.md#edai-2-42) | Đã có · chờ cluster |
@@ -73,8 +73,8 @@
 | 44 | 1 | Dùng Terraform để setup GKE hoặc các cloud services | [iac.md](iac.md#edai-2-44) | Đã có · chờ cluster |
 | 45 | 1 | Dùng Ansible để configure và deploy các service lên VM | [iac.md](iac.md#edai-2-45) | Đã có · chờ cluster |
 | 46 | 1 | Web API monitoring metrics such as req/s, num of reqs, num of failures, etc. | [observability.md](observability.md#edai-2-46) | Đã có · chờ cluster |
-| 47 | 1 | Collect và visualize metrics với Prometheus + Grafana | [observability.md](observability.md#edai-2-47) | Đã có · chờ cluster |
-| 48 | 1 | Tương tự cho logs | [observability.md](observability.md#edai-2-48) | Đã có · chờ cluster |
+| 47 | 1 | Collect và visualize metrics với Prometheus + Grafana | [observability.md](observability.md#edai-2-47) | Đã có |
+| 48 | 1 | Tương tự cho logs | [observability.md](observability.md#edai-2-48) | Đã có |
 | 49 | 1 | Tương tự cho traces | [observability.md](observability.md#edai-2-49) | Đã có · Cần làm |
 | 50 | 2 | Đảm bảo ít nhất các metrics | [observability.md](observability.md#edai-2-50) | Đã có |
 | 51 | 2 | Đảm bảo ít nhất các metrics | [observability.md](observability.md#edai-2-51) | Đã có · chờ cluster |
