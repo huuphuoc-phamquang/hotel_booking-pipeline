@@ -217,5 +217,5 @@ lại nhờ allowedLateness. Webhook không đi qua cửa sổ (chỉ dedup) nê
 | `booking_created` double submit (cùng `idempotency_key`, khác `booking_id`) | 7.980 | 1,99% booking (config 2%) |
 
 Bản callback gửi lại giữ nguyên `event_id` như webhook at-least-once thật, nên đếm thẳng thì số thanh toán bị đếm hai
-lần; Flink giữ lần đầu theo `event_id` bằng keyed state có TTL 1 giờ (`DedupByEventId`). Double submit khác
+lần; Flink giữ lần đầu theo `event_id` bằng keyed state (`DedupByEventId`), timer xoá state khi watermark qua `event_time` + 5 giờ. Double submit khác
 `event_id`, nên Flink dedup theo `idempotency_key` trước khi đếm booking, cùng quy tắc với Silver.

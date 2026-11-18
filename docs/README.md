@@ -16,7 +16,7 @@ cột F (lần gần nhất 2026-11-16):
 - **Cần làm**: còn thiếu code hoặc tài liệu.
 - **Thiết kế**: mới có manifest hoặc thiết kế, chưa chạy ở môi trường nào.
 
-Hiện toàn bộ hệ thống mới được chạy cục bộ (Docker, pyspark, Postgres). Thư mục `images/` sẽ có ảnh khi dựng cluster.
+edai-1 đã chạy trên GKE (2026-11-17/18): generator 111 GiB, Kafka + Flink, Airflow DP1–DP3, DataHub, Spark trên 105 GiB; ảnh ở `images/edai-1/`. Ở edai-2, hạ tầng (Terraform) và observability (Prometheus, Grafana, EFK, Jaeger, ingress) đã chạy trên cluster (`images/edai-2/`); các phần ML, MCP, agent mới chạy cục bộ hoặc mới có manifest.
 
 ## edai-1
 
@@ -58,8 +58,8 @@ Hiện toàn bộ hệ thống mới được chạy cục bộ (Docker, pyspark
 | 36 | 2 | Feature tables with 2 columns event_timestamp and created | [edai-1/schema_design.md](edai-1/schema_design.md#edai-1-36) | Đã có |
 | 37 | 2 | Relationship between dim & fact tables | [edai-1/schema_design.md](edai-1/schema_design.md#edai-1-37) | Đã có |
 | 38 | 2 | Naming convention | [edai-1/schema_design.md](edai-1/schema_design.md#edai-1-38) | Đã có |
-| 39 | 10 | Idea 1 | [edai-1/novel_ideas.md](edai-1/novel_ideas.md#edai-1-39) | — |
-| 40 | 10 | Idea 2 | [edai-1/novel_ideas.md](edai-1/novel_ideas.md#edai-1-40) | — |
+| 39 | 10 | Idea 1 | [edai-1/novel_ideas.md](edai-1/novel_ideas.md#edai-1-39) | Đã có |
+| 40 | 10 | Idea 2 | [edai-1/novel_ideas.md](edai-1/novel_ideas.md#edai-1-40) | Đã có |
 
 ## edai-2
 

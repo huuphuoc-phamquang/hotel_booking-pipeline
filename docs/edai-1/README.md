@@ -51,5 +51,5 @@
 | 36 | 2 | Feature tables with 2 columns event_timestamp and created | [schema_design.md](schema_design.md#edai-1-36) | Đã có |
 | 37 | 2 | Relationship between dim & fact tables | [schema_design.md](schema_design.md#edai-1-37) | Đã có |
 | 38 | 2 | Naming convention | [schema_design.md](schema_design.md#edai-1-38) | Đã có |
-| 39 | 10 | Idea 1 | [novel_ideas.md](novel_ideas.md#edai-1-39) | — |
-| 40 | 10 | Idea 2 | [novel_ideas.md](novel_ideas.md#edai-1-40) | — |
+| 39 | 10 | Idea 1 | [novel_ideas.md](novel_ideas.md#edai-1-39) | Đã có |
+| 40 | 10 | Idea 2 | [novel_ideas.md](novel_ideas.md#edai-1-40) | Đã có |

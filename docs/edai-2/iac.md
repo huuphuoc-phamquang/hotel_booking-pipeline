@@ -17,7 +17,7 @@ cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu �
 **Kết quả:** hạ tầng dựng bằng `terraform apply` trong `iac/envs/dev` (project `hotel-booking-edai`, asia-southeast1).
 Chạy lại `terraform apply` (2026-11-18) báo `No changes`: hạ tầng thật khớp code, không có thay đổi tay ngoài
 Terraform. Output là cluster `booking-ai` và registry `asia-southeast1-docker.pkg.dev/hotel-booking-edai/booking`;
-state quản lý 13 tài nguyên và 2 data source (4 API, budget, VPC, subnet, router, Cloud NAT, cluster GKE, 2 node pool, Artifact Registry).
+state quản lý 13 tài nguyên và 2 data source (4 API, budget, VPC, subnet, router, Cloud NAT, cluster GKE, 2 node pool, Artifact Registry). Ngày 2026-11-18 thêm pool thứ ba `spark-spot` (n2-standard-8 + Local SSD cho shuffle của job Spark 105 GiB) bằng `gcloud` vì cần ngay, đã khai báo cùng cấu hình trong `modules/gke/main.tf`; lần `terraform apply` sau cần `terraform import` pool này.
 
 ![terraform apply](../images/edai-2/terraform-apply.png)
 
