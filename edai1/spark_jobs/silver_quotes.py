@@ -45,6 +45,8 @@ def enrich_quotes(quotes: DataFrame, inventory: DataFrame, mode: str) -> DataFra
     """Gắn số phòng mở bán của ô (hotel, room_type, đêm) vào từng lượt xem giá."""
     q, inv = quotes.select(*QUOTE_COLS), inventory.select(*KEYS, "rooms")
     if mode == "salt":
+        # shortcut: hot_keys quét quotes thêm 1 lần trước join (không cache được ~104GB); dùng mẫu vài ngày để tìm
+        # khoá nóng nếu salting trở thành chế độ chạy thật thay vì chế độ so sánh
         return salted_join(q, inv, hot_keys(q, KEYS, HOT_CELLS), keys=KEYS)
     return q.join(inv, list(KEYS))
 

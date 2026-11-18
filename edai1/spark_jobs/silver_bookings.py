@@ -95,11 +95,12 @@ def run_optimized(spark: SparkSession, bronze: str) -> None:
 
 
 def new_bookings(spark: SparkSession, bronze: str, ds: str) -> DataFrame:
-    """Booking tạo trong ngày ds: dedup, enrich hotels, status confirmed (lần huỷ áp sau theo ngày huỷ)."""
+    """Booking tạo trong ngày ds: dedup, enrich hotels, status confirmed (lần huỷ áp sau theo ngày huỷ).
+    hotels ~1-2 MB nên broadcast thẳng: không cần đếm khoá nóng (thêm 1 lần quét) rồi salting như bản opt."""
     new = dedup_bookings(read_bookings(spark, f"{bronze}/raw_bookings", ds)) \
         .withColumn("status", F.lit("confirmed")).withColumn("cancelled_at", F.lit(None).cast("timestamp"))
     hotels = spark.read.parquet(f"{bronze}/raw_hotels").select("hotel_id", "city", "stars")
-    return salted_join(new, hotels, hot_keys(new, ("hotel_id",))).select(*SILVER_COLS)
+    return new.join(F.broadcast(hotels), "hotel_id").select(*SILVER_COLS)
 
 
 def merge_new_bookings(spark: SparkSession, bronze: str, ds: str) -> None:
