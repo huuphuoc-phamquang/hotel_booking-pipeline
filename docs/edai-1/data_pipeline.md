@@ -41,12 +41,12 @@ kết quả `gx_bronze_bookings` lên DataHub; cả 4 task `validate_*` success.
 
 **Rubric:** edai-1 · dòng 24 · 2 điểm · nhóm *Data Pipeline Orchestration* › *Pipeline to ingest data from bronze zone into silver and gold zone (or bronze -> gold only) (DP2)*
 
-**Cách làm:** [Đã có] DAG `dp2_bronze_to_gold` đợi DP1 cùng ngày (`ExternalTaskSensor`), chạy `silver_bookings` (Spark, `incr` theo `dt=ds`), `stage_gold` (Spark ghi staging và `gold.hotel_rooms`), rồi `upsert_gold`. Bước cuối dùng `sql/dp2_upsert_gold.sql` trong một transaction: `dim_customer`, `dim_hotel` SCD2 và `fact_bookings` join theo khoảng hiệu lực của phiên bản dim. Đã chạy trên GKE (2026-11-18, ds 2025-01-01), ảnh trong docs. [Cần làm] thêm `fact_quotes`.
+**Cách làm:** [Đã có] DAG `dp2_bronze_to_gold` đợi DP1 cùng ngày (`ExternalTaskSensor`), chạy `silver_bookings` (Spark, `incr` theo `dt=ds`), `stage_gold` (Spark ghi staging và `gold.hotel_rooms`), rồi `upsert_gold`. Bước cuối dùng `sql/dp2_upsert_gold.sql` trong một transaction: `dim_customer`, `dim_hotel` SCD2 và `fact_bookings` join theo khoảng hiệu lực của phiên bản dim. Đã chạy trên GKE (2026-11-18, ds 2025-01-01), ảnh trong docs. Quotes (~15 tỷ dòng/năm) giữ ở lakehouse `silver.stg_quotes` (Iceberg, phân vùng theo ngày) thay vì đưa vào Gold PostgreSQL: chưa có consumer nào cần quotes ở warehouse.
 
 **Kết quả:** chạy trên GKE ngày 2026-11-18 (Airflow 2.10.5, KubernetesExecutor, image `airflow-booking:b9cf9a8-1`), backfill ngày `ds` = 2025-01-01. Cả 5 task (`wait_dp1` → `silver_bookings` → `stage_gold` → `upsert_gold` →
 `validate_gold`) success trong khoảng 4 phút. Gold sau lần chạy: `fact_bookings` 380.512 dòng ngày 2025-01-01 (không
 trùng `booking_id`, 6.425 dòng huỷ ngay trong ngày), `dim_hotel` 50.000, `dim_customer` 370.969, `hotel_rooms`
-1,5 triệu dòng. `fact_quotes` chưa làm.
+1,5 triệu dòng. Quotes không đưa vào Gold: giữ ở lakehouse `silver.stg_quotes` (dòng 12).
 
 ![Graph DP2](../images/edai-1/airflow-dp2-graph.png)
 

@@ -323,7 +323,7 @@ erDiagram
 
 > Relationship between dim & fact tables (You can simply export via DBeaver or similar tools)
 
-**Cách làm:** [Đã có] `fact_bookings` có khoá ngoại tới `dim_hotel` (`hotel_key`) và `dim_customer` (`customer_key`) trong `schema/gold_schema.sql`; ERD dim–fact nằm ở `docs/edai-1/schema_design.md`. Recipe postgres đọc được khoá ngoại nên tab Schema của `fact_bookings` trên DataHub hiện nhãn Foreign Key trỏ sang `dim_hotel`, `dim_customer`. [Cần làm] thêm `fact_quotes`, `dim_event`; chụp ERD DBeaver và tab Schema trên DataHub.
+**Cách làm:** [Đã có] `fact_bookings` có khoá ngoại tới `dim_hotel` (`hotel_key`) và `dim_customer` (`customer_key`) trong `schema/gold_schema.sql`; ERD dim–fact nằm ở `docs/edai-1/schema_design.md`. Recipe postgres đọc được khoá ngoại nên tab Schema của `fact_bookings` trên DataHub hiện nhãn Foreign Key trỏ sang `dim_hotel`, `dim_customer`. Tab Schema của `fact_bookings` trên DataHub (Primary Key, Foreign Key) đã chụp, ảnh trong docs.
 
 **Kết quả:** `fact_bookings` có hai khoá ngoại khai báo trong `schema/gold_schema.sql`. Trên DataHub, tab Columns của `fact_bookings` đánh dấu `booking_id` là Primary Key, `hotel_key` và `customer_key` là
 Foreign Key.
@@ -372,6 +372,6 @@ erDiagram
 
 > Naming convention (- Gold layer: `dim_`, `fact_`, `obt_`, `feat_`, `raw`, prefix or similar) (- Bronze & Silver layer: `raw_`, `stg_` prefix or similar)
 
-**Cách làm:** [Đã có] Quy ước tiền tố `raw_`, `stg_`, `dim_`, `fact_`, `feat_`. [Cần làm] áp dụng cho các bảng mới (`raw_quotes`, `stg_quotes`, `fact_quotes`, `dim_event`).
+**Cách làm:** [Đã có] Quy ước tiền tố `raw_`, `stg_`, `dim_`, `fact_`, `feat_`. Áp dụng cho mọi bảng đang có: Bronze `raw_*` (8 bảng), Silver `stg_bookings`, `stg_quotes`, Gold `dim_*`, `fact_bookings`, `feat_*`, staging `stg_*` (ảnh danh sách bảng theo zone trên DataHub).
 
 **Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._

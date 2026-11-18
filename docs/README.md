@@ -43,7 +43,7 @@ Hiện toàn bộ hệ thống mới được chạy cục bộ (Docker, pyspark
 | 21 | 3 | Datawarehouse | [edai-1/data_storage.md](edai-1/data_storage.md#edai-1-21) | Đã có · Cần làm |
 | 22 | 2 | Ingest stage | [edai-1/data_pipeline.md](edai-1/data_pipeline.md#edai-1-22) | Đã có |
 | 23 | 2 | Validate stage | [edai-1/data_pipeline.md](edai-1/data_pipeline.md#edai-1-23) | Đã có |
-| 24 | 2 | Ingest stage | [edai-1/data_pipeline.md](edai-1/data_pipeline.md#edai-1-24) | Đã có · Cần làm |
+| 24 | 2 | Ingest stage | [edai-1/data_pipeline.md](edai-1/data_pipeline.md#edai-1-24) | Đã có |
 | 25 | 2 | Validate stage | [edai-1/data_pipeline.md](edai-1/data_pipeline.md#edai-1-25) | Đã có |
 | 26 | 2 | Ingest stage | [edai-1/data_pipeline.md](edai-1/data_pipeline.md#edai-1-26) | Đã có |
 | 27 | 2 | Validate stage | [edai-1/data_pipeline.md](edai-1/data_pipeline.md#edai-1-27) | Đã có |
@@ -56,8 +56,8 @@ Hiện toàn bộ hệ thống mới được chạy cục bộ (Docker, pyspark
 | 34 | 2 | Visualize tables on all zones | [edai-1/schema_design.md](edai-1/schema_design.md#edai-1-34) | Đã có |
 | 35 | 2 | Dim table with SCD 2 | [edai-1/schema_design.md](edai-1/schema_design.md#edai-1-35) | Đã có · chờ cluster |
 | 36 | 2 | Feature tables with 2 columns event_timestamp and created | [edai-1/schema_design.md](edai-1/schema_design.md#edai-1-36) | Đã có |
-| 37 | 2 | Relationship between dim & fact tables | [edai-1/schema_design.md](edai-1/schema_design.md#edai-1-37) | Đã có · Cần làm |
-| 38 | 2 | Naming convention | [edai-1/schema_design.md](edai-1/schema_design.md#edai-1-38) | Đã có · Cần làm |
+| 37 | 2 | Relationship between dim & fact tables | [edai-1/schema_design.md](edai-1/schema_design.md#edai-1-37) | Đã có |
+| 38 | 2 | Naming convention | [edai-1/schema_design.md](edai-1/schema_design.md#edai-1-38) | Đã có |
 | 39 | 10 | Idea 1 | [edai-1/novel_ideas.md](edai-1/novel_ideas.md#edai-1-39) | — |
 | 40 | 10 | Idea 2 | [edai-1/novel_ideas.md](edai-1/novel_ideas.md#edai-1-40) | — |
 
