@@ -2,22 +2,25 @@
 
 Terraform dựng hạ tầng GKE; Ansible cấu hình VM.
 
-Mỗi mục dưới đây ứng với một dòng của rubric. Phần **Cách làm** mô tả giải pháp đã triển khai, đồng bộ từ
-cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu đo được hoặc ảnh chụp (`docs/images/`).
+Mỗi mục ứng với một dòng của rubric. Mục đã hoàn thành gồm phần **Thực thi** (đã làm gì, chạy ở đâu) và **Kết quả**
+(số liệu đo được, ảnh chụp trong `docs/images/`). Mục chưa hoàn thành giữ trích rubric và phần **Cách làm** đồng bộ từ
+cột F của rubric.
 
 <a id="edai-2-44"></a>
 ## Dùng Terraform để setup GKE hoặc các cloud services · edai-2 · IaC
 
-**Rubric:** edai-2 · dòng 44 · 1 điểm · nhóm *IaC*
+**Thực thi:** `iac/modules/{network,gke,registry,budget}` và `iac/envs/dev` dựng VPC với Cloud NAT, GKE với node
+private, pool CPU spot, pool GPU L4 (tối thiểu 0 node), Artifact Registry và cảnh báo ngân sách. Hạ tầng được dựng bằng
+`terraform apply` trong `iac/envs/dev` (project `hotel-booking-edai`, asia-southeast1).
 
-**Cần nộp (cả nhóm):** Document phải show hình ảnh Terraform và Ansible code đã chạy
+**Kết quả:** chạy lại `terraform apply` ngày 2026-11-18 báo `No changes`: hạ tầng thật khớp code, không có thay đổi tay
+ngoài Terraform. Output gồm cluster `booking-ai` và registry `asia-southeast1-docker.pkg.dev/hotel-booking-edai/booking`.
+State quản lý 13 tài nguyên và 2 data source (4 API, budget, VPC, subnet, router, Cloud NAT, cluster GKE, 2 node pool,
+Artifact Registry).
 
-**Cách làm:** [Đã có] `iac/modules/{network,gke,registry,budget}` và `iac/envs/dev`: VPC với Cloud NAT, GKE node private, pool CPU spot và pool GPU L4 (tối thiểu 0 node), Artifact Registry, cảnh báo ngân sách. [Cần làm] chụp `terraform apply`.
-
-**Kết quả:** hạ tầng dựng bằng `terraform apply` trong `iac/envs/dev` (project `hotel-booking-edai`, asia-southeast1).
-Chạy lại `terraform apply` (2026-11-18) báo `No changes`: hạ tầng thật khớp code, không có thay đổi tay ngoài
-Terraform. Output là cluster `booking-ai` và registry `asia-southeast1-docker.pkg.dev/hotel-booking-edai/booking`;
-state quản lý 13 tài nguyên và 2 data source (4 API, budget, VPC, subnet, router, Cloud NAT, cluster GKE, 2 node pool, Artifact Registry). Ngày 2026-11-18 thêm pool thứ ba `spark-spot` (n2-standard-8 + Local SSD cho shuffle của job Spark 105 GiB) bằng `gcloud` vì cần ngay, đã khai báo cùng cấu hình trong `modules/gke/main.tf`; lần `terraform apply` sau cần `terraform import` pool này.
+Cùng ngày, pool thứ ba `spark-spot` (n2-standard-8 kèm Local SSD cho shuffle của job Spark 105 GiB) được tạo bằng
+`gcloud` vì cần dùng ngay. Pool này đã được khai báo cùng cấu hình trong `modules/gke/main.tf`; lần `terraform apply` sau
+cần `terraform import` pool này.
 
 ![terraform apply](../images/edai-2/terraform-apply.png)
 
