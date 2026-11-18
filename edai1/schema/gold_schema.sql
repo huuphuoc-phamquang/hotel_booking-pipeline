@@ -123,9 +123,10 @@ CREATE TABLE gold.overbooking_limits (
     PRIMARY KEY (hotel_id, stay_date)
 );
 
--- Nhãn huấn luyện dạng 2 cột: huỷ trước ngày nhận phòng. Chỉ dùng cho booking đã qua checkin (kết cục đã chốt).
+-- Nhãn huấn luyện dạng 2 cột: huỷ trước khi hết ngày nhận phòng. Chỉ dùng cho booking đã qua checkin (kết cục đã chốt).
+-- So với checkin_date + 1 chứ không <= checkin_date: DATE ép về 00:00 nên huỷ trong ngày nhận phòng sẽ thành nhãn 0.
 CREATE VIEW gold.labels_cancel AS
-SELECT booking_id, (cancelled_at IS NOT NULL AND cancelled_at <= checkin_date)::int AS is_cancelled
+SELECT booking_id, (cancelled_at IS NOT NULL AND cancelled_at < checkin_date + 1)::int AS is_cancelled
 FROM gold.fact_bookings;
 
 -- Mỗi khách sạn đúng 1 phiên bản hiện hành: SCD2 chạy sai sẽ fail ở đây thay vì âm thầm sinh 2 dòng is_current

@@ -139,6 +139,10 @@ def test_labels_view(loaded):
     cols = [c.name for c in conn.execute("SELECT * FROM gold.labels_cancel LIMIT 1").description]
     assert cols == ["booking_id", "is_cancelled"]
     assert q(conn, "SELECT count(*) FROM gold.labels_cancel")[0][0] == q(conn, "SELECT count(*) FROM gold.fact_bookings")[0][0]
+    # generator huỷ muộn nhất ngay lúc nhận phòng: booking có cancelled_at đều phải là nhãn 1, kể cả huỷ trong ngày
+    # nhận phòng. Bỏ booking nhận phòng ngay ngày đặt (training cũng loại): huỷ ≥ 1 giờ sau khi đặt có thể qua nửa đêm.
+    assert q(conn, "SELECT count(*) FROM gold.labels_cancel l JOIN gold.fact_bookings f USING (booking_id) "
+                   "WHERE f.checkin_date > f.booking_date AND l.is_cancelled <> (f.cancelled_at IS NOT NULL)::int")[0][0] == 0
 
 
 def test_hotel_features_match_pandas(loaded):
