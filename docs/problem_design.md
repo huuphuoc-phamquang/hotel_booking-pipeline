@@ -241,6 +241,15 @@ câu hỏi cho policy-agent và data-agent; các agent gọi tool qua agentgatew
 - **Không định giá.** Phần tối ưu giá đã được cắt khỏi phạm vi; hệ thống chỉ có một model `cancel-risk`.
 - **Không tự động hoá vòng đời model.** Không phát hiện drift tự động, không canary giữa hai phiên bản model (mục 6);
   A/B chỉ áp cho agent và phiên bản LLM trên nền tảng LLM.
+- **Một PostgreSQL dùng chung.** Trên môi trường demo GKE, một pod PostgreSQL (2 CPU, 8Gi RAM, PVC 200Gi,
+  `edai1/k8s/storage.yaml`) đồng thời phục vụ Gold (~140 triệu dòng), offline và online store của Feast, pgvector,
+  sink của Flink, catalog Iceberg, metadata của Airflow và MLflow. Truy vấn OLAP nặng hoặc backfill có thể làm chậm
+  đường đọc online của booking-mcp. Khi triển khai thật nên tách ít nhất online store và metadata của các công cụ
+  sang instance riêng, chuyển Gold sang kho phân tích (vd. BigQuery) hoặc dùng read replica.
+- **Feature `bookings_1h` chưa vào model.** Nhánh stream (Flink → `gold.feat_hotel_realtime` → Airflow 5 phút →
+  `feast_online`) đã chạy nhưng model `cancel-risk` chưa dùng feature này vì dữ liệu train chưa có lịch sử của nó
+  (`ml/training_pipeline.py`). Đường đi qua Airflow cũng làm độ trễ tối đa khoảng 5 phút; khi đưa feature vào model
+  nên cho Flink ghi thẳng online store (Feast push source).
 
 ## 10. Thuật ngữ
 
