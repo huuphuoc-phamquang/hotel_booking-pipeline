@@ -38,8 +38,9 @@ def test_recipes_parse(recipes):
     IcebergSourceConfig.model_validate(recipes["iceberg_silver"])
 
 
-@pytest.mark.parametrize("path, name", [("s3://lake/bronze/raw_bookings/dt=2025-03-01/part-0.parquet", "raw_bookings"),
-                                        ("s3://lake/bronze/raw_hotels/part-0.parquet", "raw_hotels")])
+@pytest.mark.parametrize("path, name", [
+    ("s3://lake/bronze/raw_bookings/dt=2025-03-01/shard=3/part-0.zstd.parquet", "raw_bookings"),   # landing_to_bronze
+    ("s3://lake/bronze/raw_hotels/part-0.parquet", "raw_hotels")])
 def test_s3_dataset_name_matches_lineage(recipes, path, name):
     from datahub.ingestion.source.s3.config import DataLakeSourceConfig
     specs = [ps for ps in DataLakeSourceConfig.model_validate(recipes["s3_bronze"]).path_specs if ps.allowed(path)]

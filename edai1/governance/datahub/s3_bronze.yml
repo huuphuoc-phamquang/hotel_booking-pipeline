@@ -1,5 +1,5 @@
 # Ingest schema Parquet của Bronze trên MinIO (s3a://lake/bronze/raw_*) lên DataHub.
-# Tên dataset = lake/bronze/raw_<bảng>, khớp ds_urn("s3:lake/bronze/raw_<bảng>"). Bảng sự kiện chia dt=<ngày>,
+# Tên dataset = lake/bronze/raw_<bảng>, khớp ds_urn("s3:lake/bronze/raw_<bảng>"). Bảng sự kiện chia dt=<ngày>/shard=<n>,
 # bảng dim nằm phẳng: hai path_spec, mỗi thư mục chỉ khớp một spec.
 # Chạy: datahub ingest -c s3_bronze.yml   (MINIO_ACCESS_KEY, MINIO_SECRET_KEY, DATAHUB_GMS)
 source:
@@ -7,7 +7,7 @@ source:
   config:
     env: PROD
     path_specs:
-      - include: s3://lake/bronze/{table}/dt={partition[0]}/*.parquet
+      - include: s3://lake/bronze/{table}/dt={partition[0]}/shard={partition[1]}/*.parquet
         table_name: "lake/bronze/{table}"
         sample_files: true       # schema lấy từ vài file, không đọc hết 111GB
       - include: s3://lake/bronze/{table}/*.parquet
