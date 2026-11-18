@@ -22,8 +22,8 @@ Hiện toàn bộ hệ thống mới được chạy cục bộ (Docker, pyspark
 
 | Dòng | Điểm | Mục | Tài liệu | Trạng thái |
 |---|---|---|---|---|
-| 3 | 2 | Có sử dụng Docker & Docker Compose | [edai-1/docker.md](edai-1/docker.md#edai-1-3) | Đã có · Cần làm |
-| 4 | 3 | Optimize Dockerfile | [edai-1/docker.md](edai-1/docker.md#edai-1-4) | Đã có · Cần làm |
+| 3 | 2 | Có sử dụng Docker & Docker Compose | [edai-1/docker.md](edai-1/docker.md#edai-1-3) | Đã có |
+| 4 | 3 | Optimize Dockerfile | [edai-1/docker.md](edai-1/docker.md#edai-1-4) | Đã có |
 | 5 | 2 | Simulate skew | [edai-1/data_generator.md](edai-1/data_generator.md#edai-1-5) | Đã có · Cần làm |
 | 6 | 2 | Simulate schema evolution | [edai-1/data_generator.md](edai-1/data_generator.md#edai-1-6) | Đã có · Cần làm |
 | 7 | 2 | Simulate another offline data problem | [edai-1/data_generator.md](edai-1/data_generator.md#edai-1-7) | Đã có · Thêm cho novelty |

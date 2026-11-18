@@ -12,7 +12,7 @@ cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu �
 
 **Cần nộp (cả nhóm):** Document cách optimizer Docker image, và kích thước sau khi optimize so với cái gốc thay đổi như nào
 
-**Cách làm:** [Đã có] `docker-compose` khởi chạy MinIO, Kafka, generator và replayer. [Cần làm] bổ sung Spark, Flink, Airflow, Postgres, DataHub vào compose; chụp `docker compose ps` với mọi service ở trạng thái healthy, đưa vào `docs/edai-1/docker.md`.
+**Cách làm:** [Đã có] `docker/docker-compose.yml` chạy MinIO (healthcheck), Kafka, offline-generator và event-replayer cho môi trường cục bộ; generator chạy 1 ngày qua compose ghi 340 MiB, 1.866 object vào bucket `landing`. Spark, Flink, Airflow, Postgres và DataHub không nằm trong compose vì chạy trên GKE (Helm/operator); image Spark, Flink, Airflow build từ `k8s/*.Dockerfile`, Postgres và DataHub dùng image chính thức. Ảnh `docker compose ps` và bucket landing trong `docs/edai-1/docker.md`.
 
 **Kết quả:** chạy `edai1/docker/docker-compose.yml` trên máy (2026-11-18): MinIO (healthy) và Kafka chạy nền, generator
 chạy qua compose với 1 ngày (`docker compose run --rm offline-generator 0 1`) ghi 340 MiB, 1.866 object vào
@@ -30,7 +30,7 @@ bucket `landing` đủ 9 nhánh (bảng sự kiện theo `dt=`, các bảng dims
 
 > Optimize Dockerfile (ví dụ multistage build)
 
-**Cách làm:** [Đã có] `docker/Dockerfile` dùng multistage (builder và runtime trên `python:3.12-slim`), kèm `docker/Dockerfile.single` một stage để so sánh, `.dockerignore` và `requirements.txt` ghim version. Đo cục bộ bằng `docker images`: bản một stage nặng 2,09GB, bản multistage 834MB. [Cần làm] ghi bảng so sánh vào `docs/edai-1/docker.md`.
+**Cách làm:** [Đã có] `docker/Dockerfile` dùng multistage (builder và runtime trên `python:3.12-slim`), kèm `docker/Dockerfile.single` một stage để so sánh, `.dockerignore` và `requirements.txt` ghim version. Đo bằng `docker images`: bản một stage 2,09GB, bản multistage 834MB (−60%); kích thước nén 524MB -> 240MB (−54%), runtime không có gcc, chạy bằng user thường. Bảng so sánh và ảnh trong `docs/edai-1/docker.md`.
 
 **Kết quả:** build lại cả hai bản từ cùng mã nguồn (2026-11-18, Docker Desktop 29.6):
 

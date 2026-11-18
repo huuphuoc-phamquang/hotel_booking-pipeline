@@ -15,8 +15,8 @@
 
 | Dòng | Điểm | Mục | Tài liệu | Trạng thái |
 |---|---|---|---|---|
-| 3 | 2 | Có sử dụng Docker & Docker Compose | [docker.md](docker.md#edai-1-3) | Đã có · Cần làm |
-| 4 | 3 | Optimize Dockerfile | [docker.md](docker.md#edai-1-4) | Đã có · Cần làm |
+| 3 | 2 | Có sử dụng Docker & Docker Compose | [docker.md](docker.md#edai-1-3) | Đã có |
+| 4 | 3 | Optimize Dockerfile | [docker.md](docker.md#edai-1-4) | Đã có |
 | 5 | 2 | Simulate skew | [data_generator.md](data_generator.md#edai-1-5) | Đã có · Cần làm |
 | 6 | 2 | Simulate schema evolution | [data_generator.md](data_generator.md#edai-1-6) | Đã có · Cần làm |
 | 7 | 2 | Simulate another offline data problem | [data_generator.md](data_generator.md#edai-1-7) | Đã có · Thêm cho novelty |
