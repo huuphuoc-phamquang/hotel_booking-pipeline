@@ -20,6 +20,7 @@ import httpx
 from fastapi import FastAPI, HTTPException
 from feast import FeatureStore
 from mcp.server.fastmcp import FastMCP          # mcp SDK 1.x; bản 2.x đổi thành mcp.server.mcpserver.MCPServer
+from mcp.server.transport_security import TransportSecuritySettings
 from opentelemetry import trace
 from prometheus_client import Counter, make_asgi_app
 from prometheus_fastapi_instrumentator import Instrumentator
@@ -59,7 +60,9 @@ TOOL_CALLS = Counter("mcp_tool_calls_total", "Số lần gọi tool", ["tool"])
 TOOL_FAILURES = Counter("mcp_tool_failures_total", "Số lần tool lỗi", ["tool"])
 
 store = FeatureStore(repo_path=os.environ.get("FEAST_REPO", "/feature_repo"))
-mcp = FastMCP("booking-tools", stateless_http=True, streamable_http_path="/")
+# Chặn DNS rebinding của SDK chỉ nhận Host localhost -> gọi qua tên service hay agentgateway bị 421; xác thực đã ở gateway
+mcp = FastMCP("booking-tools", stateless_http=True, streamable_http_path="/",
+              transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False))
 http = httpx.AsyncClient(timeout=5.0)
 tracer = trace.get_tracer("booking-mcp")
 _embedder = None
