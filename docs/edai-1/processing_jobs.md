@@ -52,9 +52,15 @@ cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu �
 
 **Rubric:** edai-1 · dòng 15 · 2 điểm · nhóm *Processing Jobs* › *Spark job to handle offline data problems*
 
-**Cách làm:** [Đã có] DAG `dp2_bronze_to_gold` gọi `silver_bookings.py` qua `SparkSubmitOperator` ở chế độ `incr`: chỉ đọc partition `dt=ds` rồi MERGE vào Iceberg, kèm điều kiện `created_at` để Iceberg cắt partition. `tests/test_silver_bookings.py` chạy MERGE thật trên Iceberg trong image Spark và cho kết quả khớp với dựng lại cả bảng. Tiếp theo, `stage_gold.py` đưa Silver sang staging Gold qua JDBC. Image Spark có sẵn Iceberg, s3a và JDBC (`k8s/spark.Dockerfile`). [Cần làm] chụp Airflow graph và log Spark.
+**Cách làm:** [Đã có] DAG `dp2_bronze_to_gold` gọi `silver_bookings.py` qua `SparkSubmitOperator` ở chế độ `incr`: chỉ đọc partition `dt=ds` rồi MERGE vào Iceberg, kèm điều kiện `created_at` để Iceberg cắt partition. `tests/test_silver_bookings.py` chạy MERGE thật trên Iceberg trong image Spark và cho kết quả khớp với dựng lại cả bảng. Tiếp theo, `stage_gold.py` đưa Silver sang staging Gold qua JDBC. Image Spark có sẵn Iceberg, s3a và JDBC (`k8s/spark.Dockerfile`). Đã chạy trên GKE (2026-11-18, ds 2025-01-01), ảnh trong docs.
 
-**Kết quả:** các test `edai1/tests/test_silver_bookings.py` chạy cục bộ và đạt (2026-11-16). Chưa có ảnh chụp trên cluster.
+**Kết quả:** chạy trên GKE ngày 2026-11-18 (Airflow 2.10.5, KubernetesExecutor, image `airflow-booking:b9cf9a8-1`), backfill ngày `ds` = 2025-01-01. Task `silver_bookings` của DP2 gọi `spark-submit` lên Kubernetes; pod driver chạy image
+`spark-booking:b9cf9a8`, kết thúc `phase: Succeeded`, `exit code: 0`, rồi `stage_gold` (Spark) và `upsert_gold` (SQL)
+chạy tiếp. Log task đọc lại được trên Airflow UI nhờ remote logging lên MinIO (`s3://lake/airflow-logs`).
+
+![Graph DP2](../images/edai-1/airflow-dp2-graph.png)
+
+![Log Spark của task silver_bookings](../images/edai-1/airflow-spark-log.png)
 
 <a id="edai-1-16"></a>
 ## Baseline · Flink job to handle streaming data problems

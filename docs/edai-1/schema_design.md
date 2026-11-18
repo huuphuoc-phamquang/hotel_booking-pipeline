@@ -12,11 +12,16 @@ cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu �
 
 **Cần nộp (cả nhóm):** Document capture màn hình thể hiện các bảng và quan hệ giữa chúng trên mỗi zone, giải thích từng bảng có nhiệm vụ gì
 
-**Cách làm:** [Đã có] `docs/edai-1/schema_design.md` có ERD cho từng zone (Bronze `raw_`, Silver `stg_`, Gold) vẽ bằng draw.io (ảnh trong `docs/images/edai-1/schema-*.png`, kèm bản Mermaid cùng quan hệ) từ schema trong code (`generator/offline_gen.py`, `storage/optimize.sql`, `schema/gold_schema.sql`), mỗi bảng một dòng mô tả vai trò. Trên DataHub: 3 recipe `governance/datahub/` (postgres Gold, iceberg Silver, s3 Bronze) ingest schema; `emit_datahub.emit_table_docs` gắn mô tả và tag zone cho 25 bảng; `tests/test_datahub_recipes.py` kiểm tên dataset khớp lineage. [Cần làm] chụp ERD từ DBeaver và trang Schema, lọc theo tag zone trên DataHub.
+**Cách làm:** [Đã có] `docs/edai-1/schema_design.md` có ERD cho từng zone (Bronze `raw_`, Silver `stg_`, Gold) vẽ bằng draw.io (ảnh trong `docs/images/edai-1/schema-*.png`, kèm bản Mermaid cùng quan hệ) từ schema trong code (`generator/offline_gen.py`, `storage/optimize.sql`, `schema/gold_schema.sql`), mỗi bảng một dòng mô tả vai trò. Trên DataHub: 3 recipe `governance/datahub/` (postgres Gold, iceberg Silver, s3 Bronze) ingest schema; `emit_datahub.emit_table_docs` gắn mô tả và tag zone cho 25 bảng; `tests/test_datahub_recipes.py` kiểm tên dataset khớp lineage. Trang Schema và danh sách bảng lọc theo tag zone trên DataHub: Đã chạy trên GKE (2026-11-18, ds 2025-01-01), ảnh trong docs.
 
 **Kết quả:** ERD dưới đây vẽ bằng draw.io từ schema trong code, mỗi zone một ảnh; bản Mermaid có cùng bảng và quan hệ nằm trong phần thu gọn bên dưới mỗi ảnh. Bronze và Silver là file Parquet và bảng Iceberg nên không có ràng
 buộc khoá; các đường nối ở hai zone này là quan hệ logic theo cột cùng tên. Ở Gold, chỉ hai đường nối của `fact_bookings`
-là khoá ngoại thật. _Chưa có ảnh ERD xuất từ DBeaver trên cluster._
+là khoá ngoại thật. Trên DataHub (GKE, 2026-11-18), lọc theo tag zone ra đủ 26 bảng: 8 Bronze trên S3, 2 Silver trên Iceberg, 16 Gold
+trên PostgreSQL; tab Columns của bảng Gold hiện khoá chính, khoá ngoại.
+
+![Bảng theo zone trên DataHub](../images/edai-1/datahub-zones.png)
+
+![Schema fact_bookings trên DataHub](../images/edai-1/datahub-schema-gold.png)
 
 ### Bronze (`s3a://lake/bronze/raw_*`, Parquet)
 
@@ -320,7 +325,11 @@ erDiagram
 
 **Cách làm:** [Đã có] `fact_bookings` có khoá ngoại tới `dim_hotel` (`hotel_key`) và `dim_customer` (`customer_key`) trong `schema/gold_schema.sql`; ERD dim–fact nằm ở `docs/edai-1/schema_design.md`. Recipe postgres đọc được khoá ngoại nên tab Schema của `fact_bookings` trên DataHub hiện nhãn Foreign Key trỏ sang `dim_hotel`, `dim_customer`. [Cần làm] thêm `fact_quotes`, `dim_event`; chụp ERD DBeaver và tab Schema trên DataHub.
 
-**Kết quả:** `fact_bookings` có hai khoá ngoại khai báo trong `schema/gold_schema.sql`. _Chưa có ảnh ERD xuất từ DBeaver._
+**Kết quả:** `fact_bookings` có hai khoá ngoại khai báo trong `schema/gold_schema.sql`. Trên DataHub, tab Columns của `fact_bookings` đánh dấu `booking_id` là Primary Key, `hotel_key` và `customer_key` là
+Foreign Key.
+
+![Schema fact_bookings trên DataHub](../images/edai-1/datahub-schema-gold.png)
+
 
 ```mermaid
 erDiagram
