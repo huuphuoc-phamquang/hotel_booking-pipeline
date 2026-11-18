@@ -30,8 +30,8 @@ edai-1 đã chạy trên GKE (2026-11-17/18): generator 111 GiB, Kafka + Flink, 
 | 8 | 2 | Store data after generating so that we can ingest to Bronze zone later | [edai-1/data_generator.md](edai-1/data_generator.md#edai-1-8) | Đã có |
 | 9 | 2 | Simulate late arrivals | [edai-1/data_generator.md](edai-1/data_generator.md#edai-1-9) | Đã có |
 | 10 | 2 | Simulate another streaming data problem | [edai-1/data_generator.md](edai-1/data_generator.md#edai-1-10) | Đã có |
-| 11 | 2 | Baseline | [edai-1/processing_jobs.md](edai-1/processing_jobs.md#edai-1-11) | Đã có · chờ cluster |
-| 12 | 3 | Handle skew with explanation | [edai-1/processing_jobs.md](edai-1/processing_jobs.md#edai-1-12) | Đã có · chờ cluster |
+| 11 | 2 | Baseline | [edai-1/processing_jobs.md](edai-1/processing_jobs.md#edai-1-11) | Đã có |
+| 12 | 3 | Handle skew with explanation | [edai-1/processing_jobs.md](edai-1/processing_jobs.md#edai-1-12) | Đã có |
 | 13 | 3 | Handle schema evolution with explanation | [edai-1/processing_jobs.md](edai-1/processing_jobs.md#edai-1-13) | Đã có |
 | 14 | 3 | Handle other offline data problem with explanation | [edai-1/processing_jobs.md](edai-1/processing_jobs.md#edai-1-14) | Đã có |
 | 15 | 2 | Spark job được tích hợp vào các data pipeline | [edai-1/processing_jobs.md](edai-1/processing_jobs.md#edai-1-15) | Đã có |
