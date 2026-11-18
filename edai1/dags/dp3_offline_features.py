@@ -16,7 +16,7 @@ from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.sensors.external_task import ExternalTaskSensor
 from datahub_airflow_plugin.entities import Dataset
 
-from gold_checks import FEATURE_CHECKS
+from gold_checks import FEATURE_CHECKS_BY_TABLE
 from governance.emit_datahub import validate_sql
 
 FEAT_BATCH = AirflowDataset("postgres://postgres:5432/warehouse/gold/feat_hotel_demand")     # feast_materialize_incremental lắng nghe
@@ -35,11 +35,10 @@ with DAG(
                                   mode="reschedule", timeout=6 * 3600)
     build = SQLExecuteQueryOperator(
         task_id="build_features", conn_id="warehouse", sql="dp3_features.sql",
-        inlets=[Dataset("postgres", "warehouse.gold.fact_bookings"), Dataset("postgres", "warehouse.gold.dim_hotel")],
+        inlets=[Dataset("postgres", f"warehouse.gold.{t}") for t in ("fact_bookings", "dim_hotel", "dim_customer")],
         outlets=[Dataset("postgres", "warehouse.gold.feat_customer_booking_stats"),
                  Dataset("postgres", "warehouse.gold.feat_hotel_demand")])
     validate = PythonOperator(
-        task_id="validate_features", outlets=[FEAT_BATCH], python_callable=lambda ds: validate_sql(
-            "warehouse", "postgres:warehouse.gold.feat_hotel_demand",
-            {k: v.format(ds=ds) for k, v in FEATURE_CHECKS.items()}))
+        task_id="validate_features", outlets=[FEAT_BATCH],
+        python_callable=lambda ds: validate_sql("warehouse", FEATURE_CHECKS_BY_TABLE, ds))
     wait_dp2 >> build >> validate

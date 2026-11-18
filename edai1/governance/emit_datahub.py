@@ -14,24 +14,32 @@ from datahub.emitter.mce_builder import make_assertion_urn, make_data_job_urn, m
 from datahub.emitter.mcp import MetadataChangeProposalWrapper
 from datahub.emitter.rest_emitter import DatahubRestEmitter
 from datahub.metadata.schema_classes import (
-    AssertionResultClass, AssertionResultTypeClass, AssertionRunEventClass, AssertionRunStatusClass,
+    AssertionInfoClass, AssertionResultClass, AssertionResultTypeClass, AssertionRunEventClass, AssertionRunStatusClass,
+    AssertionStdOperatorClass, AssertionTypeClass, DatasetAssertionInfoClass, DatasetAssertionScopeClass,
     DataJobInputOutputClass, EditableDatasetPropertiesClass, GlobalTagsClass, TagAssociationClass,
 )
 
 PIPELINES = {
-    # task Airflow                          : (bảng vào, bảng ra)
-    ("dp1_ingest_bronze", "ingest_bookings"): (["s3:landing/bookings"], ["s3:lake/bronze/raw_bookings"]),
+    # task Airflow                          : (bảng vào, bảng ra); DP1 copy nguyên landing/<t> -> raw_<t>
+    **{(dag, f"ingest_{t}"): ([f"s3:landing/{t}"], [f"s3:lake/bronze/raw_{t}"])
+       for dag, tables in (("dp1_ingest_bronze", ["quotes", "bookings", "payments", "cancellations"]),
+                           ("dp1_load_dims", ["hotels", "hotel_changes", "customers", "inventory"]))
+       for t in tables},
     ("dp2_bronze_to_gold", "silver_bookings"): (["s3:lake/bronze/raw_bookings", "s3:lake/bronze/raw_hotels",
                                                  "s3:lake/bronze/raw_cancellations"], ["iceberg:silver.stg_bookings"]),
     ("dp2_bronze_to_gold", "stage_gold"): (["iceberg:silver.stg_bookings", "s3:lake/bronze/raw_customers",
-                                            "s3:lake/bronze/raw_hotel_changes"],
+                                            "s3:lake/bronze/raw_hotels", "s3:lake/bronze/raw_hotel_changes",
+                                            "s3:lake/bronze/raw_inventory"],
                                            ["postgres:warehouse.gold.stg_bookings", "postgres:warehouse.gold.stg_customers",
-                                            "postgres:warehouse.gold.stg_hotel_changes"]),
+                                            "postgres:warehouse.gold.stg_hotel_changes",
+                                            "postgres:warehouse.gold.stg_hotel_rooms"]),
     ("dp2_bronze_to_gold", "upsert_gold"): (["postgres:warehouse.gold.stg_bookings", "postgres:warehouse.gold.stg_customers",
-                                             "postgres:warehouse.gold.stg_hotel_changes"],
+                                             "postgres:warehouse.gold.stg_hotel_changes",
+                                             "postgres:warehouse.gold.stg_hotel_rooms"],
                                             ["postgres:warehouse.gold.dim_hotel", "postgres:warehouse.gold.dim_customer",
-                                             "postgres:warehouse.gold.fact_bookings"]),
-    ("dp3_offline_features", "build_features"): (["postgres:warehouse.gold.fact_bookings", "postgres:warehouse.gold.dim_hotel"],
+                                             "postgres:warehouse.gold.fact_bookings", "postgres:warehouse.gold.hotel_rooms"]),
+    ("dp3_offline_features", "build_features"): (["postgres:warehouse.gold.fact_bookings", "postgres:warehouse.gold.dim_hotel",
+                                                  "postgres:warehouse.gold.dim_customer"],
                                                  ["postgres:warehouse.gold.feat_customer_booking_stats",
                                                   "postgres:warehouse.gold.feat_hotel_demand"]),
 }
@@ -64,13 +72,14 @@ TABLES = {
         G + "feat_hotel_demand": "Feature nhu cầu 7 và 30 ngày của khách sạn (DP3).",
         G + "feat_hotel_realtime": "Số booking trong 1 giờ gần nhất của khách sạn, Flink ghi.",
         G + "booking_risk": "Xác suất huỷ của từng booking kèm phiên bản model đã chấm (DAG score_bookings).",
-        G + "hotel_rooms": "Số phòng mở bán theo khách sạn và đêm trong 30 đêm tới.",
+        G + "hotel_rooms": "Số phòng mở bán theo khách sạn và đêm (DP2 upsert 30 đêm tới mỗi ngày).",
         G + "overbooking_limits": "Số phòng bán vượt K đã được revenue manager duyệt.",
         G + "stream_bookings_1m": "Số booking từng phút do Flink đếm, để đối soát stream với batch.",
         G + "stream_late_bookings": "Event trễ hơn watermark + allowed lateness (side output của Flink).",
         G + "stg_bookings": "Staging DP2: booking tạo hoặc huỷ trong ngày ds, Spark ghi qua JDBC, ghi đè mỗi lần chạy.",
         G + "stg_customers": "Staging DP2: khách của các booking trong ngày ds.",
         G + "stg_hotel_changes": "Staging DP2: lần đổi giá khách sạn, nạp vào dim_hotel bằng SCD2.",
+        G + "stg_hotel_rooms": "Staging DP2: số phòng mở bán của 30 đêm sau ds, upsert vào hotel_rooms.",
     },
 }
 
@@ -102,11 +111,17 @@ def emit_table_docs(emitter: DatahubRestEmitter) -> None:
 
 
 def emit_validation(emitter: DatahubRestEmitter, table_ref: str, check: str, passed: bool) -> None:
-    """Gửi kết quả 1 expectation (vd idempotency_key unique) thành AssertionRunEvent của dataset."""
+    """Gửi kết quả 1 expectation (vd idempotency_key unique): AssertionInfo khai báo assertion gắn với dataset (tab
+    Validation cần để hiện tên và phạm vi), rồi AssertionRunEvent là kết quả của lần chạy."""
+    urn = make_assertion_urn(f"{table_ref}-{check}")
+    info = AssertionInfoClass(type=AssertionTypeClass.DATASET, description=check, datasetAssertion=DatasetAssertionInfoClass(
+        dataset=ds_urn(table_ref), scope=DatasetAssertionScopeClass.DATASET_ROWS,
+        operator=AssertionStdOperatorClass._NATIVE_, nativeType=check))
+    emitter.emit(MetadataChangeProposalWrapper(entityUrn=urn, aspect=info))
     now_ms = int(time.time() * 1000)
     event = AssertionRunEventClass(
         timestampMillis=now_ms,
-        assertionUrn=make_assertion_urn(f"{table_ref}-{check}"),
+        assertionUrn=urn,
         asserteeUrn=ds_urn(table_ref),
         runId=f"{check}-{now_ms}",
         status=AssertionRunStatusClass.COMPLETE,
@@ -118,9 +133,14 @@ def emit_validation(emitter: DatahubRestEmitter, table_ref: str, check: str, pas
 
 def emit_from_airflow(table_ref: str, check: str, passed: bool) -> None:
     """Gọi trong task Airflow: GMS lấy từ Connection datahub_rest_default (governance/ deploy cạnh dags/)."""
+    import re
+
     from airflow.hooks.base import BaseHook
-    emit_validation(DatahubRestEmitter(gms_server=BaseHook.get_connection("datahub_rest_default").host),
-                    table_ref, check, passed)
+    conn = BaseHook.get_connection("datahub_rest_default")
+    # host có thể đã gồm scheme + cổng (http://gms:8080) hoặc chỉ tên host, cổng nằm ở trường port của Connection
+    gms = conn.host if "://" in conn.host else f"http://{conn.host}"
+    gms = gms if not conn.port or re.search(r":\d+$", gms) else f"{gms}:{conn.port}"
+    emit_validation(DatahubRestEmitter(gms_server=gms), table_ref, check, passed)
 
 
 if __name__ == "__main__":
@@ -130,15 +150,16 @@ if __name__ == "__main__":
     # Kết quả validation không emit ở đây: task validate_* của DAG gửi kết quả GX thật (dags/dp1_ingest_bronze.py)
 
 
-def validate_sql(conn_id: str, table_ref: str, checks: dict[str, str]) -> None:
-    """Data validation cho Gold: mỗi check là 1 câu SQL trả về 1 giá trị boolean; đẩy từng kết quả lên DataHub,
-    fail task nếu có check sai."""
+def validate_sql(conn_id: str, checks: dict[str, dict[str, str]], ds: str) -> None:
+    """Data validation cho Gold: {bảng: {tên check: SQL trả về 1 boolean}}; mỗi kết quả đẩy lên DataHub vào đúng bảng
+    được kiểm, fail task nếu có check sai ({ds} trong SQL thay bằng ngày logic)."""
     from airflow.providers.postgres.hooks.postgres import PostgresHook
     hook, failed = PostgresHook(postgres_conn_id=conn_id), []
-    for name, sql in checks.items():
-        passed = bool(hook.get_first(sql)[0])
-        emit_from_airflow(table_ref, name, passed)
-        if not passed:
-            failed.append(name)
+    for table_ref, table_checks in checks.items():
+        for name, sql in table_checks.items():
+            passed = bool(hook.get_first(sql.format(ds=ds))[0])
+            emit_from_airflow(table_ref, name, passed)
+            if not passed:
+                failed.append(f"{table_ref}:{name}")
     if failed:
-        raise ValueError(f"{table_ref}: check fail {failed}")
+        raise ValueError(f"check fail {failed}")

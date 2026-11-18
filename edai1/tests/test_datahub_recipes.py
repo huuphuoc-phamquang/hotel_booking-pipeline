@@ -43,7 +43,7 @@ def test_every_table_documented():
     gold = re.findall(r"CREATE (?:TABLE|VIEW) gold\.(\w+)", (ROOT / "schema/gold_schema.sql").read_text(encoding="utf-8"))
     documented = {ref for tables in ed.TABLES.values() for ref in tables}
     assert {f"postgres:warehouse.gold.{t}" for t in gold} <= documented
-    lineage = {ref for ins, outs in ed.PIPELINES.values() for ref in ins + outs} - {"s3:landing/bookings"}
+    lineage = {ref for ins, outs in ed.PIPELINES.values() for ref in ins + outs if not ref.startswith("s3:landing/")}
     assert lineage <= documented
 
 
@@ -52,3 +52,14 @@ def test_emit_table_docs():
     ed.emit_table_docs(type("E", (), {"emit": lambda self, m: out.append(m)})())
     assert len(out) == 2 * sum(len(t) for t in ed.TABLES.values())
     assert out[0].entityUrn == "urn:li:dataset:(urn:li:dataPlatform:s3,lake/bronze/raw_quotes,PROD)"
+
+
+def test_emit_validation_declares_assertion_then_result():
+    """Tab Validation cần AssertionInfo (assertion gắn với dataset) trước AssertionRunEvent (kết quả lần chạy)."""
+    out = []
+    ed.emit_validation(type("E", (), {"emit": lambda self, m: out.append(m)})(),
+                       "postgres:warehouse.gold.fact_bookings", "amount_positive", False)
+    info, run = (m.aspect for m in out)
+    assert out[0].entityUrn == out[1].entityUrn == run.assertionUrn
+    assert info.datasetAssertion.dataset == run.asserteeUrn == ed.ds_urn("postgres:warehouse.gold.fact_bookings")
+    assert run.result.type == "FAILURE"

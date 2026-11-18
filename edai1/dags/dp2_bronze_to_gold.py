@@ -17,7 +17,7 @@ from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.sensors.external_task import ExternalTaskSensor
 from datahub_airflow_plugin.entities import Dataset
 
-from gold_checks import GOLD_CHECKS
+from gold_checks import GOLD_CHECKS_BY_TABLE
 from spark_conf import SPARK_CONF, job
 from governance.emit_datahub import validate_sql
 
@@ -43,13 +43,16 @@ with DAG(
     stage = SparkSubmitOperator(
         task_id="stage_gold", conn_id="spark_default", conf=SPARK_CONF, application=job("stage_gold.py"),
         application_args=["--ds", "{{ ds }}"],
-        inlets=[Dataset("iceberg", "silver.stg_bookings")],
+        inlets=[Dataset("iceberg", "silver.stg_bookings")]
+               + [Dataset("s3", f"lake/bronze/raw_{t}") for t in ("customers", "hotels", "hotel_changes", "inventory")],
         outlets=[Dataset("postgres", f"warehouse.gold.{t}")
-                 for t in ("stg_bookings", "stg_customers", "stg_hotel_changes", "hotel_rooms")])
+                 for t in ("stg_bookings", "stg_customers", "stg_hotel_changes", "stg_hotel_rooms")])
     upsert = SQLExecuteQueryOperator(
         task_id="upsert_gold", conn_id="warehouse", sql="dp2_upsert_gold.sql",
-        outlets=[Dataset("postgres", f"warehouse.gold.{t}") for t in ("dim_hotel", "dim_customer", "fact_bookings")])
+        inlets=[Dataset("postgres", f"warehouse.gold.{t}")
+                for t in ("stg_bookings", "stg_customers", "stg_hotel_changes", "stg_hotel_rooms")],
+        outlets=[Dataset("postgres", f"warehouse.gold.{t}")
+                 for t in ("dim_hotel", "dim_customer", "fact_bookings", "hotel_rooms")])
     validate = PythonOperator(
-        task_id="validate_gold", python_callable=lambda ds: validate_sql(
-            "warehouse", "postgres:warehouse.gold.fact_bookings", {k: v.format(ds=ds) for k, v in GOLD_CHECKS.items()}))
+        task_id="validate_gold", python_callable=lambda ds: validate_sql("warehouse", GOLD_CHECKS_BY_TABLE, ds))
     wait_dp1 >> silver >> stage >> upsert >> validate

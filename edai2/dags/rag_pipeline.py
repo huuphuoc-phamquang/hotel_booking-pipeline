@@ -60,14 +60,20 @@ def rag_data_pipeline():
 
     @task
     def validate_chunks(chunks: list[dict]) -> list[dict]:
-        """Data validation: không rỗng, chunk_id duy nhất."""
+        """Data validation: không rỗng, chunk_id duy nhất; từng kết quả lên tab Validation của feat_policy_chunks."""
+        from governance.emit_datahub import emit_from_airflow
         df = pd.DataFrame(chunks)
-        assert len(df) > 0, "Không có chunk nào"
-        assert df["chunk_id"].is_unique, "chunk_id bị trùng"
-        assert (df["text"].str.len() > 0).all(), "Có chunk rỗng"
+        checks = {"has_chunks": len(df) > 0,
+                  "chunk_id_unique": len(df) == 0 or df["chunk_id"].is_unique,
+                  "no_empty_chunk": len(df) == 0 or bool((df["text"].str.len() > 0).all())}
+        for name, ok in checks.items():
+            emit_from_airflow("postgres:warehouse.gold.feat_policy_chunks", name, ok)
+        failed = [n for n, ok in checks.items() if not ok]
+        if failed:
+            raise ValueError(f"policy chunks fail {failed}")
         return chunks
 
-    @task(outlets=[Dataset("postgres", "gold.feat_policy_chunks")], executor_config=EMBED_POD)
+    @task(outlets=[Dataset("postgres", "warehouse.gold.feat_policy_chunks")], executor_config=EMBED_POD)
     def embed_and_push(chunks: list[dict]) -> None:
         """Embed bằng sentence-transformers rồi ghi vào Feast (online + offline)."""
         from feast import FeatureStore
@@ -80,6 +86,8 @@ def rag_data_pipeline():
         df["embed_model"] = EMBED_MODEL
         df["event_timestamp"] = df["created"] = pd.Timestamp.now(tz="UTC")
         store = FeatureStore(repo_path=Variable.get("feast_repo_path"))
+        # shortcut: chỉ ghi đè chunk_id còn tồn tại; tài liệu bị rút ngắn hoặc xoá để lại chunk cũ tới khi hết TTL 365
+        # ngày. Cần xoá theo source trên online store trước khi ghi khi tài liệu chính sách hay đổi.
         store.write_to_online_store("policy_chunks", df)
         store.write_to_offline_store("policy_chunks", df)
 
