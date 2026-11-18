@@ -46,6 +46,11 @@ def test_buffers_until_window(client):
     assert r["buffered"] == 0 and r["is_drift"] is not None
 
 
+def test_batch_larger_than_window_drains_buffer(client):
+    r = client.post("/", json={"instances": rows(RNG.gamma(2, 10, 450))}).json()
+    assert r["buffered"] == 50 and r["is_drift"] is not None
+
+
 def test_same_distribution_no_drift(client):
     r = client.post("/", json={"instances": rows(RNG.gamma(2, 10, 200))}).json()
     assert r["is_drift"] is False and r["p_val"] > 0.05

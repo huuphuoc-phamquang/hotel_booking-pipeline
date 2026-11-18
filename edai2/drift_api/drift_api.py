@@ -69,12 +69,13 @@ async def receive(req: InferenceRequest, ce_type: str = Header("unknown")) -> Dr
     buf.extend(row[LEAD_DAYS] for row in req.instances)
     if len(buf) < WINDOW:
         return DriftResult(buffered=len(buf))
-    x = np.array(buf[:WINDOW], dtype=np.float32).reshape(-1, 1)
-    del buf[:WINDOW]
-    data = (await run_in_threadpool(state["detector"].predict, x))["data"]
-    p = float(np.min(data["p_val"]))
-    DRIFT_P.labels("lead_days", MODEL_VERSION).set(p)
-    DRIFT_FLAG.labels("lead_days", MODEL_VERSION).set(int(data["is_drift"]))
+    while len(buf) >= WINDOW:                  # batch lớn hơn WINDOW (score_bookings gửi 1000) không dồn lại buffer
+        x = np.array(buf[:WINDOW], dtype=np.float32).reshape(-1, 1)
+        del buf[:WINDOW]
+        data = (await run_in_threadpool(state["detector"].predict, x))["data"]
+        p = float(np.min(data["p_val"]))
+        DRIFT_P.labels("lead_days", MODEL_VERSION).set(p)
+        DRIFT_FLAG.labels("lead_days", MODEL_VERSION).set(int(data["is_drift"]))
     return DriftResult(buffered=len(buf), is_drift=bool(data["is_drift"]), p_val=p)
 
 
