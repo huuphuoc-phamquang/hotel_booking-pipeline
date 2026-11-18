@@ -131,6 +131,7 @@ class DedupByEventId(KeyedProcessFunction):
 
     def on_timer(self, timestamp, ctx):
         self.seen.clear()
+        return ()                                 # PyFlink lặp kết quả on_timer: trả None -> TypeError, task restart
 
 
 def kafka_source(topic: str) -> KafkaSource:
