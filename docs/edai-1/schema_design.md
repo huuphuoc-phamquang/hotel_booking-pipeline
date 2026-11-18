@@ -2,21 +2,20 @@
 
 Thiết kế bảng theo zone, dimension SCD2, bảng feature, quan hệ dim–fact và quy ước đặt tên.
 
-Mỗi mục ứng với một dòng của rubric. Mục đã hoàn thành gồm phần **Thực thi** (đã làm gì, chạy ở đâu) và **Kết quả**
-(số liệu đo được, ảnh chụp trong `docs/images/`). Mục chưa hoàn thành giữ trích rubric và phần **Cách làm** đồng bộ từ
-cột F của rubric.
+Mỗi mục ứng với một dòng của rubric, ghi lại phần đã triển khai và kết quả (số liệu đo được, ảnh chụp trong
+`docs/images/`).
 
 <a id="edai-1-34"></a>
 ## Visualize tables on all zones
 
-**Thực thi:** ERD của từng zone (Bronze `raw_`, Silver `stg_`, Gold) vẽ bằng draw.io từ schema trong code
+ERD của từng zone (Bronze `raw_`, Silver `stg_`, Gold) vẽ bằng draw.io từ schema trong code
 (`generator/offline_gen.py`, `storage/optimize.sql`, `schema/gold_schema.sql`); bản Mermaid có cùng bảng và quan hệ nằm
 trong phần thu gọn bên dưới mỗi ảnh. Mỗi bảng có một dòng mô tả vai trò. Trên DataHub, 3 recipe trong
 `governance/datahub/` (postgres cho Gold, iceberg cho Silver, s3 cho Bronze) ingest schema, và
 `emit_datahub.emit_table_docs` gắn mô tả cùng tag zone cho 26 bảng; `tests/test_datahub_recipes.py` kiểm tên dataset
 khớp với lineage. Phần DataHub chạy trên GKE ngày 2026-11-18.
 
-**Kết quả:** lọc theo tag zone trên DataHub ra đủ 26 bảng: 8 bảng Bronze trên S3, 2 bảng Silver trên Iceberg, 16 bảng
+Lọc theo tag zone trên DataHub ra đủ 26 bảng: 8 bảng Bronze trên S3, 2 bảng Silver trên Iceberg, 16 bảng
 Gold trên PostgreSQL. Tab Columns của bảng Gold hiện khoá chính và khoá ngoại. Bronze và Silver là file Parquet và bảng
 Iceberg nên không có ràng buộc khoá; các đường nối ở hai zone này là quan hệ logic theo cột cùng tên. Ở Gold, chỉ hai
 đường nối của `fact_bookings` là khoá ngoại thật.
@@ -299,12 +298,12 @@ erDiagram
 <a id="edai-1-35"></a>
 ## Dim table with SCD 2
 
-**Thực thi:** `dim_hotel` có `valid_from_ts`, `valid_to_ts`, `is_current`, cập nhật bằng `sql/dp2_upsert_gold.sql`.
+`dim_hotel` có `valid_from_ts`, `valid_to_ts`, `is_current`, cập nhật bằng `sql/dp2_upsert_gold.sql`.
 `tests/test_gold_sql.py` chạy 40 ngày trên Postgres thật và xác nhận bốn điều: mỗi khách sạn có số phiên bản bằng 1 cộng
 số lần đổi giá; mỗi khách sạn có đúng một bản hiện hành; fact trỏ đúng phiên bản tại thời điểm đặt; chạy lại cùng ngày
 không làm thay đổi dữ liệu. Trên GKE, DP1–DP3 được backfill cho 2025-01-01 → 2025-01-13 (ngày 2026-11-18).
 
-**Kết quả:** phân bố số phiên bản mỗi khách sạn trong `gold.dim_hotel`: 44.237 khách sạn có 1 phiên bản, 5.442 có 2,
+Phân bố số phiên bản mỗi khách sạn trong `gold.dim_hotel`: 44.237 khách sạn có 1 phiên bản, 5.442 có 2,
 311 có 3, 8 có 4 và 2 có 5. Mỗi khách sạn có đúng một dòng `is_current` (partial unique index `dim_hotel_one_current`).
 
 Ví dụ khách sạn 123 có 3 phiên bản giá; `valid_to_ts` của bản trước bằng `valid_from_ts` của bản sau. Booking của từng
@@ -319,21 +318,22 @@ ngày trỏ đúng `hotel_key` của phiên bản còn hiệu lực ngày đó:
 <a id="edai-1-36"></a>
 ## Feature tables with 2 columns event_timestamp and created
 
-**Rubric:** edai-1 · dòng 36 · 2 điểm · nhóm *Documentation* › *Schema design*
+Ba bảng feature `feat_customer_booking_stats`, `feat_hotel_demand`, `feat_hotel_realtime` trong
+`schema/gold_schema.sql` đều có hai cột `event_timestamp` (thời điểm feature có hiệu lực) và `created` (thời điểm ghi).
+DP3 ghi hai bảng đầu, Flink ghi `feat_hotel_realtime`. Phép kiểm chạy trên Postgres của GKE ngày 2026-11-18, sau
+backfill DP1–DP3 và lần chạy Flink.
 
-> Feature tables (feat_ tables) with 2 columns event_timestamp and created
-
-**Cách làm:** [Đã có] `feat_customer_booking_stats`, `feat_hotel_demand`, `feat_hotel_realtime` đều có `event_timestamp` và `created`.
-
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+`information_schema.columns` xác nhận cả ba bảng đều có `event_timestamp` và `created`. Không dòng nào có
+`event_timestamp > created` ở cả ba bảng, tức feature không được ghi trước thời điểm có hiệu lực; đây cũng là điều kiện
+`event_before_created` mà `validate_features` kiểm mỗi ngày (dòng 27).
 
 <a id="edai-1-37"></a>
 ## Relationship between dim & fact tables
 
-**Thực thi:** `schema/gold_schema.sql` khai báo hai khoá ngoại của `fact_bookings`: tới `dim_hotel` (`hotel_key`) và
+`schema/gold_schema.sql` khai báo hai khoá ngoại của `fact_bookings`: tới `dim_hotel` (`hotel_key`) và
 `dim_customer` (`customer_key`). Recipe postgres của DataHub đọc được khoá ngoại khi ingest schema.
 
-**Kết quả:** trên DataHub, tab Columns của `fact_bookings` đánh dấu `booking_id` là Primary Key, `hotel_key` và
+Trên DataHub, tab Columns của `fact_bookings` đánh dấu `booking_id` là Primary Key, `hotel_key` và
 `customer_key` là Foreign Key trỏ sang `dim_hotel`, `dim_customer`.
 
 ![Schema fact_bookings trên DataHub](../images/edai-1/datahub-schema-gold.png)
@@ -375,10 +375,16 @@ erDiagram
 <a id="edai-1-38"></a>
 ## Naming convention
 
-**Rubric:** edai-1 · dòng 38 · 2 điểm · nhóm *Documentation* › *Schema design*
+Quy ước tiền tố theo zone:
 
-> Naming convention (- Gold layer: `dim_`, `fact_`, `obt_`, `feat_`, `raw`, prefix or similar) (- Bronze & Silver layer: `raw_`, `stg_` prefix or similar)
+- Bronze: `raw_` (8 bảng `raw_*` trên `s3a://lake/bronze/`).
+- Silver: `stg_` (`stg_bookings`, `stg_quotes` trên Iceberg).
+- Gold: `dim_`, `fact_`, `feat_` cho bảng mô hình; `stg_` cho bảng trung chuyển của DP2 (`stg_bookings`,
+  `stg_customers`, `stg_hotel_changes`, `stg_hotel_rooms`).
 
-**Cách làm:** [Đã có] Quy ước tiền tố `raw_`, `stg_`, `dim_`, `fact_`, `feat_`. Áp dụng cho mọi bảng đang có: Bronze `raw_*` (8 bảng), Silver `stg_bookings`, `stg_quotes`, Gold `dim_*`, `fact_bookings`, `feat_*`, staging `stg_*` (ảnh danh sách bảng theo zone trên DataHub).
+Danh sách bảng theo tag zone trên DataHub (ảnh ở dòng 34) cho thấy mọi bảng Bronze và Silver, cùng các bảng
+mô hình ở Gold, đều theo quy ước trên. Các bảng vận hành ở Gold (`booking_risk`, `hotel_rooms`, `overbooking_limits`,
+`stream_bookings_1m`, `stream_late_bookings`) và view `labels_cancel` đặt tên theo nghiệp vụ, không mang tiền tố.
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+![Bảng theo zone trên DataHub](../images/edai-1/datahub-zones.png)
+

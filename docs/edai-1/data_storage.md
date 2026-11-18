@@ -2,17 +2,17 @@
 
 Lakehouse dùng Iceberg, data warehouse là tầng Gold trên PostgreSQL.
 
-Mỗi mục ứng với một dòng của rubric, gồm phần **Thực thi** (đã làm gì, chạy ở đâu) và **Kết quả** (số liệu đo được,
-ảnh chụp trong `docs/images/`).
+Mỗi mục ứng với một dòng của rubric, ghi lại phần đã triển khai và kết quả (số liệu đo được, ảnh chụp trong
+`docs/images/`).
 
 <a id="edai-1-20"></a>
 ## Lakehouse
 
-**Thực thi:** `storage/optimize.sql` gồm compaction (`rewrite_data_files`), sort order và expire snapshots. Catalog
+`storage/optimize.sql` gồm compaction (`rewrite_data_files`), sort order và expire snapshots. Catalog
 `lake` là Iceberg JDBC catalog đặt trên chính PostgreSQL, không cần thêm service. Phần lakehouse của script chạy bằng
 `spark-sql` trên GKE ngày 2026-11-18.
 
-**Kết quả:** compaction không có file nhỏ để gom, vì cách ghi của Iceberg đã giữ mỗi partition một file:
+Compaction không có file nhỏ để gom, vì cách ghi của Iceberg đã giữ mỗi partition một file:
 
 - `silver.stg_bookings` sau 13 ngày MERGE của DP2 có 14 file, trung bình 6,68 MB (5.063.524 dòng). MERGE của Iceberg
   (copy-on-write) viết lại cả partition ngày mỗi lần chạy, nên mỗi partition chỉ có một file và `rewrite_data_files`
@@ -39,14 +39,14 @@ theo. `expire_snapshots` dọn các snapshot cũ hơn 7 ngày, với mốc tính
 <a id="edai-1-21"></a>
 ## Datawarehouse
 
-**Thực thi:** `schema/gold_schema.sql` tạo các index `fact_bookings(customer_key, booking_date)`,
+`schema/gold_schema.sql` tạo các index `fact_bookings(customer_key, booking_date)`,
 `(hotel_key, booking_date)`, `(checkin_date)`, `booking_risk(hotel_id, stay_date, scored_date)` và partial unique index
 `dim_hotel(hotel_id) WHERE is_current`. Các bảng `feat_*` dùng khoá chính (entity, `event_timestamp`).
 `storage/optimize.sql` thêm `(hotel_key, checkin_date)` và `dim_hotel(hotel_id, hotel_key)` cho query revenue
 management. Phần data warehouse của script chạy trên GKE ngày 2026-11-18, sau backfill 13 ngày (`gold.fact_bookings`
 4,66 triệu dòng).
 
-**Kết quả:** query đo là query của dashboard revenue management: số đêm và doanh thu của một khách sạn theo khoảng ngày
+Query đo là query của dashboard revenue management: số đêm và doanh thu của một khách sạn theo khoảng ngày
 nhận phòng (khách sạn 23059, đông nhất; nhận phòng 15/01–15/02).
 
 | | Trước | Sau |

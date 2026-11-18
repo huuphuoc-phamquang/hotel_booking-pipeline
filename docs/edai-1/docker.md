@@ -2,17 +2,17 @@
 
 Các thành phần của data platform được đóng gói thành image và tối ưu kích thước.
 
-Mỗi mục ứng với một dòng của rubric, gồm phần **Thực thi** (đã làm gì, chạy ở đâu) và **Kết quả** (số liệu đo được,
-ảnh chụp trong `docs/images/`).
+Mỗi mục ứng với một dòng của rubric, ghi lại phần đã triển khai và kết quả (số liệu đo được, ảnh chụp trong
+`docs/images/`).
 
 <a id="edai-1-3"></a>
 ## Có sử dụng Docker & Docker Compose
 
-**Thực thi:** `edai1/docker/docker-compose.yml` dựng môi trường cục bộ gồm MinIO (có healthcheck), Kafka,
+`edai1/docker/docker-compose.yml` dựng môi trường cục bộ gồm MinIO (có healthcheck), Kafka,
 offline-generator và event-replayer. Spark, Flink, Airflow, Postgres và DataHub không nằm trong compose vì chạy trên GKE
 (Helm hoặc operator). Image Spark, Flink, Airflow build từ `k8s/*.Dockerfile`; Postgres và DataHub dùng image chính thức.
 
-**Kết quả:** compose chạy trên máy ngày 2026-11-18. MinIO (healthy) và Kafka chạy nền. Generator chạy qua compose với
+Compose chạy trên máy ngày 2026-11-18. MinIO (healthy) và Kafka chạy nền. Generator chạy qua compose với
 1 ngày (`docker compose run --rm offline-generator 0 1`), ghi 340 MiB, 1.866 object vào bucket `landing`, đủ 9 nhánh
 (bảng sự kiện theo `dt=`, các bảng dims, `_manifests`). Bản đầy đủ `0 395` sinh khoảng 111 GB và đã chạy trên GKE
 (mục Store data). Image của generator và replayer build từ `docker/Dockerfile` (mục dưới).
@@ -24,11 +24,9 @@ offline-generator và event-replayer. Spark, Flink, Airflow, Postgres và DataHu
 <a id="edai-1-4"></a>
 ## Optimize Dockerfile
 
-**Thực thi:** `docker/Dockerfile` dùng multistage (builder và runtime trên `python:3.12-slim`). `docker/Dockerfile.single`
+`docker/Dockerfile` dùng multistage (builder và runtime trên `python:3.12-slim`). `docker/Dockerfile.single`
 là bản một stage để so sánh. Repo có thêm `.dockerignore` và `requirements.txt` ghim version. Hai bản build lại từ cùng
 mã nguồn ngày 2026-11-18 (Docker Desktop 29.6).
-
-**Kết quả:**
 
 | | `Dockerfile.single` | `Dockerfile` (multistage) | Thay đổi |
 |---|---|---|---|
