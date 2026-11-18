@@ -50,6 +50,8 @@ ingress.
 `curl -H "Host: jaeger.booking.local" http://34.87.100.157/` trả 200. Service không mở port ra ngoài, chỉ đi qua
 ingress.
 
+![Jaeger qua ingress](../images/edai-2/ingress-jaeger.png)
+
 <a id="edai-2-40"></a>
 ## UI để test agent
 
