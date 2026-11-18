@@ -5,7 +5,9 @@ ngày ds, khách của chúng, mọi lần đổi giá có hiệu lực tới ds
   - SCD2      : mỗi khách sạn có 1 + số lần đổi giá tới ds phiên bản, đúng 1 bản hiện hành; fact trỏ đúng phiên bản
   - Fact      : đủ booking, status khớp kết cục generator tới ds, chạy lại cùng ngày không đổi gì
   - Nhãn      : view labels_cancel 2 cột
-  - DP3       : feature khớp tính lại bằng pandas; mọi check validate của DAG (dags/gold_checks.py) đều đúng
+  - DP3       : feature khớp tính lại bằng pandas, kể cả giá trị Feast thấy (dòng mới nhất trong TTL) sau khi booking
+                rơi khỏi cửa sổ; mọi check validate của DAG (dags/gold_checks.py) đều đúng
+  - Chạy lại  : 1 ngày cũ (staging chưa biết lần huỷ về sau) không đưa booking đã huỷ về confirmed
 Cần Docker; chạy: pytest tests/test_gold_sql.py"""
 import shutil
 import subprocess
@@ -25,7 +27,7 @@ from generator.offline_gen import gen_bookings, gen_dims, load_config  # noqa: E
 from gold_checks import FEATURE_CHECKS, GOLD_CHECKS  # noqa: E402
 
 START = pd.Timestamp("2025-01-01")
-DAYS = range(0, 40)
+DAYS = range(0, 100)                          # > 90 ngày: có booking rơi khỏi cửa sổ 90 ngày của DP3
 
 
 @pytest.fixture(scope="module")
@@ -146,14 +148,45 @@ def test_hotel_features_match_pandas(loaded):
                                f"WHERE event_timestamp = '{ds + pd.Timedelta(days=1):%Y-%m-%d}'"),
                        columns=["hotel_id", "bookings_7d", "cancel_rate_30d"]).set_index("hotel_id").sort_index()
     day = b["created_at"].dt.normalize()
-    w30 = b[(day > ds - pd.Timedelta(days=30)) & (day <= ds)]
+    w31 = b[(day > ds - pd.Timedelta(days=31)) & (day <= ds)]           # khách sạn vừa rời cửa sổ 30 ngày vẫn có dòng
+    w30 = w31[w31["created_at"].dt.normalize() > ds - pd.Timedelta(days=30)]
     want = pd.DataFrame({
-        "bookings_7d": w30[w30["created_at"].dt.normalize() > ds - pd.Timedelta(days=7)].groupby("hotel_id").size(),
+        "bookings_7d": w31[w31["created_at"].dt.normalize() > ds - pd.Timedelta(days=7)].groupby("hotel_id").size()
+            .reindex(w31["hotel_id"].unique(), fill_value=0),
         "cancel_rate_30d": (w30["cancelled_at"] < ds + pd.Timedelta(days=1)).groupby(w30["hotel_id"]).mean(),
-    }).fillna({"bookings_7d": 0}).sort_index()
+    }).sort_index()
     assert list(got.index) == list(want.index)
     assert (got["bookings_7d"].values == want["bookings_7d"].values).all()
-    assert ((got["cancel_rate_30d"].astype(float) - want["cancel_rate_30d"]).abs() < 1e-4).all()
+    diff = (got["cancel_rate_30d"].astype(float) - want["cancel_rate_30d"]).abs()
+    assert (diff.fillna(0) < 1e-4).all() and (got["cancel_rate_30d"].isna() == want["cancel_rate_30d"].isna()).all()
+
+
+def test_customer_features_seen_by_feast_match_window(loaded):
+    """Giá trị Feast trả cho mỗi khách tại hết ngày ds (dòng mới nhất có event_timestamp trong TTL 90 ngày; không có
+    thì coi là 0) phải bằng số booking thật trong (ds - 90, ds]: booking cũ rơi khỏi cửa sổ không còn được đếm."""
+    conn, _, b = loaded
+    ds = START + pd.Timedelta(days=DAYS.stop - 1)
+    at = ds + pd.Timedelta(days=1)
+    rows = pd.DataFrame(q(conn, f"""SELECT DISTINCT ON (customer_id) customer_id, bookings_90d
+                                    FROM gold.feat_customer_booking_stats
+                                    WHERE event_timestamp <= '{at:%Y-%m-%d}'
+                                      AND event_timestamp > TIMESTAMP '{at:%Y-%m-%d}' - INTERVAL '90 days'
+                                    ORDER BY customer_id, event_timestamp DESC"""), columns=["customer_id", "n"])
+    seen = rows.set_index("customer_id")["n"].reindex(b["customer_id"].unique(), fill_value=0)
+    day = b["created_at"].dt.normalize()
+    w = b[(day > ds - pd.Timedelta(days=90)) & (day <= ds)]
+    want = w.groupby("customer_id").size().reindex(seen.index, fill_value=0)
+    dropped = set(b.loc[day <= ds - pd.Timedelta(days=90), "customer_id"])   # khách có booking đã rơi khỏi cửa sổ
+    assert dropped and (seen.sort_index() == want.sort_index()).all()
+
+
+def test_rerun_old_day_keeps_later_cancellations(loaded):
+    conn, dims, b = loaded
+    cancelled = lambda: q(conn, "SELECT count(*), max(cancelled_at) FROM gold.fact_bookings WHERE status = 'cancelled'")
+    before = cancelled()
+    run_day(conn, dims, b, 10)                                          # staging ngày 10 chưa biết các lần huỷ về sau
+    assert cancelled() == before
+    run_day(conn, dims, b, DAYS.stop - 1)                               # trả feature ngày cuối về như cũ cho test sau
 
 
 def test_dag_validation_checks_pass(loaded):
