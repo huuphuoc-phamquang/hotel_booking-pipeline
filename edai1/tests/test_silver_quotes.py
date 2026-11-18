@@ -9,7 +9,7 @@ pyspark = pytest.importorskip("pyspark")
 sys.path.insert(0, "spark_jobs")
 
 from generator.offline_gen import gen_dims, gen_inventory, gen_quotes, load_config  # noqa: E402
-from silver_quotes import MODES, enrich_quotes, spark_for  # noqa: E402
+from silver_quotes import HOTEL_MODES, MODES, enrich_hotels, enrich_quotes, spark_for  # noqa: E402
 
 
 @pytest.fixture(scope="module")
@@ -22,7 +22,7 @@ def bronze(tmp_path_factory):
     q = pd.concat([gen_quotes(cfg, dims, d, s) for d in (40, 41) for s in range(2)], ignore_index=True)
     stays = range(q["stay_date"].min().dayofyear - 1, q["stay_date"].max().dayofyear)   # start_date = 01/01
     inv = pd.concat([gen_inventory(cfg, dims, s) for s in stays], ignore_index=True)
-    for name, df in (("quotes", q), ("inventory", inv)):              # cùng cách ghi với landing (upload_parquet)
+    for name, df in (("quotes", q), ("inventory", inv), ("hotels", dims.hotels)):              # cùng cách ghi với landing (upload_parquet)
         df.to_parquet(root / f"{name}.parquet", coerce_timestamps="us", allow_truncated_timestamps=True)
     return root, q
 
@@ -40,3 +40,18 @@ def test_modes_agree_and_keep_every_quote(bronze):
     assert (results["baseline"]["rooms"] >= 1).all()
     for mode in MODES[1:]:
         pd.testing.assert_frame_equal(results["baseline"], results[mode])
+
+
+def test_hotel_join_modes_agree(bronze):
+    """3 chế độ của bài skew theo hotel_id cho cùng kết quả; mọi quote đều có khách sạn."""
+    root, q = bronze
+    results = {}
+    for mode in HOTEL_MODES:
+        spark = spark_for(mode)
+        out = enrich_hotels(spark.read.parquet(str(root / "quotes.parquet")),
+                            spark.read.parquet(str(root / "hotels.parquet")), mode)
+        results[mode] = out.select("quote_id", "city", "stars").toPandas().sort_values("quote_id").reset_index(drop=True)
+        spark.stop()
+    assert len(results["hotel_baseline"]) == len(q)
+    for mode in HOTEL_MODES[1:]:
+        pd.testing.assert_frame_equal(results["hotel_baseline"], results[mode])
