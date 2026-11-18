@@ -27,13 +27,18 @@ FEATURES = ["customer_booking_stats:bookings_90d", "customer_booking_stats:cance
             "hotel_demand:cancel_rate_30d"]
 # Thứ tự cột đưa vào model; mcp_server/server.py (model_rows) dựng request theo đúng thứ tự này.
 # Không có bookings_1h: hotel_realtime chưa có lịch sử cho dữ liệu train (toàn 0 lúc train, khác 0 lúc serve).
-# has_customer_history = khách có dòng customer_booking_stats trong TTL; train và serve cùng điền thiếu bằng 0.
+# has_customer_history = bookings_90d > 1: snapshot booking_date + 1 đã đếm chính booking này, nên > 0 luôn đúng lúc
+# train; > 1 = khách còn booking khác trong 90 ngày. Train và serve cùng điền thiếu bằng 0.
 MODEL_INPUTS = ["lead_days", "nights", "free_cancel", "bookings_90d", "cancel_rate_90d", "avg_lead_days_90d",
                 "bookings_7d", "cancel_rate_30d", "has_customer_history", "loyalty_tier"]
 LABEL = "is_cancelled"
 
+# event_timestamp = booking_date + 1 ngày: point-in-time join lấy snapshot DP3 của chính ngày đặt (gồm booking này,
+# chưa huỷ), đúng snapshot online mà score_bookings dùng khi chấm (sau khi materialize ngày ds). Booking huỷ ngay
+# trong ngày đặt hoặc nhận phòng ngay trong ngày đặt bị loại ở cả hai phía (score_bookings không chấm) nên snapshot
+# không lộ nhãn và hai phía cùng phân phối lead_days.
 LABEL_SQL = """
-SELECT f.booking_id, c.customer_id, h.hotel_id, f.booking_date::timestamp AS event_timestamp,
+SELECT f.booking_id, c.customer_id, h.hotel_id, (f.booking_date + 1)::timestamp AS event_timestamp,
        f.lead_days, f.nights, (f.cancellation_policy = 'flexible')::int AS free_cancel, c.loyalty_tier,
        l.is_cancelled
 FROM gold.fact_bookings f
@@ -45,6 +50,8 @@ JOIN gold.dim_hotel h USING (hotel_key)
 -- Dừng booking_date ở until - 90 ngày: nếu không, cuối cửa sổ chỉ còn booking lead ngắn (lead dài chưa tới checkin)
 -- và split_by_time đưa đúng phần lệch đó vào validation. 90 = LABEL_MATURITY_DAYS của dags/drift_stats.py.
 WHERE f.booking_date >= '{since}' AND f.booking_date < '{until}'::date - 90 AND f.checkin_date < '{until}'
+  AND f.checkin_date > f.booking_date
+  AND (f.cancelled_at IS NULL OR f.cancelled_at >= f.booking_date + 1)
 -- lấy mẫu theo booking_id (tất định, chạy lại ra cùng tập): pandas không chứa nổi cả cửa sổ 9 tháng
   AND f.booking_id % 100 < {sample_pct}
 """
@@ -62,7 +69,7 @@ def load_from_feast(features: list, label_sql: str, since: str, until: str, samp
     labels = pd.read_sql(label_sql.format(since=since, until=until, sample_pct=sample_pct), os.environ["WAREHOUSE_DSN"])
     df = store.get_historical_features(entity_df=labels, features=features).to_df()
     # không dropna: bỏ khách mới làm lệch tập train; điền thiếu y như mcp_server (`or 0`)
-    df["has_customer_history"] = df["bookings_90d"].notna().astype(int)
+    df["has_customer_history"] = (df["bookings_90d"].fillna(0) > 1).astype(int)
     num = [c.split(":")[1] for c in features]
     df[num] = df[num].astype(float)                            # NUMERIC của Postgres có thể về Decimal, XGBoost không nhận
     df = df.fillna(0)

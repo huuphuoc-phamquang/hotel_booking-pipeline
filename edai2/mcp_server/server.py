@@ -161,7 +161,7 @@ async def model_rows(booking_ids: list[int]) -> tuple[list[int], list[list], lis
     fs = await _online(CONTEXT_FEATURES, [{"customer_id": b["customer_id"], "hotel_id": b["hotel_id"]} for _, b in found])
     rows = [[b["lead_days"], b["nights"], b["free_cancel"],
              f["bookings_90d"] or 0, f["cancel_rate_90d"] or 0.0, f["avg_lead_days_90d"] or 0.0,
-             f["bookings_7d"] or 0, f["cancel_rate_30d"] or 0.0, int(f["bookings_90d"] is not None),
+             f["bookings_7d"] or 0, f["cancel_rate_30d"] or 0.0, int((f["bookings_90d"] or 0) > 1),
              b["loyalty_tier"] or 0] for (_, b), f in zip(found, fs)]
     return [i for i, _ in found], rows, missing
 

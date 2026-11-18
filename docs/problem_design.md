@@ -161,6 +161,11 @@ Model nhận 10 input (`MODEL_INPUTS`), chia ba nhóm:
 Các feature lịch sử được tính theo thời điểm (point-in-time): `event_timestamp` là cuối ngày logic `ds`, và lần huỷ
 chỉ được tính khi `cancelled_at` không muộn hơn mốc đó. Nhờ vậy, feature của một booking không chứa thông tin tương lai.
 
+Lúc train và lúc chấm dùng cùng một snapshot. DAG `score_bookings` chấm booking tạo ngày $d$ sau khi snapshot của ngày
+$d$ đã lên online store, nên snapshot đó đã gồm chính booking này. Lúc train, point-in-time join cũng lấy feature tại
+`booking_date + 1` (cùng snapshot). Booking bị huỷ ngay trong ngày tạo bị loại ở cả hai phía, nên snapshot không lộ
+nhãn. Khách có booking rơi khỏi cửa sổ 90 ngày được ghi dòng mới ngay ngày đó, không giữ số đếm cũ tới khi hết TTL.
+
 ### 5.4 Nhãn chín
 
 Nhãn của một booking chỉ xác định sau ngày nhận phòng: trước đó booking vẫn có thể bị huỷ. Tập train vì vậy chỉ lấy

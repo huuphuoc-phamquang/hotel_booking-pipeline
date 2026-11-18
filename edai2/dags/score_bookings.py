@@ -13,7 +13,8 @@ nếu không propose_overbooking vẫn cộng điểm của bản cũ cho các �
 Backfill quanh mốc drift (2025-06-01): online store mới, `feast materialize 2025-01-01T00:00:00 2025-05-15T00:00:00`
 rồi backfill chuỗi DP (DP3 xong -> materialize -> score, tuần tự từng ngày):
   airflow dags backfill dp1_ingest_bronze -s 2025-05-15 -e 2025-06-15   (tương tự dp2_bronze_to_gold, dp3_offline_features)
-Ngày chấm (as_of) lấy từ data_interval_end của run materialize gây ra event, không phải giờ máy.
+Khoảng ngày chấm lấy từ data_interval của run materialize gây ra event (Airflow gán bằng min/max interval của các run
+DP3 nguồn), không phải giờ máy.
 Connection warehouse và Variable booking_mcp_url đặt trong Airflow.
 """
 from datetime import datetime
@@ -24,12 +25,15 @@ from airflow.models import Variable
 
 ONLINE_BATCH = Dataset("feast://online/batch")
 BATCH = 1000                               # = max_length của BatchRequest trong booking-mcp
+# Booking tạo trong [start, end) = các ngày ds của mọi run DP3 gộp vào lần chạy này (backfill dồn nhiều event vào 1 run
+# thì vẫn chấm đủ từng ngày). scored_date = booking_date + 1 = snapshot feature mà training dùng (LABEL_SQL).
+# Huỷ ngay trong ngày tạo thì không chấm (training cũng loại).
 NEW_SQL = """
-SELECT f.booking_id, h.hotel_id, f.checkin_date AS stay_date
+SELECT f.booking_id, h.hotel_id, f.checkin_date AS stay_date, f.booking_date + 1 AS scored_date
 FROM gold.fact_bookings f JOIN gold.dim_hotel h USING (hotel_key)
-WHERE f.booking_date = %(as_of)s::date - 1                            -- tạo trong ngày ds (as_of = 0h ngày ds + 1)
-  AND f.checkin_date >= %(as_of)s::date
-  AND (f.cancelled_at IS NULL OR f.cancelled_at > %(as_of)s)          -- huỷ ngay trong ngày tạo thì không cần chấm
+WHERE f.booking_date >= %(start)s::date AND f.booking_date < %(end)s::date
+  AND f.checkin_date > f.booking_date
+  AND (f.cancelled_at IS NULL OR f.cancelled_at >= f.booking_date + 1)
 """
 # as_of = ngày chấm mới nhất đã có (giờ dữ liệu, không theo giờ máy); booking tạo trước đó, chưa nhận phòng, chưa huỷ.
 # ~11 triệu dòng (389 nghìn booking/ngày × lead ~29 ngày): chia RESCORE_PARTS task song song theo booking_id.
@@ -44,8 +48,9 @@ RESCORE_PARTS = 8
 CHUNK = 50_000                             # dòng / lần đọc từ server-side cursor: vừa worker Airflow 1Gi
 
 
-def score_and_store(pg, df, scored_date, bulk: bool = False) -> int:
-    """Chấm df (index booking_id, cột hotel_id, stay_date) theo lô 1000 qua booking-mcp, upsert gold.booking_risk.
+def score_and_store(pg, df, bulk: bool = False) -> int:
+    """Chấm df (index booking_id, cột hotel_id, stay_date, scored_date) theo lô 1000 qua booking-mcp, upsert
+    gold.booking_risk.
     bulk=True: booking-mcp gọi cancel-risk-bulk (không KServe logger) để drift-api không nhận cả loạt chấm lại."""
     import httpx
     probs = {}                                           # booking_id -> (xác suất, model_version)
@@ -56,7 +61,8 @@ def score_and_store(pg, df, scored_date, bulk: bool = False) -> int:
             probs.update({x["booking_id"]: (x["probability"], x["model_version"]) for x in r.json()["results"]})
     # missing = booking chưa lên online store (booking_attributes): chỉ ghi log
     print(f"{len(df) - len(probs)} booking chưa lên online store, không chấm")
-    rows = [(b, int(df.at[b, "hotel_id"]), df.at[b, "stay_date"], p, scored_date, v) for b, (p, v) in probs.items()]
+    rows = [(b, int(df.at[b, "hotel_id"]), df.at[b, "stay_date"], p, df.at[b, "scored_date"], v)
+            for b, (p, v) in probs.items()]
     pg.insert_rows("gold.booking_risk", rows,
                    ["booking_id", "hotel_id", "stay_date", "probability", "scored_date", "model_version"],
                    replace=True, replace_index=["booking_id", "scored_date"], executemany=True)
@@ -69,12 +75,14 @@ def score_bookings():
 
     @task
     def score(triggering_dataset_events=None) -> int:
-        """Lấy booking tạo trong ngày, chấm qua booking-mcp, upsert gold.booking_risk."""
+        """Lấy booking tạo trong các ngày logic của run gây ra event, chấm qua booking-mcp, upsert gold.booking_risk."""
         from airflow.providers.postgres.hooks.postgres import PostgresHook
-        as_of = max(e.source_dag_run.data_interval_end for evs in triggering_dataset_events.values() for e in evs)
+        runs = [e.source_dag_run for evs in triggering_dataset_events.values() for e in evs]
+        # shortcut: khi nhiều ngày dồn vào 1 run, online store đã ở snapshot ngày cuối nên booking các ngày trước
+        # được chấm bằng feature mới hơn 1 chút; max_active_runs=1 của materialize giữ trường hợp này hiếm.
+        window = {"start": min(r.data_interval_start for r in runs), "end": max(r.data_interval_end for r in runs)}
         pg = PostgresHook(postgres_conn_id="warehouse")
-        df = pg.get_pandas_df(NEW_SQL, parameters={"as_of": as_of}).set_index("booking_id")
-        return score_and_store(pg, df, as_of.date())
+        return score_and_store(pg, pg.get_pandas_df(NEW_SQL, parameters=window).set_index("booking_id"))
 
     score()
 
@@ -102,7 +110,7 @@ def rescore_active():
             cur.execute(ACTIVE_SQL, {"as_of": as_of, "parts": RESCORE_PARTS, "part": part})
             while rows := cur.fetchmany(CHUNK):
                 df = pd.DataFrame(rows, columns=["booking_id", "hotel_id", "stay_date"]).set_index("booking_id")
-                n += score_and_store(pg, df, as_of, bulk=True)
+                n += score_and_store(pg, df.assign(scored_date=as_of), bulk=True)
         return n
 
     rescore.partial(as_of=as_of_date()).expand(part=list(range(RESCORE_PARTS)))

@@ -61,6 +61,16 @@ def test_new_customer_filled_like_training(monkeypatch):
     assert json.loads(route.calls.last.request.content)["instances"][0] == [30, 2, 1, 0, 0.0, 0.0, 0, 0.0, 0, 2]
 
 
+# BVA bookings_90d: snapshot đã đếm chính booking này, nên chỉ > 1 mới là khách có lịch sử (giống load_from_feast)
+@pytest.mark.parametrize("bookings_90d, history", [(0, 0), (1, 0), (2, 1)])
+@respx.mock
+def test_history_excludes_this_booking(monkeypatch, bookings_90d, history):
+    monkeypatch.setattr(server, "_online", fake_online(BOOKING, {**CONTEXT, "bookings_90d": bookings_90d}))
+    route = respx.post(server.KSERVE_URL).mock(return_value=Response(200, json={"predictions": [[0.9, 0.1]]}))
+    TestClient(server.app).post("/v1/cancel-risk", json={"booking_id": 7})
+    assert json.loads(route.calls.last.request.content)["instances"][0][8] == history
+
+
 def test_unknown_booking_is_404(monkeypatch):
     monkeypatch.setattr(server, "_online", fake_online(None, CONTEXT))
     assert TestClient(server.app).post("/v1/cancel-risk", json={"booking_id": 7}).status_code == 404
