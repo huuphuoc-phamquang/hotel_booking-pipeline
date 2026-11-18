@@ -43,21 +43,27 @@ CREATE TABLE IF NOT EXISTS lake.silver.stg_quotes (
 ) USING iceberg
 PARTITIONED BY (days(quoted_at));
 
--- 2) Compaction: mỗi ngày 16 shard + các lần chạy lại sinh nhiều file nhỏ -> gom thành file ~512MB
-CALL lake.system.rewrite_data_files(
-    table   => 'silver.stg_bookings',
-    options => map('target-file-size-bytes', '536870912', 'min-input-files', '5')
-);
-
--- 3) Z-order: query hay lọc cùng lúc theo khách sạn và ngày nhận phòng -> min/max stats chặt hơn, skip nhiều file hơn
+-- 2) Compaction + z-order trong 1 lần ghi lại: mỗi ngày 16 shard + các lần chạy lại sinh nhiều file nhỏ -> gom thành
+--    file ~512MB, đồng thời sắp theo z-order (hotel_id, checkin) vì query hay lọc cùng lúc khách sạn và ngày nhận phòng
+--    -> min/max stats chặt hơn, bỏ được nhiều file hơn. Chạy riêng binpack rồi sort thì dữ liệu bị ghi lại 2 lần.
 CALL lake.system.rewrite_data_files(
     table      => 'silver.stg_bookings',
     strategy   => 'sort',
-    sort_order => 'zorder(hotel_id, checkin)'
+    sort_order => 'zorder(hotel_id, checkin)',
+    options    => map('target-file-size-bytes', '536870912', 'min-input-files', '5')
 );
 
--- 4) Dọn snapshot cũ để không giữ file rác sau compaction
-CALL lake.system.expire_snapshots(table => 'silver.stg_bookings', older_than => TIMESTAMP '2025-06-01 00:00:00');
+-- Bảng lớn nhất (stg_quotes ~104GB/năm): gom file theo partition ngày, sắp theo khoá join của bài skew
+CALL lake.system.rewrite_data_files(
+    table      => 'silver.stg_quotes',
+    strategy   => 'sort',
+    sort_order => 'zorder(hotel_id, stay_date)',
+    options    => map('target-file-size-bytes', '536870912', 'min-input-files', '5')
+);
+
+-- 3) Dọn snapshot cũ để không giữ file rác sau compaction: giữ 7 ngày gần nhất (mốc tính lúc chạy, không viết cứng)
+CALL lake.system.expire_snapshots(table => 'silver.stg_bookings', older_than => current_timestamp() - INTERVAL 7 DAYS);
+CALL lake.system.expire_snapshots(table => 'silver.stg_quotes', older_than => current_timestamp() - INTERVAL 7 DAYS);
 
 -- Kiểm tra hiệu quả: số file và kích thước trung bình
 SELECT count(*) AS num_files, avg(file_size_in_bytes) / 1024 / 1024 AS avg_mb
@@ -65,23 +71,19 @@ FROM lake.silver.stg_bookings.files;
 
 -- ===== Data warehouse (PostgreSQL, schema gold) =====
 
--- Query hay chạy: số đêm đã bán của 1 khách sạn trong tháng (dashboard revenue management)
+-- Query hay chạy: số đêm đã bán của 1 khách sạn trong tháng (dashboard revenue management). Lọc theo hotel_id qua
+-- dim_hotel: SCD2 cho mỗi lần đổi giá 1 hotel_key, lọc 1 hotel_key sẽ bỏ sót booking của các phiên bản khác.
 EXPLAIN ANALYZE
-SELECT hotel_key, sum(nights) AS room_nights, sum(amount) AS revenue
-FROM gold.fact_bookings
-WHERE hotel_key = 1024 AND checkin_date BETWEEN '2025-03-01' AND '2025-03-31' AND status = 'confirmed'
-GROUP BY hotel_key;
+SELECT h.hotel_id, sum(f.nights) AS room_nights, sum(f.amount) AS revenue
+FROM gold.fact_bookings f JOIN gold.dim_hotel h USING (hotel_key)
+WHERE h.hotel_id = 1024 AND f.checkin_date BETWEEN '2025-03-01' AND '2025-03-31' AND f.status = 'confirmed'
+GROUP BY h.hotel_id;
 
 -- B-tree composite index: cột lọc bằng (=) đặt trước, cột lọc khoảng đặt sau
 CREATE INDEX IF NOT EXISTS idx_fact_bookings_hotel_checkin
     ON gold.fact_bookings (hotel_key, checkin_date);
 
--- BRIN index: bảng fact rất lớn, booking_date tăng dần theo thứ tự ghi -> index rất nhỏ
-CREATE INDEX IF NOT EXISTS brin_fact_bookings_date
-    ON gold.fact_bookings USING brin (booking_date);
-
--- Partial index: chỉ index dòng hiện hành của dim SCD2
-CREATE INDEX IF NOT EXISTS idx_dim_hotel_current
-    ON gold.dim_hotel (hotel_id) WHERE is_current;
+-- Index hotel_key -> hotel_id của dim (join ở query trên); partial unique index dòng hiện hành đã có ở gold_schema.sql
+CREATE INDEX IF NOT EXISTS idx_dim_hotel_id ON gold.dim_hotel (hotel_id, hotel_key);
 
 ANALYZE gold.fact_bookings;
