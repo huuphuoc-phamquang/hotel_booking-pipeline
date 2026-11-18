@@ -13,6 +13,10 @@ env:
   - { name: AIRFLOW__CORE__LOAD_EXAMPLES, value: "False" }
   - { name: AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION, value: "True" }
   - { name: AIRFLOW__SECRETS__USE_CACHE, value: "True" }   # Variable.get lúc parse DAG (bronze_tables) đọc cache, không DB
+  # pod task bị xoá khi xong (KubernetesExecutor) nên log phải lên MinIO thì UI mới đọc lại được
+  - { name: AIRFLOW__LOGGING__REMOTE_LOGGING, value: "True" }
+  - { name: AIRFLOW__LOGGING__REMOTE_BASE_LOG_FOLDER, value: "s3://lake/airflow-logs" }
+  - { name: AIRFLOW__LOGGING__REMOTE_LOG_CONN_ID, value: minio_landing }
 dags:
   persistence: { enabled: false }
   gitSync: { enabled: false }                   # DAG nằm trong image (k8s/airflow.Dockerfile)
