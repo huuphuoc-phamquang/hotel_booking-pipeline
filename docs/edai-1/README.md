@@ -17,11 +17,11 @@
 |---|---|---|---|---|
 | 3 | 2 | Có sử dụng Docker & Docker Compose | [docker.md](docker.md#edai-1-3) | Đã có |
 | 4 | 3 | Optimize Dockerfile | [docker.md](docker.md#edai-1-4) | Đã có |
-| 5 | 2 | Simulate skew | [data_generator.md](data_generator.md#edai-1-5) | Đã có · Cần làm |
-| 6 | 2 | Simulate schema evolution | [data_generator.md](data_generator.md#edai-1-6) | Đã có · Cần làm |
+| 5 | 2 | Simulate skew | [data_generator.md](data_generator.md#edai-1-5) | Đã có |
+| 6 | 2 | Simulate schema evolution | [data_generator.md](data_generator.md#edai-1-6) | Đã có |
 | 7 | 2 | Simulate another offline data problem | [data_generator.md](data_generator.md#edai-1-7) | Đã có · Thêm cho novelty |
 | 8 | 2 | Store data after generating so that we can ingest to Bronze zone later | [data_generator.md](data_generator.md#edai-1-8) | Đã có |
-| 9 | 2 | Simulate late arrivals | [data_generator.md](data_generator.md#edai-1-9) | Đã có · Cần làm |
+| 9 | 2 | Simulate late arrivals | [data_generator.md](data_generator.md#edai-1-9) | Đã có |
 | 10 | 2 | Simulate another streaming data problem | [data_generator.md](data_generator.md#edai-1-10) | Đã có |
 | 11 | 2 | Baseline | [processing_jobs.md](processing_jobs.md#edai-1-11) | Đã có · chờ cluster |
 | 12 | 3 | Handle skew with explanation | [processing_jobs.md](processing_jobs.md#edai-1-12) | Đã có · chờ cluster |
@@ -31,7 +31,7 @@
 | 16 | 2 | Baseline | [processing_jobs.md](processing_jobs.md#edai-1-16) | Đã có · chờ cluster |
 | 17 | 3 | Handle late arrival with explanation | [processing_jobs.md](processing_jobs.md#edai-1-17) | Đã có · Cần làm |
 | 18 | 3 | Handle other streaming problem with explanation | [processing_jobs.md](processing_jobs.md#edai-1-18) | Đã có · chờ cluster |
-| 19 | 2 | Window processing | [processing_jobs.md](processing_jobs.md#edai-1-19) | Đã có · Cần làm |
+| 19 | 2 | Window processing | [processing_jobs.md](processing_jobs.md#edai-1-19) | Đã có |
 | 20 | 3 | Lakehouse | [data_storage.md](data_storage.md#edai-1-20) | Đã có · Thiết kế · Cần làm |
 | 21 | 3 | Datawarehouse | [data_storage.md](data_storage.md#edai-1-21) | Đã có · Cần làm |
 | 22 | 2 | Ingest stage | [data_pipeline.md](data_pipeline.md#edai-1-22) | Đã có |

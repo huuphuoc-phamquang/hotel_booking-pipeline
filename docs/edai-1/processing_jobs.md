@@ -124,10 +124,56 @@ trước và sau dedup.
 
 **Cần nộp (cả nhóm):** Document show đoạn code thể hiện khả năng xử lý Window trong Flink, và giải thích đoạn code đó làm gì
 
-**Cách làm:** [Đã có] Cửa sổ trượt 1 giờ, bước 5 phút theo `hotel_id` (`SlidingEventTimeWindows`) tính `bookings_1h` và upsert vào `gold.feat_hotel_realtime`. Cửa sổ tumbling 1 phút (`TumblingEventTimeWindows`) ghi `gold.stream_bookings_1m` để đối soát. [Cần làm] trích code và giải thích trong `docs/edai-1/processing_jobs.md`.
+**Cách làm:** [Đã có] Cửa sổ trượt 1 giờ, bước 5 phút theo `hotel_id` (`SlidingEventTimeWindows`) tính `bookings_1h` và upsert vào `gold.feat_hotel_realtime`. Cửa sổ tumbling 1 phút (`TumblingEventTimeWindows`) ghi `gold.stream_bookings_1m` để đối soát. Đoạn code window và giải thích (watermark, key theo khách sạn, allowed lateness, side output, đếm tăng dần) trong `docs/edai-1/processing_jobs.md`.
 
-**Kết quả:** hai cửa sổ chạy trên GKE và ghi vào Gold: tumbling 1 phút ra `gold.stream_bookings_1m`, sliding 1 giờ
-bước 5 phút ra `gold.feat_hotel_realtime` (`window_end` là bội số 5 phút).
+**Kết quả:** đoạn code window trong `edai1/flink_jobs/booking_events_window.py` (hàm `main`):
+
+```python
+wm = WatermarkStrategy.for_bounded_out_of_orderness(MAX_OUT_OF_ORDER).with_timestamp_assigner(EventTimeAssigner())
+events = checked.assign_timestamps_and_watermarks(wm)          # event time = event_time, watermark lùi 10 phút
+
+created = events.filter(lambda e: e["type"] == "booking_created")
+created = created.key_by(lambda e: e["idempotency_key"], key_type=Types.LONG()) \
+                 .process(DedupByEventId(), EVENT)               # double submit chỉ đếm 1 lần (BASELINE=1 bỏ bước này)
+by_hotel = created.key_by(lambda e: e["hotel_id"], key_type=Types.LONG())
+
+# (1) feature: số booking 1 giờ gần nhất của mỗi khách sạn, cập nhật mỗi 5 phút
+(by_hotel.window(SlidingEventTimeWindows.of(Time.hours(1), Time.minutes(5)))
+ .allowed_lateness(ALLOWED_LATENESS_MS)
+ .aggregate(CountAgg(), WithWindowEnd(), accumulator_type=Types.LONG(), output_type=FEAT_ROW)
+ .add_sink(jdbc_sink(UPSERT_SQL, FEAT_ROW)))                     # -> gold.feat_hotel_realtime
+
+# (2) đối soát: số booking từng phút, event trễ quá hạn ra side output thay vì bị bỏ
+minutes = (by_hotel.window(TumblingEventTimeWindows.of(Time.minutes(1)))
+           .allowed_lateness(ALLOWED_LATENESS_MS)
+           .side_output_late_data(LATE_TAG)
+           .aggregate(CountAgg(), WithWindowEnd(), accumulator_type=Types.LONG(), output_type=FEAT_ROW))
+minutes.add_sink(jdbc_sink(MINUTE_SQL, FEAT_ROW))                # -> gold.stream_bookings_1m
+minutes.get_side_output(LATE_TAG).map(late_row, LATE_ROW).add_sink(jdbc_sink(LATE_SQL, LATE_ROW))
+```
+
+Đoạn code làm các việc sau:
+
+- **Thời gian sự kiện và watermark.** Cửa sổ tính theo `event_time` của booking, không theo giờ Flink nhận event.
+  Watermark = `event_time` lớn nhất đã thấy trừ 10 phút (`MAX_OUT_OF_ORDER`): Flink chờ thêm 10 phút cho event đến
+  lệch thứ tự rồi mới coi một cửa sổ là đủ dữ liệu.
+- **Khoá theo khách sạn.** `key_by(hotel_id)` chia luồng theo khách sạn, mỗi khách sạn có cửa sổ và state riêng.
+  Trước đó bước khử trùng theo `idempotency_key` bỏ bản gửi lặp, nên cửa sổ đếm đúng số lần đặt như Silver.
+- **(1) Cửa sổ trượt** dài 1 giờ, trượt 5 phút: mỗi event thuộc 12 cửa sổ chồng nhau, cứ 5 phút có một cửa sổ đóng và
+  cho ra `bookings_1h` của khách sạn tính tới `window_end`. Kết quả upsert theo (`hotel_id`, `event_timestamp`) vào
+  `gold.feat_hotel_realtime`, feature tươi theo giờ cho Feast (DAG `feast_materialize_realtime`).
+- **(2) Cửa sổ tumbling** 1 phút không chồng nhau: mỗi event thuộc đúng một cửa sổ, nên tổng các phút bằng tổng
+  booking, dùng để đối soát với ground truth (`generator/stream_truth.py`).
+- **Event trễ.** `allowed_lateness(5 phút)` giữ state cửa sổ thêm 5 phút sau khi watermark qua `window_end`; event đến
+  trong khoảng đó làm cửa sổ phát lại kết quả mới, và upsert ghi đè dòng cũ. Event trễ hơn nữa (quá watermark 10
+  phút + 5 phút) không bị bỏ âm thầm: `side_output_late_data` đẩy chúng vào `gold.stream_late_bookings`. Cửa sổ
+  trượt không có side output; một event chỉ mất khỏi nó khi cả 12 cửa sổ chứa nó đều đã đóng (trễ khoảng 75 phút), và
+  event đó vẫn được ghi ở side output của nhánh tumbling.
+- **Đếm tăng dần.** `aggregate(CountAgg(), WithWindowEnd())`: state mỗi cửa sổ chỉ là một số nguyên cộng dần, không giữ
+  danh sách event; `WithWindowEnd` gắn `hotel_id` và `window_end` vào kết quả khi cửa sổ đóng.
+
+Hai cửa sổ chạy trên GKE và ghi vào Gold: tumbling 1 phút ra `gold.stream_bookings_1m`, sliding 1 giờ bước 5 phút ra
+`gold.feat_hotel_realtime` (`window_end` là bội số 5 phút).
 
 ![gold.stream_bookings_1m](../images/edai-1/flink-stream-bookings-1m.png)
 
