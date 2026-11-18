@@ -16,8 +16,13 @@ spec:
     state.checkpoints.dir: s3://lake/flink/checkpoints
     s3.endpoint: http://minio.data.svc.cluster.local:9000
     s3.path.style.access: "true"
+    # backpressure lúc đọc lại backlog: barrier aligned xếp sau buffer đầy nên checkpoint không xong, restart mất tiến độ
+    execution.checkpointing.unaligned.enabled: "true"
   serviceAccount: flink
   podTemplate:
+    metadata:
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "false"   # autoscaler GKE gỡ JobManager khi thu node spot
     spec:
       containers:
         - name: flink-main-container
