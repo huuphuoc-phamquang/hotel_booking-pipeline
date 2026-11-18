@@ -24,10 +24,14 @@ from datahub_airflow_plugin.entities import Dataset
 from spark_conf import SPARK_CONF, job
 
 
-TABLES = Variable.get("bronze_tables", deserialize_json=True, default_var=["quotes", "bookings", "payments", "cancellations"])
+# Chỉ bronze_tables đọc lúc parse (quyết định task nào tồn tại); AIRFLOW__SECRETS__USE_CACHE (airflow-values.yaml)
+# cache Variable nên scheduler không đánh DB mỗi lần parse. shards_per_day, landing_start_date đọc lúc chạy task.
 # cancellations partition theo ngày huỷ: copy dt=ds chỉ lấy lần huỷ đã xảy ra trong ngày ds (như CDC từ nguồn)
-SHARDS = int(Variable.get("shards_per_day", default_var=16))
-LANDING_START = Variable.get("landing_start_date", default_var="2025-01-01")   # = start_date trong generator/config.yaml
+TABLES = Variable.get("bronze_tables", deserialize_json=True, default_var=["quotes", "bookings", "payments", "cancellations"])
+
+
+def shards() -> int:
+    return int(Variable.get("shards_per_day", default_var=16))
 
 default_args = {"owner": "data-eng", "retries": 2, "retry_delay": timedelta(minutes=5)}
 
@@ -38,13 +42,14 @@ def check_landing(table: str, ds: str) -> None:
     if table == "cancellations":
         # lần huỷ ngày ds đến từ booking của mọi ngày <= ds, mỗi lần chạy generator thêm 1 file part- nên không đếm
         # file được: đợi các manifest (generator ghi khi chạy xong [first, last)) phủ liền [0, ngày ds]
-        day = (date.fromisoformat(ds) - date.fromisoformat(LANDING_START)).days
+        start = Variable.get("landing_start_date", default_var="2025-01-01")   # = start_date trong generator/config.yaml
+        day = (date.fromisoformat(ds) - date.fromisoformat(start)).days
         if manifest_coverage(hook.list_keys(bucket_name="landing", prefix="_manifests/") or []) <= day:
             raise ValueError(f"cancellations ngày {ds}: generator chưa chạy xong mọi ngày tới {ds}")
         return
     keys = hook.list_keys(bucket_name="landing", prefix=f"{table}/dt={ds}/") or []
-    if len(keys) < SHARDS:
-        raise ValueError(f"{table} ngày {ds}: mới có {len(keys)}/{SHARDS} shard trên landing")
+    if len(keys) < shards():
+        raise ValueError(f"{table} ngày {ds}: mới có {len(keys)}/{shards()} shard trên landing")
 
 
 def manifest_coverage(keys: list) -> int:
@@ -58,17 +63,27 @@ def manifest_coverage(keys: list) -> int:
 
 
 def validate_bronze(table: str, ds: str) -> None:
-    """Validate stage: Great Expectations 1.x (governance/bronze_checks.py) trên partition ngày ds của Bronze,
-    chỉ đọc các cột cần kiểm. Khoá MinIO lấy từ Connection minio_landing (cần s3fs trong image Airflow)."""
-    import pandas as pd
-    from governance.bronze_checks import columns, validate_frame
+    """Validate stage: Great Expectations 1.x (governance/bronze_checks.py) trên partition ngày ds của Bronze, đọc từng
+    shard và chỉ các cột cần kiểm (quotes 1 ngày ~34 triệu dòng không nạp hết vào worker). Khoá MinIO lấy từ
+    Connection minio_landing."""
+    from urllib.parse import urlparse
+
+    import pyarrow.dataset as pads
+    from pyarrow.fs import S3FileSystem
+
+    from governance.bronze_checks import validate_shards
     from governance.emit_datahub import emit_from_airflow
     conn = S3Hook(aws_conn_id="minio_landing").get_connection("minio_landing")
-    df = pd.read_parquet(f"s3://lake/bronze/raw_{table}/dt={ds}/", columns=columns(table), storage_options={
-        "key": conn.login, "secret": conn.password, "client_kwargs": {"endpoint_url": conn.extra_dejson["endpoint_url"]}})
-    result = validate_frame(table, df)
-    emit_from_airflow(f"s3:lake/bronze/raw_{table}", f"gx_bronze_{table}", result.success)
-    if not result.success:
+    url = urlparse(conn.extra_dejson["endpoint_url"])
+    # region cố định: MinIO không có region, thiếu thì SDK AWS C++ dò region qua IMDS (chậm/timeout trên GKE)
+    fs = S3FileSystem(access_key=conn.login, secret_key=conn.password, endpoint_override=url.netloc, scheme=url.scheme,
+                      region="us-east-1")
+    # Bronze chia thư mục shard=N (landing_to_bronze): filter theo shard chỉ mở file của shard đó
+    dataset = pads.dataset(f"lake/bronze/raw_{table}/dt={ds}", filesystem=fs, partitioning="hive")
+    results = validate_shards(table, dataset, shards())
+    ok = all(r.success for r in results)
+    emit_from_airflow(f"s3:lake/bronze/raw_{table}", f"gx_bronze_{table}", ok)
+    if not ok:
         raise ValueError(f"Data validation fail cho bronze raw_{table} ngày {ds}")
 
 

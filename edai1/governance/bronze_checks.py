@@ -38,3 +38,17 @@ def validate_frame(table: str, df) -> gx.core.ExpectationSuiteValidationResult:
     suite = ctx.suites.add(gx.ExpectationSuite(name=f"bronze_{table}", expectations=[
         gxe.ExpectTableRowCountToBeBetween(min_value=1), *[cls(**kw) for cls, kw in EXPECTATIONS[table]]]))
     return batch.validate(suite)
+
+
+def validate_shards(table: str, dataset, shards: int) -> list:
+    """Validate 1 partition ngày của Bronze theo từng shard (cột shard Spark lấy từ đường dẫn landing) để bộ nhớ chỉ
+    chứa 1 shard: quotes 1 ngày ~34 triệu dòng, 1 shard ~2,4 triệu. Kiểm unique theo shard tương đương cả partition vì
+    id mang số shard (generator make_ids) và idempotency_key nằm cùng shard với booking gốc. Shard rỗng bỏ qua (lần huỷ
+    của 1 ngày có thể không rơi vào mọi shard); cả partition rỗng thì kiểm row count trên DataFrame rỗng -> fail."""
+    import pyarrow.dataset as pads
+    results = []
+    for s in range(shards):
+        df = dataset.to_table(columns=columns(table), filter=pads.field("shard") == s).to_pandas()
+        if len(df):
+            results.append(validate_frame(table, df))
+    return results or [validate_frame(table, dataset.schema.empty_table().select(columns(table)).to_pandas())]

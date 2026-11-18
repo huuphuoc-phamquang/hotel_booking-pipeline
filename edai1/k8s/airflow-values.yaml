@@ -12,11 +12,12 @@ data:
 env:
   - { name: AIRFLOW__CORE__LOAD_EXAMPLES, value: "False" }
   - { name: AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION, value: "True" }
+  - { name: AIRFLOW__SECRETS__USE_CACHE, value: "True" }   # Variable.get lúc parse DAG (bronze_tables) đọc cache, không DB
 dags:
   persistence: { enabled: false }
   gitSync: { enabled: false }                   # DAG nằm trong image (k8s/airflow.Dockerfile)
 triggerer:
   persistence: { enabled: false }
 workers:
-  # task pod: spark-submit chỉ chờ driver; validate_quotes đọc 1 partition quotes (~34 triệu dòng) vào pandas
-  resources: { requests: { cpu: 500m, memory: 4Gi } }
+  # task pod: spark-submit chỉ chờ driver; validate_* đọc Bronze từng shard (~2,4 triệu dòng quotes / shard)
+  resources: { requests: { cpu: 500m, memory: 1Gi }, limits: { memory: 2Gi } }
