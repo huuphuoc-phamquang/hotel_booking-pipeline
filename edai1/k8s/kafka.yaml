@@ -66,3 +66,14 @@ metadata:
 spec:
   partitions: 6
   replicas: 1
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: payment-callbacks
+  namespace: data
+  labels: { strimzi.io/cluster: booking }
+spec:
+  topicName: payment_callbacks       # callback thanh toán Flink đã khử trùng theo event_id
+  partitions: 6
+  replicas: 1

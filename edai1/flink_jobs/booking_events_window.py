@@ -6,10 +6,13 @@ Rubric edai-1 › Processing Jobs › Flink job to handle streaming data problem
     lấy ở nhánh đối soát tumbling 1 phút: với cửa sổ trượt 1 giờ, event chỉ rơi ra side output khi trễ hơn cả
     cửa sổ cuối chứa nó (> 1h15'), nên gần như không thấy. Đối soát: mỗi giờ
     sum(gold.stream_bookings_1m) + count(gold.stream_late_bookings) = số booking (dedup idempotency_key) ở Silver.
-  - Handle other streaming problem     : dedup payment_callback theo event_id bằng keyed state + TTL; data contract
-                                         (flink_jobs/contract.py) chặn event sai trước watermark -> booking_events_dlq
+  - Handle other streaming problem     : dedup payment_callback theo event_id bằng keyed state (xoá theo event-time
+                                         timer), kết quả ra topic
+                                         payment_callbacks; data contract (flink_jobs/contract.py) chặn event sai
+                                         trước khi gán watermark -> booking_events_dlq (at-least-once)
   - Window processing                  : sliding event-time window 1 giờ, trượt 5 phút (SlidingEventTimeWindows),
-                                         tumbling 1 phút cho đối soát (TumblingEventTimeWindows)
+                                         tumbling 1 phút cho đối soát (TumblingEventTimeWindows); đếm bằng
+                                         AggregateFunction nên state mỗi cửa sổ chỉ là 1 số, không giữ cả event
 Đầu vào: topic booking_events do generator/stream_gen.py phát lại (key = hotel_id).
 Kết quả bookings_1h upsert vào gold.feat_hotel_realtime theo (hotel_id, event_timestamp = window_end): đây là
 batch source của Feast hotel_realtime; DAG feast_materialize_realtime đưa lên online store mỗi 5 phút. Upsert nên window bắn lại do allowedLateness ghi đè chứ không cộng trùng;
@@ -25,21 +28,28 @@ from pyflink.common import Duration, Row, Time, Types, WatermarkStrategy
 from pyflink.common.serialization import SimpleStringSchema
 from pyflink.common.watermark_strategy import TimestampAssigner
 from pyflink.datastream import CheckpointingMode, OutputTag, StreamExecutionEnvironment
+from pyflink.datastream.connectors.base import DeliveryGuarantee
 from pyflink.datastream.connectors.jdbc import JdbcConnectionOptions, JdbcExecutionOptions, JdbcSink
 from pyflink.datastream.connectors.kafka import (KafkaOffsetsInitializer, KafkaRecordSerializationSchema, KafkaSink,
                                                  KafkaSource)
-from pyflink.datastream.functions import KeyedProcessFunction, ProcessFunction, ProcessWindowFunction, RuntimeContext
+from pyflink.datastream.functions import (AggregateFunction, KeyedProcessFunction, ProcessFunction,
+                                         ProcessWindowFunction, RuntimeContext)
 
 from contract import violation
-from pyflink.datastream.state import StateTtlConfig, ValueStateDescriptor
+from pyflink.datastream.state import ValueStateDescriptor
 from pyflink.datastream.window import SlidingEventTimeWindows, TumblingEventTimeWindows
 
 BASELINE = os.environ.get("BASELINE") == "1"
 MAX_OUT_OF_ORDER = Duration.of_minutes(0 if BASELINE else 10)
 ALLOWED_LATENESS_MS = 5 * 60 * 1000
-LATE_TAG = OutputTag("too-late", Types.STRING())
+EVENT = Types.PICKLED_BYTE_ARRAY()        # event đã parse (dict): JSON chỉ parse 1 lần ở ContractCheck
+LATE_TAG = OutputTag("too-late", EVENT)
+# Khoá dedup giữ tới khi watermark qua event_time + 5 giờ: trễ dài nhất của generator là channel_manager 4 giờ
+# (config.yaml › late) + watermark 10 phút. Event time nên không phụ thuộc tốc độ replay như TTL processing time.
+DEDUP_HORIZON_MS = 5 * 3600 * 1000
 DLQ_TAG = OutputTag("contract-violation", Types.STRING())
 DLQ_TOPIC = "booking_events_dlq"
+CALLBACK_TOPIC = "payment_callbacks"       # callback thanh toán đã khử trùng, cho hệ thống thanh toán phía sau
 FEAT_ROW = Types.ROW([Types.LONG(), Types.LONG(), Types.SQL_TIMESTAMP()])     # hotel_id, count, window_end
 LATE_ROW = Types.ROW([Types.LONG(), Types.LONG(), Types.SQL_TIMESTAMP()])     # event_id, hotel_id, event_time
 UPSERT_SQL = ("INSERT INTO gold.feat_hotel_realtime (hotel_id, bookings_1h, event_timestamp) VALUES (?, ?, ?) "
@@ -55,56 +65,72 @@ def utc(ms: int) -> datetime:
     return datetime.fromtimestamp(ms / 1000, tz=timezone.utc).replace(tzinfo=None)
 
 
-def late_row(v: str) -> Row:
-    e = json.loads(v)
+def late_row(e: dict) -> Row:
     return Row(e["event_id"], e["hotel_id"], utc(e["event_time"]))
 
 
 class EventTimeAssigner(TimestampAssigner):
-    """Lấy event_time (ms) trong JSON làm event time thay vì thời điểm Kafka nhận. Event sai contract (thiếu event_time,
-    không phải JSON) nhận timestamp 0: không đẩy watermark lên (watermark lấy max), và ContractCheck chuyển nó sang DLQ."""
+    """Lấy event_time (ms) làm event time thay vì thời điểm Kafka nhận. Chạy sau ContractCheck nên event_time chắc
+    chắn là số nguyên >= 0 và không vượt giờ máy quá 1 ngày (contract.py). event_time sai nhưng vẫn trong khoảng đó
+    thì vẫn đẩy được watermark: contract không biết giá trị đúng."""
 
     def extract_timestamp(self, value, record_timestamp):
-        try:
-            t = json.loads(value).get("event_time")
-        except (json.JSONDecodeError, AttributeError):
-            return 0
-        return t if isinstance(t, int) else 0
+        return value["event_time"]
 
 
-class CountPerWindow(ProcessWindowFunction):
-    """Đếm booking mới của 1 khách sạn trong cửa sổ kết thúc tại window_end."""
+class CountAgg(AggregateFunction):
+    """Đếm tăng dần: state của mỗi cửa sổ là 1 số nguyên thay vì danh sách chuỗi JSON của mọi event trong cửa sổ."""
+
+    def create_accumulator(self):
+        return 0
+
+    def add(self, value, accumulator):
+        return accumulator + 1
+
+    def get_result(self, accumulator):
+        return accumulator
+
+    def merge(self, a, b):
+        return a + b
+
+
+class WithWindowEnd(ProcessWindowFunction):
+    """Gắn khách sạn và window_end vào số đếm của CountAgg (elements chỉ có 1 phần tử)."""
 
     def process(self, key, context, elements):
-        yield Row(key, sum(1 for _ in elements), utc(context.window().end))
+        yield Row(key, next(iter(elements)), utc(context.window().end))
 
 
 class ContractCheck(ProcessFunction):
-    """Event đúng contract đi tiếp; event sai (hoặc không phải JSON) ra DLQ kèm reason = trường vi phạm."""
+    """Event đúng contract đi tiếp dạng dict; event sai (hoặc không phải JSON) ra DLQ kèm reason = trường vi phạm."""
 
     def process_element(self, value, ctx):
         try:
-            reason = violation(json.loads(value))
+            event = json.loads(value)
+            reason = violation(event)
         except json.JSONDecodeError:
             reason = "json"
         if reason is None:
-            yield value
+            yield event
         else:
             yield DLQ_TAG, json.dumps({"reason": reason, "raw": value})
 
 
 class DedupByEventId(KeyedProcessFunction):
-    """Chỉ cho qua lần đầu tiên của mỗi key (event_id hoặc idempotency_key); state tự hết hạn sau 1 giờ."""
+    """Chỉ cho qua lần đầu tiên của mỗi key (event_id hoặc idempotency_key); state xoá khi watermark qua
+    event_time + DEDUP_HORIZON_MS."""
 
     def open(self, runtime_context: RuntimeContext):
-        desc = ValueStateDescriptor("seen", Types.BOOLEAN())
-        desc.enable_time_to_live(StateTtlConfig.new_builder(Time.hours(1)).build())
-        self.seen = runtime_context.get_state(desc)
+        self.seen = runtime_context.get_state(ValueStateDescriptor("seen", Types.BOOLEAN()))
 
     def process_element(self, value, ctx):
         if self.seen.value() is None:
             self.seen.update(True)
+            ctx.timer_service().register_event_time_timer(ctx.timestamp() + DEDUP_HORIZON_MS)
             yield value
+
+    def on_timer(self, timestamp, ctx):
+        self.seen.clear()
 
 
 def kafka_source(topic: str) -> KafkaSource:
@@ -115,7 +141,9 @@ def kafka_source(topic: str) -> KafkaSource:
 
 
 def kafka_sink(topic: str) -> KafkaSink:
+    """At-least-once: flush khi checkpoint, không mất message DLQ khi broker lỗi hay job restart (mặc định NONE)."""
     return (KafkaSink.builder().set_bootstrap_servers(os.environ.get("KAFKA_BOOTSTRAP", "kafka:9092"))
+            .set_delivery_guarantee(DeliveryGuarantee.AT_LEAST_ONCE)
             .set_record_serializer(KafkaRecordSerializationSchema.builder().set_topic(topic)
                                    .set_value_serialization_schema(SimpleStringSchema()).build()).build())
 
@@ -137,35 +165,39 @@ def main() -> None:
     env.enable_checkpointing(60_000, CheckpointingMode.EXACTLY_ONCE)
     wm = WatermarkStrategy.for_bounded_out_of_orderness(MAX_OUT_OF_ORDER).with_timestamp_assigner(EventTimeAssigner())
     # Đo trên PyFlink 1.20.1 (tests/test_stream_e2e.py): WatermarkStrategy đưa vào from_source bỏ qua TimestampAssigner
-    # viết bằng Python (dùng timestamp Kafka = giờ produce) và with_idleness làm watermark đứng yên -> gán timestamp ngay
-    # sau source, không idleness. Vì vậy parallelism không được vượt số partition Kafka: subtask không có partition
-    # nào giữ watermark ở mức thấp nhất và mọi window đứng chờ (FlinkDeployment 2 <= 6 partition).
-    raw = env.from_source(kafka_source("booking_events"), WatermarkStrategy.no_watermarks(), "booking_events")              .assign_timestamps_and_watermarks(wm)
-    events = raw.process(ContractCheck(), Types.STRING())
-    events.get_side_output(DLQ_TAG).sink_to(kafka_sink(DLQ_TOPIC))
+    # viết bằng Python (dùng timestamp Kafka = giờ produce) và with_idleness làm watermark đứng yên -> gán timestamp ở
+    # operator Python ngay sau source, không idleness. Watermark khi đó tính trên luồng của cả subtask, nên mỗi subtask
+    # phải đọc đúng 1 partition: parallelism = số partition Kafka (FlinkDeployment 6 = 6 partition). Ít hơn thì
+    # partition đọc nhanh kéo watermark và event của partition chậm thành trễ giả; nhiều hơn thì subtask rỗng giữ
+    # watermark đứng yên. shortcut: đổi số partition phải đổi parallelism theo.
+    # Contract trước watermark: event sai (vd event_time ở tương lai) ra DLQ trước khi kịp đẩy watermark lên.
+    checked = (env.from_source(kafka_source("booking_events"), WatermarkStrategy.no_watermarks(), "booking_events")
+               .process(ContractCheck(), EVENT))
+    checked.get_side_output(DLQ_TAG).sink_to(kafka_sink(DLQ_TOPIC))
+    events = checked.assign_timestamps_and_watermarks(wm)
 
-    created = events.filter(lambda v: json.loads(v)["type"] == "booking_created")
+    created = events.filter(lambda e: e["type"] == "booking_created")
     if not BASELINE:                             # double submit: 2 booking_id, cùng idempotency_key -> đếm 1 lần như Silver
-        created = created.key_by(lambda v: json.loads(v)["idempotency_key"], key_type=Types.LONG()) \
-                         .process(DedupByEventId(), Types.STRING())
-    by_hotel = created.key_by(lambda v: json.loads(v)["hotel_id"], key_type=Types.LONG())
+        created = created.key_by(lambda e: e["idempotency_key"], key_type=Types.LONG()) \
+                         .process(DedupByEventId(), EVENT)
+    by_hotel = created.key_by(lambda e: e["hotel_id"], key_type=Types.LONG())
     (by_hotel.window(SlidingEventTimeWindows.of(Time.hours(1), Time.minutes(5)))
      .allowed_lateness(ALLOWED_LATENESS_MS)
-     .process(CountPerWindow(), FEAT_ROW)
+     .aggregate(CountAgg(), WithWindowEnd(), accumulator_type=Types.LONG(), output_type=FEAT_ROW)
      .add_sink(jdbc_sink(UPSERT_SQL, FEAT_ROW)))
     minutes = (by_hotel.window(TumblingEventTimeWindows.of(Time.minutes(1)))
                .allowed_lateness(ALLOWED_LATENESS_MS)
                .side_output_late_data(LATE_TAG)
-               .process(CountPerWindow(), FEAT_ROW))
+               .aggregate(CountAgg(), WithWindowEnd(), accumulator_type=Types.LONG(), output_type=FEAT_ROW))
     minutes.add_sink(jdbc_sink(MINUTE_SQL, FEAT_ROW))
     # trễ hơn watermark + allowedLateness: không mất, ghi lại để đối soát
     minutes.get_side_output(LATE_TAG).map(late_row, LATE_ROW).add_sink(jdbc_sink(LATE_SQL, LATE_ROW))
 
-    callbacks = events.filter(lambda v: json.loads(v)["type"] == "payment_callback")
+    callbacks = events.filter(lambda e: e["type"] == "payment_callback")
     if not BASELINE:
-        callbacks = callbacks.key_by(lambda v: json.loads(v)["event_id"], key_type=Types.LONG()) \
-                             .process(DedupByEventId(), Types.STRING())
-    callbacks.print()
+        callbacks = callbacks.key_by(lambda e: e["event_id"], key_type=Types.LONG()) \
+                             .process(DedupByEventId(), EVENT)
+    callbacks.map(json.dumps, Types.STRING()).sink_to(kafka_sink(CALLBACK_TOPIC))
 
     env.execute("booking_events_window")
 

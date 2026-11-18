@@ -173,3 +173,14 @@ def test_contract_flags_exactly_the_injected_events(small):
         payload = {k: v.item() if hasattr(v, "item") else v for k, v in r.items()
                    if k not in drop and not (isinstance(v, float) and np.isnan(v))}
         assert violation(payload) == (None if pd.isna(r["violation"]) else r["violation"]), r
+
+
+def test_contract_rejects_future_event_time():
+    """event_time ở tương lai xa (vd ghi nhầm µs thay vì ms) ra DLQ, không kịp đẩy watermark của Flink."""
+    pytest.importorskip("jsonschema")
+    sys.path.insert(0, "flink_jobs")
+    from contract import violation
+    ev = {"event_id": 1, "type": "booking_created", "event_time": 1_751_328_000_000, "booking_id": 1,
+          "idempotency_key": 1, "hotel_id": 1, "price": 100.0}
+    assert violation(ev) is None
+    assert violation({**ev, "event_time": ev["event_time"] * 1000}) == "event_time"
