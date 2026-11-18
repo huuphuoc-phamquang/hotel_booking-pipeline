@@ -85,7 +85,7 @@ Tình trạng chạy thực tế:
 | 15 | 2 | Sử dụng KServe để serve model vừa train ở bên trên, dùng model-inside-image pattern | [edai-2/ml_inference_service.md](edai-2/ml_inference_service.md#edai-2-15) | Đã có · chờ cluster |
 | 16 | 1 | Có sử dụng FastAPI + data validation + healthcheck for k8s | [edai-2/mcp_server.md](edai-2/mcp_server.md#edai-2-16) | Đã có |
 | 17 | 1 | Sử dụng async cho concurrent processing | [edai-2/mcp_server.md](edai-2/mcp_server.md#edai-2-17) | Đã có |
-| 18 | 2 | Deploy in the form of MCP tool to k8s with helm + rollingupdate + auto fallback | [edai-2/mcp_server.md](edai-2/mcp_server.md#edai-2-18) | Đã có · chờ cluster |
+| 18 | 2 | Deploy in the form of MCP tool to k8s with helm + rollingupdate + auto fallback | [edai-2/mcp_server.md](edai-2/mcp_server.md#edai-2-18) | Đã có |
 | 19 | 2 | Deploy 1 Agent sử dụng MCP tool ở trên với multi-replica và auto-scale sử dụng cái này | [edai-2/mcp_server.md](edai-2/mcp_server.md#edai-2-19) | Đã có · chờ cluster |
 | 20 | 1 | Configure Agent chạy trong Sandbox để đảm bảo security | [edai-2/mcp_server.md](edai-2/mcp_server.md#edai-2-20) | Thiết kế · chờ cluster |
 | 21 | 1 | Publish Agent ở trên lên registry đã deploy để đảm bảo governance | [edai-2/mcp_server.md](edai-2/mcp_server.md#edai-2-21) | Đã có · chờ cluster |

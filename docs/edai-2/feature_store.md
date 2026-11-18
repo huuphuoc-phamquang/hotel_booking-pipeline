@@ -16,7 +16,11 @@ cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu �
 
 **Cách làm:** [Đã có] `feast_materialize_incremental` chạy theo Airflow Dataset của DP3 (sau bước validate), materialize đúng cửa sổ ngày logic với `max_active_runs=1`, rồi phát Dataset kích hoạt `score_bookings`. [Cần làm] chụp lần chạy thành công và dữ liệu trên online store.
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+**Kết quả:** materialize mới chạy tay trên GKE ngày 2026-11-18, chưa chạy qua DAG `feast_materialize_incremental`
+trên Airflow. `feast apply` tạo 5 feature view, sau đó `feast materialize` (cửa sổ 2025-01-10 → 2026-01-04) chạy trong
+một pod riêng 12Gi RAM, vì chạy trong pod booking-mcp (giới hạn 4Gi) bị hết bộ nhớ. Online store `feast_online` sau đó có
+1.584.578 booking (`booking_attributes`), 1.973.203 khách (`customer_booking_stats`), 50.000 khách sạn (`hotel_demand`)
+và 49.596 khách sạn (`hotel_realtime`). booking-mcp đọc được các feature này (dòng 46, 49).
 
 <a id="edai-2-12"></a>
 ## Deploy các jobs chịu trách nhiệm push streaming feature vào OFFLINE & ONLINE store
