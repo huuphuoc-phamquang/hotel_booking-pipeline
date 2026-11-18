@@ -2,31 +2,38 @@
 
 Metric của Web API, telemetry hệ thống, log, trace, telemetry cho LLM và agent, kiểm tra drift theo lịch.
 
-Mỗi mục ứng với một dòng của rubric. Mục đã hoàn thành gồm phần **Thực thi** (đã làm gì, chạy ở đâu) và **Kết quả**
-(số liệu đo được, ảnh chụp trong `docs/images/`). Mục chưa hoàn thành giữ trích rubric và phần **Cách làm** đồng bộ từ
-cột F của rubric.
+Mỗi mục ứng với một dòng của rubric. Mục đã hoàn thành ghi lại phần đã triển khai và kết quả (số liệu đo được,
+ảnh chụp trong `docs/images/`). Mục chưa hoàn thành giữ trích rubric, phần **Cách làm** đồng bộ từ cột F của rubric
+và phần **Kết quả** chờ bổ sung.
 
 <a id="edai-2-46"></a>
 ## Web API monitoring metrics such as req/s, num of reqs, num of failures, etc.
 
-**Rubric:** edai-2 · dòng 46 · 1 điểm · nhóm *Observability* › *Web API metrics*
+booking-mcp chạy trên GKE ngày 2026-11-18 (namespace `agents`, Helm chart `helm/api`, image
+`booking-mcp:e6e53e9-2`). Feature được materialize từ Gold lên online store Feast (PostgreSQL, schema `feast_online`).
+Một script tạo traffic chạy trong pod, lấy `booking_id`, khách và khách sạn thật từ `gold.fact_bookings` rồi lặp 400
+vòng; mỗi vòng gọi ba tool MCP (`get_booking_features`, `propose_overbooking`, `predict_cancellation`) và REST
+`POST /v1/cancel-risk`. KServe chưa deploy, nên `predict_cancellation` và `/v1/cancel-risk` lỗi thật ở bước gọi model;
+các lỗi này hiện thành failure trên dashboard. booking-mcp dùng `prometheus-fastapi-instrumentator` để đo req/s, số request,
+lỗi và latency; ServiceMonitor của chart cho Prometheus scrape `/metrics`. Dashboard
+`observability/dashboards/booking-apis.json` hiển thị các metric này.
 
-**Cần nộp (cả nhóm):** Document show được các telemetry
+Số đếm trên Prometheus tính từ lúc pod khởi động: `/mcp/` nhận 2.085 request 2xx, `/v1/cancel-risk` trả 692 request 5xx.
+Lúc traffic chạy, `/mcp/` đạt đỉnh khoảng 9,4 req/s và `/v1/cancel-risk` khoảng 3 req/s; tỉ lệ lỗi 5xx của service
+khoảng 25% (692 trên 2.777 request), đúng bằng phần request REST gọi KServe; latency p95 khoảng 95 ms.
 
-**Cách làm:** [Đã có] booking-mcp dùng `prometheus-fastapi-instrumentator` (req/s, số request, lỗi) cùng các metric `mcp_tool_calls`, `mcp_tool_failures`; dashboard `observability/dashboards/booking-apis.json`. [Cần làm] chụp dashboard.
-
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+![Grafana: Booking APIs](../images/edai-2/grafana-booking-apis.png)
 
 <a id="edai-2-47"></a>
 ## Collect và visualize metrics với Prometheus + Grafana · edai-2 · Observability
 
-**Thực thi:** Stack observability được cài trên GKE ngày 2026-11-18 vào namespace `monitoring`: `kube-prometheus-stack` 93.4.0
+Stack observability được cài trên GKE ngày 2026-11-18 vào namespace `monitoring`: `kube-prometheus-stack` 93.4.0
 (`observability/stack/kube-prometheus-stack.yaml`, PVC Prometheus dùng storage class `standard`), Pushgateway, Jaeger
 (`stack/jaeger.yaml`), Elasticsearch và Kibana 8.5.1, Fluent Bit 0.58.3 (`stack/efk.yaml`). Prometheus thu CPU, RAM, disk, network theo node và pod qua
 node-exporter và kube-state-metrics. Grafana đọc mật khẩu admin từ Secret `grafana-admin` và truy cập qua ingress
 `grafana.booking.local`.
 
-**Kết quả:** các dashboard có sẵn của chart (node-exporter, kube-state-metrics) hiện CPU, RAM, disk, network theo
+Các dashboard có sẵn của chart (node-exporter, kube-state-metrics) hiện CPU, RAM, disk, network theo
 cluster, node và pod. Ảnh chụp lúc job Spark 105 GiB đang chạy: namespace `data` dùng khoảng 38 core và 128 GiB RAM, mỗi
 executor Spark khoảng 6 core.
 
@@ -39,12 +46,12 @@ executor Spark khoảng 6 core.
 <a id="edai-2-48"></a>
 ## Tương tự cho logs · edai-2 · Observability
 
-**Thực thi:** dùng cùng stack ở dòng 47; log đi theo chuỗi Fluent Bit → Elasticsearch → Kibana
+Dùng cùng stack ở dòng 47; log đi theo chuỗi Fluent Bit → Elasticsearch → Kibana
 (`observability/stack/efk.yaml`), Kibana truy cập qua ingress. Fluent Bit chạy dạng DaemonSet (1 pod mỗi node), đọc log
 container, gắn metadata pod/namespace, bỏ log của `kube-system` và `monitoring`, rồi đẩy vào index `booking-YYYY.MM.DD`.
 Chart Kibana 8.5.1 bật `csp.strict` khiến một số trình duyệt bị chặn, nên cấu hình đặt `csp.strict: false`.
 
-**Kết quả:** Kibana (data view `booking-*`) nhận khoảng 48 nghìn dòng log trong 15 phút. Lọc KQL theo pod của task
+Kibana (data view `booking-*`) nhận khoảng 48 nghìn dòng log trong 15 phút. Lọc KQL theo pod của task
 Airflow DP2 ra đúng log của `silver_bookings`, `stage_gold`, `upsert_gold`.
 
 ![Kibana Discover](../images/edai-2/kibana-discover.png)
@@ -54,28 +61,45 @@ Airflow DP2 ra đúng log của `silver_bookings`, `stage_gold`, `upsert_gold`.
 <a id="edai-2-49"></a>
 ## Tương tự cho traces · edai-2 · Observability
 
-**Rubric:** edai-2 · dòng 49 · 1 điểm · nhóm *Observability* › *Computing telemetry data (such as CPU, RAM, disk, network, etc.)*
+Cùng lần chạy ở dòng 46. Jaeger (`observability/stack/jaeger.yaml`) nhận OTLP gRPC cổng 4317; booking-mcp bật
+tracing khi có biến `OTEL_EXPORTER_OTLP_ENDPOINT`, gửi span của FastAPI, span `feast.online` cho mỗi lần đọc online
+store và span httpx cho lời gọi KServe. Jaeger UI truy cập qua ingress (dòng 39). Tracing cho agentgateway và trace
+xuyên suốt A2A → MCP → KServe chưa làm, vì agent và KServe chưa deploy.
 
-**Cách làm:** [Đã có] `observability/stack/jaeger.yaml` nhận OTLP gRPC cổng 4317, UI qua ingress; booking-mcp gửi trace (FastAPI, httpx tới KServe, span đọc Feast). [Cần làm] tracing cho agentgateway; chụp một trace A2A → MCP → KServe.
+Trace `POST /v1/cancel-risk` (13,43 ms, 7 span) gồm span FastAPI, hai span `feast.online` (đọc `booking_attributes`
+1,78 ms, rồi feature ngữ cảnh 2,23 ms) và span `POST` gọi KServe (4,99 ms). Span cuối bị đánh dấu lỗi do chưa có service
+KServe, và lỗi lan lên span gốc. Trace của `POST /mcp` cho thấy cùng
+chuỗi span khi gọi qua tool MCP.
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+![Jaeger: danh sách trace của booking-mcp](../images/edai-2/jaeger-traces.png)
+
+![Jaeger: chi tiết trace POST /v1/cancel-risk](../images/edai-2/jaeger-trace-detail.png)
 
 <a id="edai-2-50"></a>
 ## Đảm bảo ít nhất các metrics · LLM-related telemetry data
 
-**Thực thi:** `llm_metrics.py` đo số token vào, ra và tổng, thời gian round-trip, TTFT và số lần chặn PII. Một dãy số
+`llm_metrics.py` đo số token vào, ra và tổng, thời gian round-trip, TTFT và số lần chặn PII. Một dãy số
 thẻ chỉ bị coi là PII khi qua kiểm tra Luhn và không đứng sau tiền tố `BK-`.
 
-**Kết quả:** `edai2/tests/test_llm_metrics.py` (11 test, coverage 100%) chạy cục bộ và đạt ngày 2026-11-16. Test xác
+`edai2/tests/test_llm_metrics.py` (11 test, coverage 100%) chạy cục bộ và đạt ngày 2026-11-16. Test xác
 nhận `BK-<id>` không bị chặn, còn `4111 1111 1111 1111` bị chặn. Phần này chưa có ảnh chụp trên cluster.
 
 <a id="edai-2-51"></a>
 ## Đảm bảo ít nhất các metrics · Agent-related telemetry data
 
-**Rubric:** edai-2 · dòng 51 · 2 điểm · nhóm *Observability* › *Agent-related telemetry data*
+Cùng lần chạy ở dòng 46. booking-mcp đếm số lần gọi từng tool (`mcp_tool_calls_total`) và số lần tool lỗi
+(`mcp_tool_failures_total`), hiển thị trên dashboard `observability/dashboards/booking-apis.json`. Metric `agent_calls_total`
+và request A2A qua agentgateway nằm ở dashboard `observability/dashboards/llm-agents.json` nhưng chưa có số liệu, vì agent
+chưa deploy.
 
-> Đảm bảo ít nhất các metrics + total num of times each agent is called + total num of times each MCP tool is called + total failures cho mỗi lượt call tool
+| Tool | Số lần gọi | Số lần lỗi |
+|---|---|---|
+| `get_booking_features` | 692 | 0 |
+| `propose_overbooking` | 692 | 0 |
+| `predict_cancellation` | 692 | 692 (chưa có KServe) |
 
-**Cách làm:** [Đã có] Các metric `agent_calls_total`, `mcp_tool_calls_total`, `mcp_tool_failures_total` cùng dashboard `observability/dashboards/llm-agents.json` (có request A2A theo route qua agentgateway). [Cần làm] chụp dashboard.
+Trên panel "MCP tool: số lần gọi / lỗi", bốn đường (ba đường số lần gọi và đường lỗi của `predict_cancellation`) trùng
+nhau, vì ba tool được gọi cùng nhịp và `predict_cancellation` lỗi ở mọi lần gọi.
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+![Grafana: số lần gọi và lỗi theo tool MCP](../images/edai-2/grafana-mcp-tools.png)
+

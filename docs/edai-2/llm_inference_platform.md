@@ -2,9 +2,9 @@
 
 Nền tảng LLM gồm llm-d và vLLM, model tự fine-tune, agentgateway và benchmark.
 
-Mỗi mục ứng với một dòng của rubric. Mục đã hoàn thành gồm phần **Thực thi** (đã làm gì, chạy ở đâu) và **Kết quả**
-(số liệu đo được, ảnh chụp trong `docs/images/`). Mục chưa hoàn thành giữ trích rubric và phần **Cách làm** đồng bộ từ
-cột F của rubric.
+Mỗi mục ứng với một dòng của rubric. Mục đã hoàn thành ghi lại phần đã triển khai và kết quả (số liệu đo được,
+ảnh chụp trong `docs/images/`). Mục chưa hoàn thành giữ trích rubric, phần **Cách làm** đồng bộ từ cột F của rubric
+và phần **Kết quả** chờ bổ sung.
 
 <a id="edai-2-3"></a>
 ## Deploy LLM inference platform
@@ -20,7 +20,7 @@ cột F của rubric.
 <a id="edai-2-4"></a>
 ## Setup a custom LLM model
 
-**Thực thi:** `llm_platform/finetune` gồm hai script:
+`llm_platform/finetune` gồm hai script:
 
 - `build_dataset.py` dựng 429 hội thoại từ `policies/*.md`, giá trị K từ `overbooking.limit` và các câu từ chối PII
   (có test).
@@ -29,8 +29,6 @@ cột F của rubric.
 Job `llm_platform/finetune/job.yaml` chạy trên GKE ngày 2026-11-17, mỗi model một Job trên 1 GPU L4 (spot), 2 epoch,
 407 mẫu train và 22 mẫu eval: v1 dùng Qwen2.5-1.5B-Instruct, v2 dùng Qwen2.5-3B. `upload.py` đẩy model đã gộp lên
 `s3://models/qwen2.5-{1.5b,3b}-booking-sft/`.
-
-**Kết quả:**
 
 | Model | Thời gian Job | Loss train (epoch 0,4 → 1,9) | Eval loss | Eval token accuracy | Đích |
 |---|---|---|---|---|---|

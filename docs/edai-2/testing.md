@@ -2,36 +2,36 @@
 
 Unit test, phân lớp tương đương và giá trị biên (EP/BVA), mutation test, property-based test và load test.
 
-Mỗi mục ứng với một dòng của rubric. Mục đã hoàn thành gồm phần **Thực thi** (đã làm gì, chạy ở đâu) và **Kết quả**
-(số liệu đo được, ảnh chụp trong `docs/images/`). Mục chưa hoàn thành giữ trích rubric và phần **Cách làm** đồng bộ từ
-cột F của rubric.
+Mỗi mục ứng với một dòng của rubric. Mục đã hoàn thành ghi lại phần đã triển khai và kết quả (số liệu đo được,
+ảnh chụp trong `docs/images/`). Mục chưa hoàn thành giữ trích rubric, phần **Cách làm** đồng bộ từ cột F của rubric
+và phần **Kết quả** chờ bổ sung.
 
 <a id="edai-2-28"></a>
 ## Unit test với Test Coverage > 90% · edai-2 · Validation & Verification
 
-**Thực thi:** `edai2/tests/test_server.py` và `edai2/tests/test_cancel_risk.py` kiểm Web API của booking-mcp bằng
+`edai2/tests/test_server.py` và `edai2/tests/test_cancel_risk.py` kiểm Web API của booking-mcp bằng
 fixture, monkeypatch và respx (giả Feast và KServe); `edai2/tests/test_overbooking.py` kiểm hàm tính K.
 
-**Kết quả:** chạy cục bộ ngày 2026-11-18: 51 test đạt, coverage `mcp_server/server.py` 95% và `overbooking.py` 100%.
+Chạy cục bộ ngày 2026-11-18: 51 test đạt, coverage `mcp_server/server.py` 95% và `overbooking.py` 100%.
 Phần này chưa có ảnh chụp trên cluster.
 
 <a id="edai-2-29"></a>
 ## Có sử dụng kỹ thuật equivalence partitioning vs boundary value analysis khi thiết kế test… · edai-2 · Validation & Verification
 
-**Thực thi:** test tham số hoá theo các lớp tương đương và giá trị biên: xác suất trong [0, 1] trả về từ KServe,
+Test tham số hoá theo các lớp tương đương và giá trị biên: xác suất trong [0, 1] trả về từ KServe,
 `booking_id`, và K (p = 0 hoặc 1, không có booking, chi phí ≤ 0). `tests/test_overbooking.py` dùng hypothesis để so K
 với định nghĩa trực tiếp.
 
-**Kết quả:** các test `edai2/tests/test_overbooking.py` chạy cục bộ và đạt (2026-11-16). Phần này chưa có ảnh chụp trên
+Các test `edai2/tests/test_overbooking.py` chạy cục bộ và đạt (2026-11-16). Phần này chưa có ảnh chụp trên
 cluster.
 
 <a id="edai-2-30"></a>
 ## Có sử dụng mutation testing để đánh giá hiệu quả của các test · edai-2 · Validation & Verification
 
-**Thực thi:** Jenkins chạy mutmut chỉ trên các file thay đổi; `ci/check_mutation_score.py` chặn build khi score dưới
+Jenkins chạy mutmut chỉ trên các file thay đổi; `ci/check_mutation_score.py` chặn build khi score dưới
 80%.
 
-**Kết quả:** mutmut chạy cục bộ ngày 2026-11-18 trong container `python:3.12-slim` với `requirements-dev.txt`, chỉ mutate
+Mutmut chạy cục bộ ngày 2026-11-18 trong container `python:3.12-slim` với `requirements-dev.txt`, chỉ mutate
 `mcp_server/overbooking.py` (file có logic thay đổi gần nhất); bước này chưa chạy trong pipeline Jenkins. Trong 46 mutant,
 test giết 40 và để sống 6, **mutation score đạt 87,0%** (ngưỡng 80%). Cả 6 mutant sống sót không làm đổi hành vi của `limit`:
 
@@ -46,10 +46,10 @@ test giết 40 và để sống 6, **mutation score đạt 87,0%** (ngưỡng 80
 <a id="edai-2-31"></a>
 ## Idempotency testing sử dụng property-based testing · edai-2 · Validation & Verification
 
-**Thực thi:** Hypothesis kiểm hai property: `test_predict_tool_idempotent` (tool MCP) và `test_cancel_risk_idempotent`
+Hypothesis kiểm hai property: `test_predict_tool_idempotent` (tool MCP) và `test_cancel_risk_idempotent`
 (REST). Cùng một booking gọi hai lần phải cho cùng kết quả.
 
-**Kết quả:** chạy cục bộ ngày 2026-11-18 (`pytest tests/ -k idempotent --hypothesis-show-statistics`): 2 test property
+Chạy cục bộ ngày 2026-11-18 (`pytest tests/ -k idempotent --hypothesis-show-statistics`): 2 test property
 đều đạt, mỗi test 50 ví dụ do Hypothesis sinh (`booking_id` và xác suất KServe giả trả về trong [0, 1]), 0 ví dụ lỗi.
 `test_cancel_risk_idempotent` gọi handler REST `cancel_risk` (`POST /v1/cancel-risk`) hai lần; `test_predict_tool_idempotent`
 gọi tool MCP `predict_cancellation` hai lần cho cùng booking. Cả hai kiểm hai lần gọi cho cùng kết quả; Feast và KServe

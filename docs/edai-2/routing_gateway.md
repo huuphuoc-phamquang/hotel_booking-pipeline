@@ -2,37 +2,37 @@
 
 Service được đặt sau ingress, có basic auth, rate limit, domain và HTTPS.
 
-Mỗi mục ứng với một dòng của rubric. Mục đã hoàn thành gồm phần **Thực thi** (đã làm gì, chạy ở đâu) và **Kết quả**
-(số liệu đo được, ảnh chụp trong `docs/images/`). Mục chưa hoàn thành giữ trích rubric và phần **Cách làm** đồng bộ từ
-cột F của rubric.
+Mỗi mục ứng với một dòng của rubric. Mục đã hoàn thành ghi lại phần đã triển khai và kết quả (số liệu đo được,
+ảnh chụp trong `docs/images/`). Mục chưa hoàn thành giữ trích rubric, phần **Cách làm** đồng bộ từ cột F của rubric
+và phần **Kết quả** chờ bổ sung.
 
 <a id="edai-2-37"></a>
 ## Service để coi metric · edai-2 · External Routing & Gateway (NGINX Ingress Controll
 
-**Thực thi:** NGINX Ingress Controller 4.15.1 (LoadBalancer `34.87.100.157`, `loadBalancerSourceRanges` chỉ mở cho IP của nhóm) và Ingress `observability` trong `k8s/ingress.yaml`, chạy trên GKE ngày 2026-11-18. Host `grafana.booking.local` trỏ vào service `kube-prometheus-stack-grafana:80`; service không mở port ra ngoài mà chỉ đi qua
+NGINX Ingress Controller 4.15.1 (LoadBalancer `34.87.100.157`, `loadBalancerSourceRanges` chỉ mở cho IP của nhóm) và Ingress `observability` trong `k8s/ingress.yaml`, chạy trên GKE ngày 2026-11-18. Host `grafana.booking.local` trỏ vào service `kube-prometheus-stack-grafana:80`; service không mở port ra ngoài mà chỉ đi qua
 ingress.
 
-**Kết quả:** `curl -H "Host: grafana.booking.local" http://34.87.100.157/` trả 302 (chuyển tới trang đăng nhập).
+`curl -H "Host: grafana.booking.local" http://34.87.100.157/` trả 302 (chuyển tới trang đăng nhập).
 
 ![Grafana qua ingress](../images/edai-2/ingress-grafana.png)
 
 <a id="edai-2-38"></a>
 ## Service để coi log · edai-2 · External Routing & Gateway (NGINX Ingress Controll
 
-**Thực thi:** NGINX Ingress Controller 4.15.1 (LoadBalancer `34.87.100.157`, `loadBalancerSourceRanges` chỉ mở cho IP của nhóm) và Ingress `observability` trong `k8s/ingress.yaml`, chạy trên GKE ngày 2026-11-18. Host `kibana.booking.local` trỏ vào service `kibana-kibana:5601`; service không mở port ra ngoài mà chỉ đi qua
+NGINX Ingress Controller 4.15.1 (LoadBalancer `34.87.100.157`, `loadBalancerSourceRanges` chỉ mở cho IP của nhóm) và Ingress `observability` trong `k8s/ingress.yaml`, chạy trên GKE ngày 2026-11-18. Host `kibana.booking.local` trỏ vào service `kibana-kibana:5601`; service không mở port ra ngoài mà chỉ đi qua
 ingress.
 
-**Kết quả:** `curl -H "Host: kibana.booking.local" http://34.87.100.157/` trả 302 (chuyển tới trang đăng nhập).
+`curl -H "Host: kibana.booking.local" http://34.87.100.157/` trả 302 (chuyển tới trang đăng nhập).
 
 ![Kibana qua ingress](../images/edai-2/ingress-kibana.png)
 
 <a id="edai-2-39"></a>
 ## Service để coi trace · edai-2 · External Routing & Gateway (NGINX Ingress Controll
 
-**Thực thi:** NGINX Ingress Controller 4.15.1 (LoadBalancer `34.87.100.157`, `loadBalancerSourceRanges` chỉ mở cho IP của nhóm) và Ingress `observability` trong `k8s/ingress.yaml`, chạy trên GKE ngày 2026-11-18. Host `jaeger.booking.local` trỏ vào service `jaeger-query:16686`; service không mở port ra ngoài mà chỉ đi qua
+NGINX Ingress Controller 4.15.1 (LoadBalancer `34.87.100.157`, `loadBalancerSourceRanges` chỉ mở cho IP của nhóm) và Ingress `observability` trong `k8s/ingress.yaml`, chạy trên GKE ngày 2026-11-18. Host `jaeger.booking.local` trỏ vào service `jaeger-query:16686`; service không mở port ra ngoài mà chỉ đi qua
 ingress.
 
-**Kết quả:** `curl -H "Host: jaeger.booking.local" http://34.87.100.157/` trả 200.
+`curl -H "Host: jaeger.booking.local" http://34.87.100.157/` trả 200.
 
 ![Jaeger qua ingress](../images/edai-2/ingress-jaeger.png)
 
