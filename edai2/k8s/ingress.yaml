@@ -22,6 +22,16 @@ spec:
     - host: jaeger.booking.local
       http:
         paths: [{ path: /, pathType: Prefix, backend: { service: { name: jaeger-query, port: { number: 16686 } } } }]
+    # cùng 3 service qua nip.io (DNS công khai trỏ về IP LoadBalancer): xem được không cần sửa file hosts
+    - host: grafana.34.87.100.157.nip.io
+      http:
+        paths: [{ path: /, pathType: Prefix, backend: { service: { name: kube-prometheus-stack-grafana, port: { number: 80 } } } }]
+    - host: kibana.34.87.100.157.nip.io
+      http:
+        paths: [{ path: /, pathType: Prefix, backend: { service: { name: kibana-kibana, port: { number: 5601 } } } }]
+    - host: jaeger.34.87.100.157.nip.io
+      http:
+        paths: [{ path: /, pathType: Prefix, backend: { service: { name: jaeger-query, port: { number: 16686 } } } }]
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
