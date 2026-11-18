@@ -25,8 +25,8 @@
 | 10 | 2 | Simulate another streaming data problem | [data_generator.md](data_generator.md#edai-1-10) | Đã có |
 | 11 | 2 | Baseline | [processing_jobs.md](processing_jobs.md#edai-1-11) | Đã có · chờ cluster |
 | 12 | 3 | Handle skew with explanation | [processing_jobs.md](processing_jobs.md#edai-1-12) | Đã có · chờ cluster |
-| 13 | 3 | Handle schema evolution with explanation | [processing_jobs.md](processing_jobs.md#edai-1-13) | Đã có · chờ cluster |
-| 14 | 3 | Handle other offline data problem with explanation | [processing_jobs.md](processing_jobs.md#edai-1-14) | Đã có · chờ cluster |
+| 13 | 3 | Handle schema evolution with explanation | [processing_jobs.md](processing_jobs.md#edai-1-13) | Đã có |
+| 14 | 3 | Handle other offline data problem with explanation | [processing_jobs.md](processing_jobs.md#edai-1-14) | Đã có |
 | 15 | 2 | Spark job được tích hợp vào các data pipeline | [processing_jobs.md](processing_jobs.md#edai-1-15) | Đã có |
 | 16 | 2 | Baseline | [processing_jobs.md](processing_jobs.md#edai-1-16) | Đã có |
 | 17 | 3 | Handle late arrival with explanation | [processing_jobs.md](processing_jobs.md#edai-1-17) | Đã có |

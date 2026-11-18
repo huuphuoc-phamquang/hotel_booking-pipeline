@@ -34,18 +34,38 @@ cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu �
 
 **Rubric:** edai-1 · dòng 13 · 3 điểm · nhóm *Processing Jobs* › *Spark job to handle offline data problems*
 
-**Cách làm:** [Đã có] `mergeSchema` kết hợp `coalesce` cho `room_category`. `tests/test_silver_bookings.py` chạy pyspark cục bộ trên Bronze vắt qua mốc 2025-07-01: không mất dòng, `room_category` không null, `channel` chỉ null ở partition v1. [Cần làm] chụp kết quả trên dữ liệu thật.
+**Cách làm:** [Đã có] `mergeSchema` kết hợp `coalesce` cho `room_category`. `tests/test_silver_bookings.py` chạy pyspark cục bộ trên Bronze vắt qua mốc 2025-07-01: không mất dòng, `room_category` không null, `channel` chỉ null ở partition v1. Trên toàn bộ 152,8 triệu booking (`spark_jobs/bookings_quality.py`, GKE): 70,86 triệu dòng v1 và 81,98 triệu dòng v2, sau `read_bookings` `room_category` không null dòng nào, `channel` chỉ null ở v1.
 
-**Kết quả:** các test `edai1/tests/test_silver_bookings.py` chạy cục bộ và đạt (2026-11-16). Chưa có ảnh chụp trên cluster.
+**Kết quả:** `spark_jobs/bookings_quality.py` chạy trên GKE (2026-11-18, Spark local[6] trong pod `bookings-quality`, 6 phút 10 giây) trên toàn bộ `s3a://landing/bookings`: 395 ngày, 6.320 file, 3,5 GiB, dùng đúng `read_bookings` và `dedup_bookings` của `silver_bookings.py`.
+
+| Phiên bản (theo `dt`) | Số dòng | `room_type` có giá trị | `room_category` có giá trị | `channel` có giá trị |
+|---|---|---|---|---|
+| v1 (trước 2025-07-01) | 70.855.735 | 70.855.735 | 0 | 0 |
+| v2 (từ 2025-07-01) | 81.982.006 | 0 | 81.982.006 | 81.982.006 |
+
+Sau `read_bookings` (`mergeSchema` + `coalesce(room_category, room_type)`): `room_category` không null dòng nào ở cả hai
+phiên bản, không mất dòng nào; `channel` chỉ null ở 70.855.735 dòng v1 (cột mới của v2, dữ liệu cũ không có).
+
+![Kết quả bookings_quality trên dữ liệu thật](../images/edai-1/spark-bookings-quality.png)
 
 <a id="edai-1-14"></a>
 ## Handle other offline data problem with explanation
 
 **Rubric:** edai-1 · dòng 14 · 3 điểm · nhóm *Processing Jobs* › *Spark job to handle offline data problems*
 
-**Cách làm:** [Đã có] Khử trùng theo `idempotency_key` bằng `row_number` sắp theo `created_at`. `tests/test_silver_bookings.py` xác nhận sau khi khử trùng, mỗi `idempotency_key` còn một dòng và `status` khớp kết cục do generator sinh. [Cần làm] chạy và ghi số dòng trước, sau trên dữ liệu thật.
+**Cách làm:** [Đã có] Khử trùng theo `idempotency_key` bằng `row_number` sắp theo `created_at`. `tests/test_silver_bookings.py` xác nhận sau khi khử trùng, mỗi `idempotency_key` còn một dòng và `status` khớp kết cục do generator sinh. Trên toàn bộ landing: 152.837.741 dòng, 149.839.353 `idempotency_key`; sau khử trùng còn 149.839.353 dòng, bỏ 2.998.388 bản trùng (1,962%).
 
-**Kết quả:** các test `edai1/tests/test_silver_bookings.py` chạy cục bộ và đạt (2026-11-16). Chưa có ảnh chụp trên cluster.
+**Kết quả:** `spark_jobs/bookings_quality.py` chạy trên GKE (2026-11-18, Spark local[6] trong pod `bookings-quality`, 6 phút 10 giây) trên toàn bộ `s3a://landing/bookings`: 395 ngày, 6.320 file, 3,5 GiB, dùng đúng `read_bookings` và `dedup_bookings` của `silver_bookings.py`.
+
+| | Số dòng |
+|---|---|
+| Bookings trên landing | 152.837.741 |
+| `idempotency_key` khác nhau | 149.839.353 |
+| Sau `dedup_bookings` | 149.839.353 |
+| Bản gửi trùng bị bỏ | 2.998.388 (1,962%; config 2%) |
+
+Sau khử trùng số dòng bằng đúng số `idempotency_key` khác nhau: mỗi lần đặt còn đúng một dòng (dòng `created_at` nhỏ
+nhất). Ảnh output ở dòng 13.
 
 <a id="edai-1-15"></a>
 ## Spark job được tích hợp vào các data pipeline
