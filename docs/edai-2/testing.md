@@ -49,7 +49,12 @@ cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu �
 
 **Cách làm:** [Đã có] Hypothesis kiểm `test_predict_tool_idempotent` (tool MCP) và `test_cancel_risk_idempotent` (REST): cùng một booking gọi hai lần cho cùng kết quả.
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+**Kết quả:** chạy cục bộ ngày 2026-11-18 (`pytest tests/ -k idempotent --hypothesis-show-statistics`): 2 test property
+đạt, mỗi test 50 ví dụ do Hypothesis sinh (`booking_id` và xác suất KServe giả trả về trong [0, 1]), 0 ví dụ lỗi. `test_cancel_risk_idempotent`
+gọi handler REST `cancel_risk` (`POST /v1/cancel-risk`) hai lần, `test_predict_tool_idempotent` gọi tool MCP `predict_cancellation` hai lần cho cùng
+booking và kiểm hai lần cho cùng kết quả; Feast và KServe được giả bằng respx.
+
+![Hypothesis: 2 test idempotent](../images/edai-2/hypothesis-idempotent.png)
 
 <a id="edai-2-32"></a>
 ## Load test the Web API to understand throughput and latency · edai-2 · Validation & Verification
