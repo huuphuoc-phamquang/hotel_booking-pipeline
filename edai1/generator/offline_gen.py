@@ -385,13 +385,15 @@ def main(config_path: str = "generator/config.yaml", first_day: int = 0, last_da
 
     dims = gen_dims(cfg)
     manifest = {"config_sha256": cfg["sha256"], "numpy": np.__version__, "pandas": pd.__version__,
-                "pyarrow": pyarrow.__version__, "partitions": [
-                    upload_parquet(client, dims.hotels, "hotels/part-0.parquet", "hotel_id"),
-                    upload_parquet(client, dims.hotel_changes, "hotel_changes/part-0.parquet",
-                                   ["hotel_id", "valid_from"]),
-                    upload_parquet(client, dims.customers, "customers/part-0.parquet", "customer_id"),
-                ]}
-    if first_day == 0:                       # bảng tĩnh, tất định: chỉ lần chạy chứa ngày 0 ghi, các lần khác bỏ qua
+                "pyarrow": pyarrow.__version__, "partitions": []}
+    # bảng dim tĩnh, tất định: chỉ lần chạy chứa ngày 0 ghi (8 pod của Indexed Job không cùng ghi đè 30 triệu khách),
+    # các lần khác vẫn sinh dims trong bộ nhớ để dựng booking
+    if first_day == 0:
+        manifest["partitions"] += [
+            upload_parquet(client, dims.hotels, "hotels/part-0.parquet", "hotel_id"),
+            upload_parquet(client, dims.hotel_changes, "hotel_changes/part-0.parquet", ["hotel_id", "valid_from"]),
+            upload_parquet(client, dims.customers, "customers/part-0.parquet", "customer_id"),
+        ]
         for s in range(len(dims.season)):
             inv = gen_inventory(cfg, dims, s)
             manifest["partitions"].append(upload_parquet(

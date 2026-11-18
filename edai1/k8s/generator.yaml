@@ -1,6 +1,6 @@
 # Sinh landing ~110GB trên GKE: Indexed Job, mỗi pod 1 khoảng ngày (partition độc lập, sinh lại ra đúng byte).
 # 395 ngày / 8 pod ≈ 50 ngày / pod (~1,5 giờ). Mỗi pod ghi manifest của khoảng mình; DP1 gộp các manifest liền nhau.
-# Dims sinh tất định nên pod nào cũng ghi đè đúng cùng file.
+# Dims (hotels, hotel_changes, customers, inventory) chỉ pod chứa ngày 0 ghi; pod khác sinh trong bộ nhớ để dựng booking.
 # Image: docker build -f docker/Dockerfile -t REGISTRY/data/generator:TAG . (từ thư mục edai1)
 apiVersion: batch/v1
 kind: Job
