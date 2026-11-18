@@ -10,7 +10,7 @@ Rubric edai-1 › Processing Jobs › Spark job to handle offline data problems 
       salt      : AQE tắt, salting HOT_CELLS ô (hotel_id, room_type, stay_date) nóng nhất
     Chỉ cần salting khi aqe_tuned vẫn còn task chậm hơn hẳn median.
   - sink noop để đo thời gian xử lý; sink iceberg để ghi lake.silver.stg_quotes (DDL ở storage/optimize.sql)
-Chạy: spark-submit --py-files silver_bookings.py silver_quotes.py <baseline|aqe|salt> <bronze_path> <noop|iceberg>
+Chạy: spark-submit --py-files silver_bookings.py silver_quotes.py <mode> <bronze_path> <noop|iceberg> [quotes_path]
 Proof: docs/edai-1/processing_jobs.md ghi thời gian, max/median task time, shuffle read của 3 chế độ + ảnh Spark UI.
 """
 import sys
@@ -54,8 +54,10 @@ def enrich_quotes(quotes: DataFrame, inventory: DataFrame, mode: str) -> DataFra
 if __name__ == "__main__":
     mode, bronze, sink = sys.argv[1:4]
     assert mode in MODES and sink in ("noop", "iceberg"), sys.argv
+    # tham số 4 (tuỳ chọn): đọc quotes thẳng từ landing (cùng file Parquet DP1 chép sang Bronze) khi Bronze chưa đủ năm
+    quotes_path = sys.argv[4] if len(sys.argv) > 4 else f"{bronze}/raw_quotes"
     spark = spark_for(mode)
-    out = enrich_quotes(spark.read.parquet(f"{bronze}/raw_quotes"), spark.read.parquet(f"{bronze}/raw_inventory"), mode)
+    out = enrich_quotes(spark.read.parquet(quotes_path), spark.read.parquet(f"{bronze}/raw_inventory"), mode)
     if sink == "iceberg":
         out.writeTo("lake.silver.stg_quotes").overwritePartitions()      # chạy lại không sinh duplicate
     else:
