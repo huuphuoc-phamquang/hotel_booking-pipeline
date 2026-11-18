@@ -5,7 +5,7 @@ ra cùng 1 model như train trên toàn bộ dữ liệu; rank 0 ghi model dạn
 để evaluate_and_register và KServe sklearnserver dùng y nguyên.
 Tracker: Trainer đặt DMLC_TRACKER_URI / DMLC_TRACKER_PORT / DMLC_TASK_ID / DMLC_NUM_WORKER cho từng pod;
 tests/test_train_xgb_dist.py chạy 2 process với RabitTracker cục bộ theo đúng cách đó.
-Chạy: python train_xgb_dist.py <train.parquet> <model.joblib> <cột input, cách nhau dấu phẩy> <nhãn>
+Chạy: python train_xgb_dist.py <train.parquet> <model.joblib> <cột input, cách nhau dấu phẩy> <nhãn> [n_estimators] [max_depth]
 """
 import os
 import sys
@@ -38,4 +38,5 @@ def train_worker(tracker_args: dict, train_path: str, model_path: str, inputs: l
 
 if __name__ == "__main__":
     train_path, model_path, cols, lab = sys.argv[1:5]
-    train_worker(tracker_args_from_env(), train_path, model_path, cols.split(","), lab)
+    hp = {k: int(v) for k, v in zip(("n_estimators", "max_depth"), sys.argv[5:7])}   # thiếu thì dùng mặc định
+    train_worker(tracker_args_from_env(), train_path, model_path, cols.split(","), lab, **hp)

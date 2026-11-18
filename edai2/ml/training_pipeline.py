@@ -75,10 +75,10 @@ def load_from_feast(features: list, label_sql: str, since: str, until: str, samp
     df[num] = df[num].astype(float)                            # NUMERIC của Postgres có thể về Decimal, XGBoost không nhận
     df = df.fillna(0)
     df.to_parquet(data.path)
-    # data versioning: upsert vào Iceberg ml.train_cancel_risk, trả snapshot_id để MLflow ghi (tái lập bằng time travel)
+    # data versioning: ghi đè Iceberg ml.train_cancel_risk, trả snapshot_id để MLflow ghi (tái lập bằng time travel)
     from data_version import snapshot_training_set
     from pyiceberg.catalog import load_catalog
-    catalog = load_catalog("lake", type="sql", uri=os.environ["ICEBERG_CATALOG_URI"], warehouse="s3://lake/warehouse",
+    catalog = load_catalog("lake", type="sql", uri=os.environ["ICEBERG_CATALOG_URI"], warehouse="s3://lake/",
                            **{"s3.endpoint": os.environ["S3_ENDPOINT"]})
     return snapshot_training_set(catalog, df)
 
@@ -124,7 +124,7 @@ def train_distributed(train: Input[Dataset], model: Output[Model], inputs: list,
             "spec": {"runtimeRef": {"name": "xgboost-distributed"},
                      "trainer": {"image": "registry.booking.local/ml/train-base:1.4", "numNodes": num_nodes,
                                  "command": ["python", "/app/ml/train_xgb_dist.py", train.uri, out, ",".join(inputs),
-                                             label],
+                                             label, str(n_estimators), str(max_depth)],
                                  "resourcesPerNode": {"requests": {"cpu": "2", "memory": "4Gi"}}}}}
     api = client.CustomObjectsApi()
     api.create_namespaced_custom_object("trainer.kubeflow.org", "v1alpha1", "kubeflow", "trainjobs", body)

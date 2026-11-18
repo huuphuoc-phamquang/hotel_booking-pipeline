@@ -1,8 +1,9 @@
-"""Data versioning cho tập train của cancel-risk: Iceberg ml.train_cancel_risk, upsert theo booking_id.
+"""Data versioning cho tập train của cancel-risk: Iceberg ml.train_cancel_risk, mỗi lần train là 1 snapshot.
 
-Data versioning (incremental, edai-2 › MLflow lưu data + metadata của mỗi run): mỗi lần train ghi tập train vào cùng bảng bằng upsert (chỉ dòng mới hoặc
-đổi nhãn sinh file mới, dòng giống hệt không ghi lại), MLflow log snapshot_id; tái lập đúng tập đã train bằng
-scan(snapshot_id=...) (= VERSION AS OF của Spark SQL). Catalog `lake` = Iceberg JDBC/SQL catalog trên PostgreSQL như Spark.
+Rubric edai-2 › MLflow lưu data + metadata của mỗi run: mỗi lần train ghi đè (overwrite) bảng bằng đúng tập vừa train,
+MLflow log snapshot_id; tái lập đúng tập đã train bằng scan(snapshot_id=...) (= VERSION AS OF của Spark SQL).
+Không dùng upsert: v2 train trên cửa sổ sau drift sẽ giữ lại các dòng của v1 trong snapshot, snapshot không còn bằng
+tập v2 đã train. Snapshot cũ vẫn đọc được tới khi expire_snapshots. Catalog `lake` = Iceberg SQL catalog trên PostgreSQL.
 """
 import pandas as pd
 import pyarrow as pa
@@ -13,14 +14,14 @@ TABLE = "ml.train_cancel_risk"
 
 
 def snapshot_training_set(catalog: Catalog, df: pd.DataFrame, table: str = TABLE) -> int:
-    """Upsert df vào bảng (tạo nếu chưa có) và trả snapshot_id hiện hành sau khi ghi."""
+    """Ghi đè bảng bằng df (tạo nếu chưa có) và trả snapshot_id hiện hành sau khi ghi."""
     data = pa.Table.from_pandas(df, preserve_index=False)
     try:
         tbl = catalog.load_table(table)
     except NoSuchTableError:
         catalog.create_namespace_if_not_exists(table.split(".")[0])
         tbl = catalog.create_table(table, schema=data.schema)
-    tbl.upsert(data.cast(tbl.schema().as_arrow()), join_cols=["booking_id"])
+    tbl.overwrite(data.cast(tbl.schema().as_arrow()))
     return tbl.refresh().current_snapshot().snapshot_id
 
 
