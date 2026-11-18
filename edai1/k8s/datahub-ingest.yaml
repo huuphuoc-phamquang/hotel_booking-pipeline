@@ -17,7 +17,8 @@ spec:
           image: python:3.12-slim
           command: ["sh", "-c"]
           args:
-            - pip install -q "acryl-datahub[postgres,iceberg,s3]==1.7.0.19" &&
+            # uv: resolver của pip báo ResolutionImpossible với pyiceberg[...] 0.11.1 mà extra iceberg kéo vào
+            - pip install -q uv && uv pip install -q --system "acryl-datahub[postgres,iceberg,s3]==1.7.0.19" &&
               for f in /recipes/*.yml; do echo "== $f"; datahub ingest -c "$f" || exit 1; done &&
               cd /recipes && python emit_datahub.py
           env:
