@@ -56,3 +56,4 @@ def test_dataset_chain(dags):
 def test_drift_monitor_gates_retrain(dags):
     d = dags["drift_monitor"]
     assert upstream(d, "retrain") == {"plan_retrain"} and upstream(d, "plan_retrain") == {"measure"}
+    assert upstream(d, "measure") == {"wait_dp2"}

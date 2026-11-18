@@ -16,17 +16,20 @@ from datetime import date, datetime
 
 from airflow.decorators import dag, task
 from airflow.models import Variable
+from airflow.sensors.external_task import ExternalTaskSensor
 
 MODEL_NAME = "cancel-risk"
 DETECTED_VAR = "cancel_risk_drift_detected"
 CURRENT_SQL = """SELECT lead_days FROM gold.fact_bookings
 WHERE booking_date > %(ds)s::date - 7 AND booking_date <= %(ds)s::date"""
+# 1 điểm / booking (lần chấm mới nhất): rescore_active chấm lại cùng version thì booking không bị tính 2 lần.
+# Lọc stay_date (= checkin_date) ngay trong subquery (index booking_risk_stay): DISTINCT ON chỉ sort 7 ngày, không cả bảng.
 CALIB_SQL = """SELECT avg(r.probability), avg(l.is_cancelled)
-FROM gold.booking_risk r
-JOIN gold.fact_bookings f USING (booking_id)
+FROM (SELECT DISTINCT ON (booking_id) booking_id, probability, model_version FROM gold.booking_risk
+      WHERE stay_date > %(ds)s::date - 7 AND stay_date <= %(ds)s::date
+      ORDER BY booking_id, scored_date DESC) r
 JOIN gold.labels_cancel l USING (booking_id)
-WHERE r.model_version = %(version)s
-  AND f.checkin_date > %(ds)s::date - 7 AND f.checkin_date <= %(ds)s::date"""
+WHERE r.model_version = %(version)s"""
 
 
 @dag(dag_id="drift_monitor", start_date=datetime(2025, 1, 1), schedule="@daily", catchup=False, max_active_runs=1,
@@ -77,7 +80,11 @@ def drift_monitor():
             arguments={"since": window[0], "until": window[1]})
         return run.run_id
 
+    # fact_bookings ngày ds phải nạp xong (DP2) trước khi đo, như dp3_offline_features
+    wait_dp2 = ExternalTaskSensor(task_id="wait_dp2", external_dag_id="dp2_bronze_to_gold", external_task_id=None,
+                                  mode="reschedule", timeout=6 * 3600)
     report = measure()
+    wait_dp2 >> report
     push(report)
     retrain(plan_retrain(report))
 
