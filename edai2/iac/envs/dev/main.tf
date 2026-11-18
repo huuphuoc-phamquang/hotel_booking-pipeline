@@ -56,7 +56,7 @@ module "gke" {
   subnetwork      = module.network.subnetwork
   cpu_max_nodes   = 6
   gpu_max_nodes   = 1
-  spark_max_nodes = 6 # 48 + 48 vCPU, dưới quota CPUS vùng = 100
+  spark_max_nodes = 7 # n2: quota N2_CPUS riêng; CPUS_ALL_REGIONS đã nâng 64 -> 128
 }
 
 module "registry" {
