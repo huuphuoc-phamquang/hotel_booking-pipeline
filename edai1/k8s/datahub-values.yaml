@@ -12,6 +12,8 @@ opensearch:
   serviceMonitor: { enabled: false }   # chart 0.3.1 không đặt mặc định -> helm template lỗi nil pointer
 # --- datahub ---
 global:
+  # GMS bật xác thực (mặc định chart 1.1.11; tắt thì job system-update thiếu DATAHUB_SYSTEM_CLIENT_SECRET và fail):
+  # Airflow và job ingest gửi kèm Personal Access Token (Connection datahub_rest_default, secret datahub-token)
   kafka:
     bootstrap: { server: booking-kafka-bootstrap.data.svc.cluster.local:9092 }
   sql:
@@ -24,5 +26,5 @@ global:
       database: datahub
       username: postgres
       password: { secretRef: datahub-secrets, secretKey: postgres-password }
-postgresqlSetupJob: { enabled: true }       # tạo database datahub + bảng metadata_aspect_v2
+postgresqlSetupJob: { enabled: true }       # tạo bảng metadata_aspect_v2; database datahub phải tạo trước (create database)
 acryl-datahub-actions: { enabled: false }   # không ingest qua UI; ingest bằng CLI (governance/datahub/*.yml)
