@@ -8,6 +8,7 @@
 -- Proof: docs/SchemaDesign.md chụp ERD + bảng mô tả nhiệm vụ của từng bảng.
 
 CREATE SCHEMA IF NOT EXISTS gold;
+CREATE EXTENSION IF NOT EXISTS vector;          -- online store Feast (schema feast_online) lưu embedding policy_chunks
 
 -- Dimension SCD Type 2: mỗi lần khách sạn đổi giá/hạng sao -> đóng dòng cũ, mở dòng mới
 CREATE TABLE gold.dim_hotel (
