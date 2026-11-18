@@ -8,15 +8,20 @@ booking để đề xuất số phòng overbooking (revenue manager duyệt).
 - [edai-1/](edai-1/README.md): data platform. [edai-2/](edai-2/README.md): nền tảng AI và agent.
 - `images/edai-1/`, `images/edai-2/`: ảnh chụp minh chứng.
 
-Bảng dưới tra ngược từ dòng rubric (file `EDAI K11.xlsx`) sang mục tài liệu. Trạng thái tính lại mỗi lần đồng bộ với
-cột F (lần gần nhất 2026-11-16):
+Bảng dưới tra ngược từ dòng rubric (file `EDAI K11.xlsx`) sang mục tài liệu. Trạng thái được tính lại mỗi lần đồng bộ
+với cột F (lần gần nhất 2026-11-18):
 
-- **Đã có**: đã có code; mục nào ghi Kết quả thì đã có test chạy cục bộ.
+- **Đã có**: đã có code. Mục đã hoàn thành chỉ gồm phần Thực thi và Kết quả (có test, số liệu hoặc ảnh chụp).
 - **chờ cluster**: code đã có, chỉ còn chạy hoặc chụp minh chứng trên GKE.
 - **Cần làm**: còn thiếu code hoặc tài liệu.
 - **Thiết kế**: mới có manifest hoặc thiết kế, chưa chạy ở môi trường nào.
 
-edai-1 đã chạy trên GKE (2026-11-17/18): generator 111 GiB, Kafka + Flink, Airflow DP1–DP3, DataHub, Spark trên 105 GiB; ảnh ở `images/edai-1/`. Ở edai-2, hạ tầng (Terraform) và observability (Prometheus, Grafana, EFK, Jaeger, ingress) đã chạy trên cluster (`images/edai-2/`); các phần ML, MCP, agent mới chạy cục bộ hoặc mới có manifest.
+Tình trạng chạy thực tế:
+
+- edai-1 đã chạy trên GKE (2026-11-17/18): generator 111 GiB, Kafka + Flink, Airflow DP1–DP3, DataHub và Spark trên
+  105 GiB; ảnh ở `images/edai-1/`.
+- edai-2: hạ tầng (Terraform) và observability (Prometheus, Grafana, EFK, Jaeger, ingress) đã chạy trên cluster
+  (`images/edai-2/`). Các phần ML, MCP và agent mới chạy cục bộ hoặc mới có manifest.
 
 ## edai-1
 
@@ -106,7 +111,7 @@ edai-1 đã chạy trên GKE (2026-11-17/18): generator 111 GiB, Kafka + Flink, 
 | 41 | 2 | UI cho agent registry | [edai-2/routing_gateway.md](edai-2/routing_gateway.md#edai-2-41) | Đã có · chờ cluster |
 | 42 | 2 | Setup authentication cho UI test agent ở trên | [edai-2/routing_gateway.md](edai-2/routing_gateway.md#edai-2-42) | Đã có · chờ cluster |
 | 43 | 1 | Làm cái này cho Web API kéo dữ liệu | [edai-2/routing_gateway.md](edai-2/routing_gateway.md#edai-2-43) | Đã có · chờ cluster |
-| 44 | 1 | Dùng Terraform để setup GKE hoặc các cloud services | [edai-2/iac.md](edai-2/iac.md#edai-2-44) | Đã có · chờ cluster |
+| 44 | 1 | Dùng Terraform để setup GKE hoặc các cloud services | [edai-2/iac.md](edai-2/iac.md#edai-2-44) | Đã có |
 | 45 | 1 | Dùng Ansible để configure và deploy các service lên VM | [edai-2/iac.md](edai-2/iac.md#edai-2-45) | Đã có · chờ cluster |
 | 46 | 1 | Web API monitoring metrics such as req/s, num of reqs, num of failures, etc. | [edai-2/observability.md](edai-2/observability.md#edai-2-46) | Đã có · chờ cluster |
 | 47 | 1 | Collect và visualize metrics với Prometheus + Grafana | [edai-2/observability.md](edai-2/observability.md#edai-2-47) | Đã có |
