@@ -16,7 +16,17 @@ cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu �
 
 **Cách làm:** [Đã có] `rag_pipeline.py` chia chunk, embed bằng bge-m3 rồi ghi vào Feast `policy_chunks`; tài liệu chính sách nằm ở `policies/*.md`. Task embed chạy trên pod riêng 4–6Gi (`executor_config`), chart booking-mcp nâng limit lên 4Gi. [Cần làm] chụp lần chạy trên Airflow.
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+**Kết quả:** các bước của DAG `rag_data_pipeline` chạy trên GKE ngày 2026-11-18 trong một pod dùng image booking-mcp,
+chưa chạy qua Airflow (image Airflow trên cluster là của edai-1, chưa có code edai-2). Ba tài liệu `policies/*.md`
+(260, 315 và 193 token) cho ra 3 chunk 512 token, qua đủ ba kiểm tra (`has_chunks`, `chunk_id_unique`,
+`no_empty_chunk`). bge-m3 embed thành ma trận (3, 1024) và ghi vào online store `policy_chunks` trong 39 s.
+
+Truy vấn thử "Khách huỷ phòng trước bao nhiêu ngày thì được hoàn tiền?" trả về `policies/cancellation.md#0` gần nhất
+(distance 0,234), đúng tài liệu chính sách huỷ. Hai kết quả còn lại ghép nhầm `chunk_id` với `text` và không xếp theo
+khoảng cách, nghi do `retrieve_online_documents_v2` của Feast 0.68 trên PostgreSQL; lỗi này chưa được điều tra. Lần chạy
+đầu còn lộ một lỗi cấu hình đã sửa: Feast chỉ nhận tên metric viết thường (`cosine`).
+
+![RAG pipeline chạy trên GKE](../images/edai-2/rag-pipeline-run.png)
 
 <a id="edai-2-10"></a>
 ## Đảm bảo data governance cho pipeline
