@@ -42,3 +42,17 @@ async def test_chat_streams_and_records_metrics():
             assert m.TOKENS.labels("qwen", "total")._value.get() == before + 17
             with pytest.raises(ValueError):
                 await m.chat("policy-agent", "qwen", [{"role": "user", "content": "thẻ 4111 1111 1111 1111"}], client)
+
+
+async def test_chat_raises_on_gateway_error():
+    """Gateway trả 503: chat() báo lỗi, không ghi latency như một lần gọi thành công."""
+    import httpx
+    import respx
+    import llm_metrics as m
+    with respx.mock:
+        respx.post(m.GATEWAY).mock(return_value=httpx.Response(503, text="upstream unavailable"))
+        async with httpx.AsyncClient() as client:
+            before = m.LATENCY.labels("qwen-err")._sum.get()
+            with pytest.raises(httpx.HTTPStatusError):
+                await m.chat("policy-agent", "qwen-err", [{"role": "user", "content": "đêm 30/4?"}], client)
+            assert m.LATENCY.labels("qwen-err")._sum.get() == before

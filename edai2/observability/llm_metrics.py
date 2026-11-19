@@ -64,6 +64,9 @@ async def chat(agent: str, model: str, messages: list[dict], client: httpx.Async
         start, first, parts, usage = time.perf_counter(), None, [], {}
         body = {"model": model, "messages": messages, "stream": True, "stream_options": {"include_usage": True}}
         async with client.stream("POST", GATEWAY, json=body) as r:
+            if r.status_code >= 400:                  # 401/429/503 của gateway: không đếm như lần gọi thành công
+                await r.aread()
+                r.raise_for_status()
             async for line in r.aiter_lines():
                 if not line.startswith("data: ") or line == "data: [DONE]":
                     continue
