@@ -249,8 +249,9 @@ async def search_policy(question: str, top_k: int = 4) -> list[Chunk]:
         global _embedder
         if _embedder is None:                    # nạp model 1 lần, không nạp lại mỗi request
             from sentence_transformers import SentenceTransformer
-            _embedder = SentenceTransformer("BAAI/bge-m3")
-        vec = _embedder.encode(question, normalize_embeddings=True).tolist()
+            _embedder = await asyncio.to_thread(SentenceTransformer, "BAAI/bge-m3")
+        # encode chạy CPU vài chục ms: đưa ra thread để không chặn event loop (các request khác vẫn chạy)
+        vec = (await asyncio.to_thread(_embedder.encode, question, normalize_embeddings=True)).tolist()
         # API Feast này là sync -> chạy trong thread để không chặn event loop
         res = (await asyncio.to_thread(store.retrieve_online_documents_v2,
                                        features=["policy_chunks:text", "policy_chunks:embedding"],
