@@ -39,13 +39,27 @@ ingress.
 <a id="edai-2-40"></a>
 ## UI để test agent
 
-**Rubric:** edai-2 · dòng 40 · 2 điểm · nhóm *External Routing & Gateway (NGINX Ingress Controller)* › *Các service cần được hide đằng sau gateway*
+Agent Workbench ([`ui/index.html`](../../edai2/ui/index.html), [`ui/nginx.conf`](../../edai2/ui/nginx.conf),
+[`k8s/agent-workbench.yaml`](../../edai2/k8s/agent-workbench.yaml)) là trang tĩnh chạy trên nginx trong namespace
+`kagent`, đứng sau NGINX Ingress tại `workbench.34.124.198.171.nip.io` (chỉ mở cho IP của nhóm). Pod workbench không
+gọi model hay MCP trực tiếp: nginx proxy `/api/` sang kagent controller, trang gửi `message/send` theo giao thức A2A tới
+`/api/a2a/kagent/<agent>/`. Mọi số liệu trên trang lấy từ task A2A trả về: lời gọi tool và agent con (kèm Arguments,
+Results) từ `history`, câu trả lời từ `artifacts`, token từ `kagent_usage_metadata`; thời gian phản hồi đo ở trình duyệt.
+kagent UI gốc cũng được đặt sau ingress tại `agents.34.124.198.171.nip.io` với cùng lớp xác thực.
 
-> UI để test agent (xem tại đây)
+Thử trên cluster thứ hai ngày 2026-11-19:
 
-**Cách làm:** [Đã có] Ingress `agents.booking.local` cho kagent UI. [Cần làm] chụp.
+- coordinator-agent nhận câu hỏi về khách 18766768, khách sạn 8528 và booking 90000919211, giao việc cho data-agent và
+  policy-agent rồi tổng hợp đúng số liệu (1 booking 90 ngày, tỉ lệ huỷ 0%; xác suất huỷ 13,14%, model v1).
+- policy-agent với câu "Đồng ý, áp dụng K=1 cho khách sạn 8528 đêm 2025-01-29": task dừng ở `input-required`, trang mở
+  hộp duyệt với tham số của `apply_overbooking`; nút Approve/Reject gửi `decision_type` của kagent. Bấm Reject thì tool trả
+  "Tool call was rejected by user" và `gold.overbooking_limits` không có lần ghi mới.
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+![Agent Workbench: coordinator-agent giao việc cho data-agent và policy-agent](../images/edai-2/workbench-coordinator.png)
+
+![Agent Workbench: HITL chờ duyệt apply_overbooking](../images/edai-2/workbench-hitl.png)
+
+![Agent Workbench: Reject, tool trả rejected](../images/edai-2/workbench-hitl-chat.png)
 
 <a id="edai-2-41"></a>
 ## UI cho agent registry
@@ -59,11 +73,20 @@ ingress.
 <a id="edai-2-42"></a>
 ## Setup authentication cho UI test agent ở trên
 
-**Rubric:** edai-2 · dòng 42 · 2 điểm · nhóm *External Routing & Gateway (NGINX Ingress Controller)* › *Basic authentication & rate limit ở gateway (username/password)*
+Ingress `agent-workbench` ([`k8s/agent-workbench.yaml`](../../edai2/k8s/agent-workbench.yaml)) và `kagent-ui`
+([`k8s/ingress.yaml`](../../edai2/k8s/ingress.yaml)) dùng `auth-type: basic` với Secret htpasswd `kagent-ui-auth`
+(user `admin`, mật khẩu ngẫu nhiên lưu ngoài repo) và `limit-rps: "10"`; NGINX sinh `limit_req rate=10r/s burst=50`,
+request vượt ngưỡng nhận 503 (`limit_req_status` mặc định của ingress-nginx).
 
-**Cách làm:** [Đã có] Kagent UI được bảo vệ bằng basic auth (htpasswd) và `limit-rps` 10. [Cần làm] chụp phản hồi 401 khi sai mật khẩu.
+Tab *Auth & Rate limit* của Agent Workbench gửi request thật qua ingress, kết quả ngày 2026-11-19:
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+- `GET /api/agents` không kèm thông tin đăng nhập hoặc với mật khẩu sai: `401 Unauthorized`, header
+  `WWW-Authenticate: Basic realm="Agent test UI"`; với phiên đã đăng nhập: 200.
+- 150 request song song tới `/healthz` trong 0,75 s: 81 request nhận 200, 69 request bị chặn với 503.
+
+Đo thêm bằng curl từ máy của nhóm: 300 request song song tới kagent UI cho 112 × 200 và 188 × 503.
+
+![Agent Workbench: basic auth 401 và rate limit 503](../images/edai-2/workbench-auth.png)
 
 <a id="edai-2-43"></a>
 ## Làm cái này cho Web API kéo dữ liệu · edai-2 · External Routing & Gateway (NGINX Ingress Controll
