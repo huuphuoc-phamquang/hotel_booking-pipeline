@@ -17,6 +17,8 @@ jenkins:
         env:
           - key: GCP_PROJECT
             value: "{{ gcp_project }}"
+          - key: API_REPLICAS
+            value: "{{ api_replicas }}"
 credentials:
   system:
     domainCredentials:

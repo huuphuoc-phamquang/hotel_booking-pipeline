@@ -1,6 +1,7 @@
 # Biến của role jenkins. Secret không đặt ở đây: truyền bằng -e @<file ngoài repo> (jenkins_gke_token,
 # jenkins_gke_ca, jenkins_vault_token), xem iac/ansible/site.yml.
 gcp_project: hotel-booking-edai2
+api_replicas: 1                      # replica booking-mcp / drift-api khi Jenkins deploy; quota 12 vCPU chỉ đủ 1
 gke_server: ""                       # https://<endpoint GKE>, rỗng thì bỏ qua cấu hình cloud Kubernetes
 repo_url: https://github.com/huuphuoc-phamquang/hotel_booking-pipeline.git
 jenkins_gke_token: ""

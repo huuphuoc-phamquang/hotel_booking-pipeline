@@ -81,7 +81,8 @@ open('drift_api/reference/MODEL_VERSION', 'w').write(mv.version)"'''
           // --atomic: pod mới không Ready trong 5 phút thì tự rollback
           sh '''
             deploy() { helm upgrade --install $1 helm/api -n $2 -f helm/api/values-$1.yaml \
-                         --set image.repository=$REGISTRY/$3 --set image.tag=$TAG $4 --atomic --timeout 5m; }
+                         --set image.repository=$REGISTRY/$3 --set image.tag=$TAG --set replicaCount=${API_REPLICAS:-2} $4 \
+                         --atomic --timeout 5m; }   # API_REPLICAS: biến toàn cục của Jenkins (JCasC), quota thấp thì 1
             if [ "$WITH_DRIFT_API" = true ]; then
               deploy drift-api ml ml/drift-api "--set env.MODEL_VERSION=$(cat drift_api/reference/MODEL_VERSION)"
             fi
