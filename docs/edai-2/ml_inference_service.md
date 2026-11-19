@@ -19,7 +19,7 @@ predict trả `200` với xác suất [không huỷ, huỷ] và `model_version: 
 REST `/v1/cancel-risk` lấy feature từ Feast rồi gọi KServe: 20/20 lời gọi thử thành công. Trace dưới đây ghi lúc chịu tải
 (dòng 32): lời gọi KServe chỉ mất 7,49 ms trên tổng 492,64 ms, phần còn lại là hai lần đọc online store Feast.
 
-![KServe: InferenceService, Deployment, HPA và lời gọi predict](../images/edai-2/kserve-cancel-risk.png)
+![KServe: InferenceService, Deployment, HPA và lời gọi predict](../images/edai-2/kserve-cli.png)
 
 ![Jaeger: booking-mcp → Feast → KServe](../images/edai-2/jaeger-trace-kserve.png)
 

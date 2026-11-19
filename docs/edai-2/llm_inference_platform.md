@@ -58,6 +58,27 @@ eval xấp xỉ loss train, chưa có dấu hiệu overfit. Trên bộ dữ li�
 
 **Rubric:** edai-2 · dòng 6 · 2 điểm · nhóm *Deploy a LLM inference platform theo hướng dẫn này và set up gateway cho agent theo hướng dẫn này* › *Deploy LLM inference platform + setup custom model & agentgateway*
 
-**Cách làm:** [Đã có] Các tham số tối ưu: prefix caching, `max-model-len`, `gpu-memory-utilization`. [Thiết kế] Đo bằng `vllm bench serve` hoặc guidellm, quét concurrency 1/4/16/64 với workload có prefix chung. Trình tự: baseline → bật prefix caching → chỉnh `gpu-memory-utilization`, `max-num-seqs` → routing prefix-aware của llm-d. [Cần làm] ghi bảng throughput, TTFT, TPOT, độ trễ E2E p50/p95/p99 và tỉ lệ lỗi vào `docs/edai-2/llm_inference_platform.md`.
+**Cách làm:** [Đã có] Các tham số tối ưu: prefix caching, `max-model-len`, `gpu-memory-utilization`. [Thiết kế] Đo bằng `vllm bench serve` hoặc guidellm, quét concurrency 1/4/16/64 với workload có prefix chung. Trình tự: baseline → bật prefix caching → chỉnh `gpu-memory-utilization`, `max-num-seqs` → routing prefix-aware của llm-d. [Cần làm] đo lại với routing prefix-aware của llm-d trên GKE khi có quota GPU (đã đo vLLM trên laptop GPU).
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+**Kết quả:** benchmark chạy ngày 2026-11-19 trên **laptop có GPU** (RTX 2000 Ada 8 GB), không phải trên GKE: tài
+khoản GCP mới chưa có quota GPU, nên chưa có phần routing prefix-aware của llm-d. vLLM 0.9.2 chạy bằng Docker, phục vụ
+Qwen2.5-1.5B-Instruct kèm adapter LoRA v1 (multi-LoRA, `max-model-len 2048`). `vllm bench serve` với prompt 512 token có
+tiền tố chung 256 token, output 128 token, quét concurrency 1/4/16/64 (script và file JSON kết quả trong
+`edai2/llm_platform/bench/`). Không request nào lỗi.
+
+| Cấu hình | Conc. | req/s | token ra/s | TTFT trung bình | TTFT p99 | TPOT trung bình |
+|---|---|---|---|---|---|---|
+| 1. Baseline, tắt prefix caching | 16 | 3,84 | 484 | 552 ms | 1.469 ms | 28,4 ms |
+| | 64 | 6,67 | 829 | 1.244 ms | 5.895 ms | 67,7 ms |
+| 2. Bật prefix caching | 16 | 4,35 | 505 | 327 ms | 910 ms | 27,4 ms |
+| | 64 | 9,52 | 1.183 | 867 ms | 3.472 ms | 48,0 ms |
+| 3. Prefix caching, `gpu-memory-utilization 0.86`, `max-num-seqs 64` | 16 | 4,43 | 505 | 251 ms | 840 ms | 27,1 ms |
+| | 64 | 9,50 | 1.180 | 891 ms | 3.644 ms | 47,9 ms |
+
+Prefix caching là tối ưu hiệu quả nhất với workload có tiền tố chung (system prompt giống nhau giữa các request): ở
+concurrency 64, throughput tăng 43%, TTFT trung bình giảm 30%, TTFT p99 giảm 41%; ở concurrency 4, TTFT giảm từ 288 ms
+xuống 47 ms. Cấu hình 3 chỉ cải thiện thêm ở concurrency 16 (TTFT 327 → 251 ms). Không tăng được
+`gpu-memory-utilization` lên 0,92 vì Windows và WSL giữ sẵn khoảng 1 GB VRAM. KV cache còn khoảng 124.000 token, đủ cho
+concurrency 64 với độ dài này.
+
+![vllm bench serve: 3 cấu hình × 4 mức concurrency](../images/edai-2/vllm-bench.png)
