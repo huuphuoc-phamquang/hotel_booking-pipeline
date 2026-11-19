@@ -53,8 +53,9 @@ JOIN gold.dim_hotel h USING (hotel_key)
 WHERE f.booking_date >= '{since}' AND f.booking_date < '{until}'::date - 90 AND f.checkin_date < '{until}'
   AND f.checkin_date > f.booking_date
   AND (f.cancelled_at IS NULL OR f.cancelled_at >= f.booking_date + 1)
--- lấy mẫu theo booking_id (tất định, chạy lại ra cùng tập): pandas không chứa nổi cả cửa sổ 9 tháng
-  AND f.booking_id % 100 < {sample_pct}
+-- lấy mẫu theo booking_id (tất định, chạy lại ra cùng tập): pandas không chứa nổi cả cửa sổ 9 tháng; mod() thay
+-- toán tử modulo: read_sql qua psycopg 3 coi ký tự phần trăm là placeholder, kể cả trong comment SQL
+  AND mod(f.booking_id, 100) < {sample_pct}
 """
 
 
