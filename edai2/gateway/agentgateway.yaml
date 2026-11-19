@@ -56,7 +56,7 @@ binds:
               - mcp:
                   targets:
                     - name: booking-tools
-                      mcp: { host: http://booking-mcp.agents.svc.cluster.local:8000/mcp/ }
+                      mcp: { host: http://booking-mcp.agents.svc.cluster.local/mcp/ }   # Service mở cổng 80 (targetPort 8000)
 
           # ---------- A2A Gateway ----------
           - name: a2a-data-agent
