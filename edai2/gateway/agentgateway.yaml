@@ -85,7 +85,18 @@ binds:
             backends:
               - host: data-agent.kagent.svc.cluster.local:8080
 
-          # shortcut: chưa có policy-agent-v2 (giai đoạn D) nên 100% về policy-agent; thêm backend v2 weight 50 khi có
+          # gọi thẳng bản v2 (agent card cho registry, so sánh có chủ đích); /a2a/policy-agent vẫn chia 50/50
+          - name: a2a-policy-agent-v2
+            matches:
+              - path: { pathPrefix: /a2a/policy-agent-v2 }
+            policies:
+              a2a: {}
+              jwtAuth: *jwt
+              urlRewrite: { path: { prefix: / } }
+            backends:
+              - host: policy-agent-v2.kagent.svc.cluster.local:8080
+
+          # A/B agent: 50/50 giữa policy-agent (default-model-config) và policy-agent-v2 (model-config-v2, prompt v2)
           - name: a2a-policy-agent
             matches:
               - path: { pathPrefix: /a2a/policy-agent }
@@ -94,7 +105,10 @@ binds:
               jwtAuth: *jwt
               urlRewrite: { path: { prefix: / } }
             backends:
-              - host: policy-agent.kagent.svc.cluster.local:8080
+              - weight: 50
+                host: policy-agent.kagent.svc.cluster.local:8080
+              - weight: 50
+                host: policy-agent-v2.kagent.svc.cluster.local:8080
 
           - name: a2a-coordinator
             matches:

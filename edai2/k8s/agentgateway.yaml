@@ -20,6 +20,7 @@ spec:
           args: ["-f", "/config/config.yaml"]
           ports:
             - { name: http, containerPort: 3000 }
+            - { name: metrics, containerPort: 15020 }
           readinessProbe:
             httpGet: { path: /healthz/ready, port: 15021 }
             periodSeconds: 5
@@ -35,8 +36,17 @@ spec:
 ---
 apiVersion: v1
 kind: Service
-metadata: { name: agentgateway, namespace: gateway }
+metadata: { name: agentgateway, namespace: gateway, labels: { app: agentgateway } }
 spec:
   selector: { app: agentgateway }
   ports:
     - { name: http, port: 3000, targetPort: 3000 }
+    - { name: metrics, port: 15020, targetPort: 15020 }
+---
+# Prometheus scrape agentgateway_requests / request_duration_seconds / gen_ai_* theo route và backend (A/B, KEDA)
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata: { name: agentgateway, namespace: gateway }
+spec:
+  selector: { matchLabels: { app: agentgateway } }
+  endpoints: [{ port: metrics, path: /metrics, interval: 15s }]
