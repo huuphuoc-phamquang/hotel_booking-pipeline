@@ -1,8 +1,10 @@
-# KEDA thay HPA CPU (rubric dẫn KEDA): mỗi ScaledObject tự tạo 1 HPA keda-hpa-<tên>, nên không để HPA khác cùng target.
-# Scaler Prometheus theo request/s; coordinator thêm trigger cpu để giữ tiêu chí CPU (KEDA lấy replica lớn nhất).
-# Tên metric agentgateway theo bản đã cài (kiểm `curl agentgateway:15020/metrics`); API dùng http_requests_total của
-# prometheus-fastapi-instrumentator. Proof: chạy locust, chụp `kubectl get hpa,pods -w` tăng replica.
-# Lưu ý kagent: nếu controller reconcile lại deployment.replicas thì bỏ replicas khỏi Agent (agents/agents.yaml).
+# KEDA 2.20 (helm kedacore/keda, namespace keda) thay HPA CPU: mỗi ScaledObject tự tạo HPA keda-hpa-<tên>, không để
+# HPA khác cùng target. Agent scale theo request/s qua agentgateway (agentgateway_requests_total, nhãn route
+# "default/a2a-<agent>", ServiceMonitor trong k8s/agentgateway.yaml); coordinator thêm trigger cpu (KEDA lấy replica lớn nhất).
+# kagent reconcile lại deployment.replicas nếu Agent có trường đó, nên Agent trong agents/agents-gke.yaml KHÔNG đặt
+# deployment.replicas; ScaledObject giữ tối thiểu 2 replica. Mỗi lượt agent chờ LLM ~5 s nên ngưỡng 1 req/s/replica.
+# shortcut: tối đa 4 replica vì cluster 12 vCPU; lời gọi coordinator -> agent con không qua gateway nên không tính vào
+# metric của data-agent / policy-agent.
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
@@ -11,13 +13,13 @@ metadata:
 spec:
   scaleTargetRef: { name: data-agent }
   minReplicaCount: 2
-  maxReplicaCount: 6
+  maxReplicaCount: 4
   triggers:
     - type: prometheus
       metadata:
         serverAddress: http://kube-prometheus-stack-prometheus.monitoring:9090
-        query: sum(rate(agentgateway_requests_total{route="a2a-data-agent"}[1m]))
-        threshold: "5"                       # req/s mỗi replica
+        query: sum(rate(agentgateway_requests_total{route="default/a2a-data-agent"}[1m]))
+        threshold: "1"
 ---
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
@@ -27,13 +29,29 @@ metadata:
 spec:
   scaleTargetRef: { name: policy-agent }
   minReplicaCount: 2
-  maxReplicaCount: 6
+  maxReplicaCount: 4
   triggers:
     - type: prometheus
       metadata:
         serverAddress: http://kube-prometheus-stack-prometheus.monitoring:9090
-        query: sum(rate(agentgateway_requests_total{route="a2a-policy-agent"}[1m])) / 2   # 50/50 với v2
-        threshold: "5"
+        query: sum(rate(agentgateway_requests_total{route="default/a2a-policy-agent",backend=~".*/backend0"}[1m]))
+        threshold: "1"
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: policy-agent-v2
+  namespace: kagent
+spec:
+  scaleTargetRef: { name: policy-agent-v2 }
+  minReplicaCount: 2
+  maxReplicaCount: 4
+  triggers:
+    - type: prometheus
+      metadata:
+        serverAddress: http://kube-prometheus-stack-prometheus.monitoring:9090
+        query: sum(rate(agentgateway_requests_total{route="default/a2a-policy-agent",backend=~".*/backend1"}[1m]))
+        threshold: "1"
 ---
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
@@ -43,13 +61,13 @@ metadata:
 spec:
   scaleTargetRef: { name: coordinator-agent }
   minReplicaCount: 2
-  maxReplicaCount: 6
+  maxReplicaCount: 4
   triggers:
     - type: prometheus
       metadata:
         serverAddress: http://kube-prometheus-stack-prometheus.monitoring:9090
-        query: sum(rate(agentgateway_requests_total{route="a2a-coordinator"}[1m]))
-        threshold: "5"
+        query: sum(rate(agentgateway_requests_total{route="default/a2a-coordinator"}[1m]))
+        threshold: "1"
     - type: cpu
       metricType: Utilization
       metadata: { value: "60" }
