@@ -2,9 +2,8 @@
 
 Terraform dựng hạ tầng GKE; Ansible cấu hình VM.
 
-Mỗi mục ứng với một dòng của rubric. Mục đã hoàn thành ghi lại phần đã triển khai và kết quả (số liệu đo được,
-ảnh chụp trong `docs/images/`). Mục chưa hoàn thành giữ trích rubric, phần **Cách làm** đồng bộ từ cột F của rubric
-và phần **Kết quả** chờ bổ sung.
+Mỗi mục ứng với một dòng của rubric, ghi lại phần đã triển khai và kết quả (số liệu đo được, ảnh chụp trong
+`docs/images/`).
 
 <a id="edai-2-44"></a>
 ## Dùng Terraform để setup GKE hoặc các cloud services · edai-2 · IaC
@@ -29,8 +28,24 @@ cần `terraform import` pool này.
 <a id="edai-2-45"></a>
 ## Dùng Ansible để configure và deploy các service lên VM · edai-2 · IaC
 
-**Rubric:** edai-2 · dòng 45 · 1 điểm · nhóm *IaC*
+Playbook `iac/ansible/site.yml` (role `common`, `docker`, `vault`, `jenkins`) chạy ngày 2026-11-19 lên VM `cicd-vm`
+(e2-medium spot, Ubuntu 22.04, subnet `booking-gke`; firewall `booking-cicd-allow` chỉ mở cổng 22, 8080, 8200 cho IP
+của nhóm). Ansible chạy trong container `python:3.11-slim` trên laptop (ansible-core 2.18, collection `community.docker`,
+`community.general` theo `requirements.yml`), SSH bằng key riêng nằm ngoài repo.
 
-**Cách làm:** [Đã có] `iac/ansible` gồm `site.yml` và các role common, docker, vault, jenkins (chạy dạng container); `--syntax-check` và `ansible-lint` profile production đều sạch. [Cần làm] chạy trên VM, chụp kết quả playbook.
+| Lần chạy | ok | changed | failed |
+|---|---|---|---|
+| 1 (VM mới) | 13 | 11 | 0 |
+| 2 | 12 | 0 | 0 |
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+Lần 1 cài gói cơ bản, bật firewall `ufw`, cài Docker, chạy container Vault (`hashicorp/vault:1.20`, storage file) và
+Jenkins (`jenkins/jenkins:lts-jdk21`). Lần 2 không còn thay đổi nào, tức playbook idempotent. Jenkins trên VM truy cập
+được qua `http://<IP VM>:8080` sau bước unlock bằng mật khẩu khởi tạo. Vault trên VM để init bằng tay theo thiết kế của
+role (unseal key không đi qua Ansible).
+
+![Ansible lần 1: changed=11](../images/edai-2/ansible-run1.png)
+
+![Ansible lần 2: changed=0](../images/edai-2/ansible-run2.png)
+
+![Jenkins trên VM](../images/edai-2/jenkins-vm.png)
+

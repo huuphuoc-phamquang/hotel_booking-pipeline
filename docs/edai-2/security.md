@@ -30,3 +30,5 @@ một key share chưa có HA hay auto-unseal (cần Raft + GCP KMS khi dùng th�
 ![Vault: policy chỉ đọc và role Kubernetes của booking-mcp](../images/edai-2/vault-cli-3.png)
 
 ![booking-mcp có vault-agent, Kubernetes Secret cũ không còn](../images/edai-2/vault-cli-4.png)
+
+![Vault UI: secret/agents/booking-mcp](../images/edai-2/vault-ui.png)
