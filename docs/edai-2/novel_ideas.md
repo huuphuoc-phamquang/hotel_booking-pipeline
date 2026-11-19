@@ -30,7 +30,7 @@ Trước drift, xác suất dự báo lệch xác suất thật dưới 0,05 ở
 Tool `propose_overbooking` tính K cho từng khách sạn × đêm bằng phân phối Poisson-binomial chính xác trên xác suất
 huỷ trong `gold.booking_risk`, với ngưỡng c_spoil / (c_spoil + c_walk), rồi so với số phòng trong `gold.hotel_rooms`.
 Tool này chỉ đề xuất. Việc ghi K bằng `apply_overbooking` nằm trong `requireApproval` của policy-agent
-([`agents/agents-direct.yaml`](../../edai2/agents/agents-direct.yaml)), nên kagent dừng lời gọi cho tới khi người
+([`agents/agents-gke.yaml`](../../edai2/agents/agents-gke.yaml)), nên kagent dừng lời gọi cho tới khi người
 duyệt bấm Approve hoặc Reject.
 
 Thử trên cluster thứ hai ngày 2026-11-19: policy-agent đề xuất K cho khách sạn 8528 đêm 2025-01-29, người dùng đồng ý

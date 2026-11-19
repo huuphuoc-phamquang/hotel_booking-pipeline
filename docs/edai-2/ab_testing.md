@@ -40,4 +40,11 @@ phần từ chối PII: model 1,5B học khuôn câu trả lời chứ không h�
 `propose_overbooking`, chính sách lấy qua RAG (`search_policy`), PII chặn ở lớp ngoài (`llm_metrics.py`); fine-tune chỉ
 nên dùng để dạy cách gọi tool và giọng trả lời.
 
+Sau đó, chia traffic online đã chạy qua agentgateway (route `/v1` trong
+[`gateway/agentgateway.yaml`](../../edai2/gateway/agentgateway.yaml)): weight 90 tới model gốc `qwen-3b`, weight 10 tới
+adapter `qwen-booking-v2`, cùng một vLLM (Qwen2.5-3B). Ngày 2026-11-19, 13 request LLM hợp lệ của agent qua
+gateway chia thành 12 tới `qwen-3b` và 1 tới `qwen-booking-v2` (trường `gen_ai.request.model` trong log
+gateway, ảnh ở `global_model_config.md`); mẫu còn nhỏ nên tỉ lệ chưa phản ánh đúng 90/10. Dashboard so sánh theo model
+vẫn chưa có.
+
 ![A/B offline giữa base, v1 và v1b](../images/edai-2/llm-ab-offline.png)

@@ -2,16 +2,31 @@
 
 agentgateway là điểm vào duy nhất cho MCP server.
 
-Mỗi mục dưới đây ứng với một dòng của rubric. Phần **Cách làm** mô tả giải pháp đã triển khai, đồng bộ từ
-cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu đo được hoặc ảnh chụp (`docs/images/`).
+Mỗi mục ứng với một dòng của rubric, ghi lại phần đã triển khai và kết quả (số liệu đo được, ảnh chụp trong
+`docs/images/`).
 
 <a id="edai-2-23"></a>
 ## MCP Gateway
 
-**Rubric:** edai-2 · dòng 23 · 2 điểm · nhóm *MCP Gateway (agentgateway as MCP Gateway)*
+Route `/mcp` trong [`gateway/agentgateway.yaml`](../../edai2/gateway/agentgateway.yaml) gom MCP server `booking-tools`
+(booking-mcp, `http://booking-mcp.agents.svc.cluster.local/mcp/`) sau agentgateway v1.6.0. Agent không còn gọi thẳng
+booking-mcp: trong [`agents/agents-gke.yaml`](../../edai2/agents/agents-gke.yaml), mỗi agent có một `RemoteMCPServer`
+riêng trỏ tới `http://agentgateway.gateway.svc.cluster.local:3000/mcp` và gửi header `Authorization` lấy từ Secret của
+chính agent đó (`mcp-token-data`, `mcp-token-policy`).
 
-**Cần nộp (cả nhóm):** Document phải show được setup agentgateway để làm MCP Gateway, show được các thiết lập về security và policy kèm giải thích tại sao dùng cái đó + link tới YAML chứa các setting
+Security và policy trên route:
 
-**Cách làm:** [Đã có] Route `/mcp` đi qua gateway, xác thực JWT, `mcpAuthorization` theo tool và role; `RemoteMCPServer` trỏ tới gateway thay vì gọi thẳng MCP.
+- `jwtAuth` (`mode: strict`): token phải do realm `agents` của Keycloak ký, audience `agentgateway`. Request không token
+  bị chặn ở gateway, không tới được MCP server.
+- `mcpAuthorization`: quy tắc CEL theo tên tool và claim `role` của token. `get_booking_features` chỉ dành cho
+  `role == "data-agent"`; `predict_cancellation`, `search_policy`, `propose_overbooking`, `apply_overbooking` chỉ dành
+  cho `role == "policy-agent"`. Claim `role` do mapper hardcoded của từng client Keycloak gắn vào, agent không tự đặt
+  được. Lý do: nguyên tắc quyền tối thiểu, và tool ghi dữ liệu (`apply_overbooking`) chỉ lộ ra với đúng agent có bước
+  duyệt HITL.
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+Kiểm bằng [`gateway/check.sh`](../../edai2/gateway/check.sh) trên cluster thứ hai ngày 2026-11-19: `/mcp` không token
+trả 401; `tools/list` với token data-agent chỉ có `get_booking_features`, với token policy-agent có bốn tool còn lại;
+data-agent gọi thẳng `predict_cancellation` bị gateway từ chối (`Unknown tool: predict_cancellation`). Qua kagent, data-agent
+và policy-agent vẫn gọi tool bình thường qua gateway, log ghi `mcp.method.name=tools/call` kèm `jwt.sub` của từng agent.
+
+![Kiểm security & policy của agentgateway](../images/edai-2/agentgateway-check.png)

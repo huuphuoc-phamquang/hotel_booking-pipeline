@@ -45,13 +45,31 @@ eval xấp xỉ loss train, chưa có dấu hiệu overfit. Trên bộ dữ li�
 <a id="edai-2-5"></a>
 ## Setup agent gateway theo hướng dẫn và thiết lập security & policy phù hợp
 
-**Rubric:** edai-2 · dòng 5 · 1 điểm · nhóm *Deploy a LLM inference platform theo hướng dẫn này và set up gateway cho agent theo hướng dẫn này* › *Deploy LLM inference platform + setup custom model & agentgateway*
+agentgateway v1.6.0 chạy standalone trong namespace `gateway` ([`k8s/agentgateway.yaml`](../../edai2/k8s/agentgateway.yaml)),
+cấu hình ở [`gateway/agentgateway.yaml`](../../edai2/gateway/agentgateway.yaml) và dựng bằng
+[`gateway/deploy.sh`](../../edai2/gateway/deploy.sh) trên cluster thứ hai ngày 2026-11-19. Gateway là điểm vào duy nhất
+của agent cho cả ba loại lưu lượng: LLM (`/v1`), MCP (`/mcp`) và A2A (`/a2a/<agent>`). Keycloak 26.3
+([`k8s/keycloak.yaml`](../../edai2/k8s/keycloak.yaml), realm `agents`) cấp JWT theo luồng client credentials, mỗi agent
+một client.
 
-> Setup agent gateway theo hướng dẫn và thiết lập security & policy phù hợp (trên này có rất nhiều doc để mn tham khảo)
+| Policy | Thiết lập | Lý do |
+|---|---|---|
+| `jwtAuth` (`mode: strict`) | issuer realm `agents`, audience `agentgateway`, JWKS lấy từ Keycloak | Mỗi agent có danh tính riêng, thu hồi được theo client; gateway tự kiểm chữ ký bằng JWKS nên không gọi Keycloak mỗi request. Mặc định `jwtAuth` không bắt buộc có token, nên phải đặt `strict`. |
+| `backendAuth.key` | khoá vLLM đọc từ Secret `vllm-key` | Agent chỉ cầm JWT; khoá của model server chỉ nằm ở gateway, lộ token agent không lộ khoá vLLM. |
+| `backendTLS` | TLS tới vLLM | vLLM chạy trên máy GPU cá nhân, ra ngoài qua Cloudflare tunnel HTTPS. |
+| `localRateLimit` | bucket 50, nạp 10 request/giây trên route LLM | Chặn agent rơi vào vòng gọi tool lặp làm nghẽn GPU duy nhất. |
+| `mcpAuthorization` | tool theo claim `role` của token | Nguyên tắc quyền tối thiểu: data-agent chỉ thấy tool đọc feature, chỉ policy-agent được dự đoán, tra chính sách và ghi K bán vượt. |
+| `a2a` + `urlRewrite` | `/a2a/<agent>/` → `/` của pod agent | Gateway nhận diện lưu lượng A2A (log, telemetry) và giấu địa chỉ nội bộ của agent. |
 
-**Cách làm:** [Đã có] agentgateway áp dụng `jwtAuth` với Keycloak, `localRateLimit` và `mcpAuthorization` theo tool và role. [Cần làm] giải thích từng policy và lý do lựa chọn trong `docs/edai-2/llm_inference_platform.md`.
+Script [`gateway/check.sh`](../../edai2/gateway/check.sh) kiểm các policy từ một pod trong cluster. Route LLM trả 401
+khi không có token hoặc token giả mạo, 200 với token của client `kagent`. Trên `/mcp`, token data-agent chỉ liệt kê
+`get_booking_features`, token policy-agent liệt kê bốn tool còn lại, và data-agent gọi `predict_cancellation` bị từ chối
+với lỗi `Unknown tool`. Agent card của cả ba agent qua `/a2a` trả 401 khi không có token, 200 khi có token.
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+Hai giới hạn còn lại: Keycloak chạy `start-dev` với realm nạp lại từ ConfigMap mỗi lần khởi động, và token sống 30 ngày
+vì kagent chỉ nhận khoá tĩnh trong Secret; `gateway/deploy.sh` cấp lại token khi chạy lại.
+
+![Kiểm security & policy của agentgateway](../images/edai-2/agentgateway-check.png)
 
 <a id="edai-2-6"></a>
 ## Benchmark model server and optimize the platform
