@@ -75,6 +75,19 @@ CREATE TABLE gold.feat_hotel_realtime (
     PRIMARY KEY (hotel_id, event_timestamp)
 );
 
+-- Chunk chính sách cho RAG (DAG rag_data_pipeline): bảng nguồn của feature view policy_chunks. Feast 0.68 không ghi
+-- offline store PostgreSQL (thiếu offline_write_batch) nên DAG upsert thẳng vào đây; bản online nằm ở feast_online.
+CREATE TABLE gold.feat_policy_chunks (
+    chunk_id          TEXT      PRIMARY KEY,
+    text              TEXT      NOT NULL,
+    source            TEXT      NOT NULL,
+    doc_sha256        TEXT      NOT NULL,
+    embed_model       TEXT      NOT NULL,
+    embedding         REAL[]    NOT NULL,
+    event_timestamp   TIMESTAMP NOT NULL,
+    created           TIMESTAMP NOT NULL DEFAULT now()
+);
+
 -- Đối soát stream (Flink nhánh tumbling 1 phút): số booking từng phút + event rơi ra side output.
 -- Mỗi giờ: sum(bookings) + count(late) = số booking (dedup idempotency_key) có created_at trong giờ đó ở Silver.
 CREATE TABLE gold.stream_bookings_1m (

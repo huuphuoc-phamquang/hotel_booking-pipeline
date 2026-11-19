@@ -89,7 +89,12 @@ def rag_data_pipeline():
         # shortcut: chỉ ghi đè chunk_id còn tồn tại; tài liệu bị rút ngắn hoặc xoá để lại chunk cũ tới khi hết TTL 365
         # ngày. Cần xoá theo source trên online store trước khi ghi khi tài liệu chính sách hay đổi.
         store.write_to_online_store("policy_chunks", df)
-        store.write_to_offline_store("policy_chunks", df)
+        # Feast 0.68 không ghi được offline store PostgreSQL (thiếu offline_write_batch): upsert thẳng bảng nguồn của view
+        from airflow.providers.postgres.hooks.postgres import PostgresHook
+        cols = ["chunk_id", "text", "source", "doc_sha256", "embed_model", "embedding", "event_timestamp", "created"]
+        PostgresHook(postgres_conn_id="warehouse").insert_rows(
+            "gold.feat_policy_chunks", list(df[cols].itertuples(index=False, name=None)), target_fields=cols,
+            replace=True, replace_index="chunk_id")
 
     embed_and_push(validate_chunks(chunk_docs(load_docs())))
 
