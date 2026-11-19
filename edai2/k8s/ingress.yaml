@@ -49,6 +49,9 @@ spec:
     - host: agents.booking.local
       http:
         paths: [{ path: /, pathType: Prefix, backend: { service: { name: kagent-ui, port: { number: 8080 } } } }]
+    - host: agents.34.124.198.171.nip.io
+      http:
+        paths: [{ path: /, pathType: Prefix, backend: { service: { name: kagent-ui, port: { number: 8080 } } } }]
     - host: registry.agents.booking.local
       http:
         paths: [{ path: /, pathType: Prefix, backend: { service: { name: agent-registry, port: { number: 8080 } } } }]
