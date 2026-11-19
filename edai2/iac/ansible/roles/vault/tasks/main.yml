@@ -10,6 +10,7 @@
   ansible.builtin.template:
     src: vault.hcl.j2
     dest: /opt/vault/config/vault.hcl
+    owner: "100"                     # user vault (uid 100) trong container phải đọc được, không thì restart liên tục
     mode: "0640"
 
 - name: Container Vault
@@ -25,4 +26,9 @@
       - /opt/vault/data:/vault/file
     env:
       VAULT_ADDR: http://127.0.0.1:8200
+
+- name: Vault phải lắng nghe (container tạo được chưa chắc chạy được)
+  ansible.builtin.wait_for:
+    port: 8200
+    timeout: 60
 # Khởi tạo 1 lần bằng tay (unseal key không đi qua Ansible): docker exec vault vault operator init
