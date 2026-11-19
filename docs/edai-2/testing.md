@@ -2,9 +2,8 @@
 
 Unit test, phân lớp tương đương và giá trị biên (EP/BVA), mutation test, property-based test và load test.
 
-Mỗi mục ứng với một dòng của rubric. Mục đã hoàn thành ghi lại phần đã triển khai và kết quả (số liệu đo được,
-ảnh chụp trong `docs/images/`). Mục chưa hoàn thành giữ trích rubric, phần **Cách làm** đồng bộ từ cột F của rubric
-và phần **Kết quả** chờ bổ sung.
+Mỗi mục ứng với một dòng của rubric, ghi lại phần đã triển khai và kết quả (số liệu đo được, ảnh chụp trong
+`docs/images/`).
 
 <a id="edai-2-28"></a>
 ## Unit test với Test Coverage > 90% · edai-2 · Validation & Verification
@@ -60,10 +59,25 @@ gọi tool MCP `predict_cancellation` hai lần cho cùng booking. Cả hai ki�
 <a id="edai-2-32"></a>
 ## Load test the Web API to understand throughput and latency · edai-2 · Validation & Verification
 
-**Rubric:** edai-2 · dòng 32 · 2 điểm · nhóm *Validation & Verification*
+`tests/locustfile.py` gửi tải tới `POST /v1/cancel-risk` (5 phần) và `/healthz` (1 phần) của booking-mcp; mỗi
+request đọc feature từ Feast online rồi gọi KServe `cancel-risk`. Biến `BOOKING_IDS` cho locust dùng 5.000 `booking_id`
+thật lấy từ `gold.fact_bookings`, vì cluster thứ hai chỉ có dữ liệu tháng 1/2025. Locust chạy trong một pod trên GKE
+ngày 2026-11-19, gọi thẳng service: 100 user, tăng 10 user/s, 5 phút, `--html` ra file SLA
+[locust_sla_report.html](locust_sla_report.html). booking-mcp chạy 1 replica.
 
-> Local Testing Load test the Web API (cái Web API kéo dữ liệu) to understand throughput (req/s) and latency (generate a html file with locust as SLA)
+| Endpoint | Request | Lỗi | RPS | p50 | p95 | p99 | Max |
+|---|---|---|---|---|---|---|---|
+| `POST /v1/cancel-risk` | 17.511 | 0 | 58,4 | 1.100 ms | 2.400 ms | 3.600 ms | 5.342 ms |
+| `GET /healthz` | 3.548 | 0 | 11,8 | 4 ms | 14 ms | 110 ms | 497 ms |
+| Tổng | 21.059 | 0 | 70,3 | 1.000 ms | 2.400 ms | 3.400 ms | 5.342 ms |
 
-**Cách làm:** [Đã có] `tests/locustfile.py` gửi tải tới `POST /v1/cancel-risk` của booking-mcp. [Cần làm] chạy với `--html`, chụp RPS và p95.
+Không có request lỗi. Latency cao do đọc online store: trace Jaeger lúc chịu tải (dòng 15) cho thấy hai lần đọc Feast
+chiếm khoảng 98% thời gian một request, còn KServe chỉ khoảng 7,5 ms. Hướng cải thiện: tăng replica booking-mcp, dùng
+connection pool cho online store Feast, thêm index trên bảng online. Trên Grafana, req/s của `/v1/cancel-risk` lên tới
+khoảng 80 req/s ở đỉnh và không có lỗi 5xx. Panel p95 đứng ở 1 s vì histogram mặc định của
+`prometheus-fastapi-instrumentator` chỉ có bucket tới 1 s, nên p95 thật lấy theo locust.
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+![Locust: thống kê request và latency](../images/edai-2/locust-report.png)
+
+![Grafana: booking-mcp trong lúc load test](../images/edai-2/grafana-locust.png)
+
