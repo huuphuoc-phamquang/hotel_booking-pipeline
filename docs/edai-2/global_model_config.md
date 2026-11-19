@@ -14,4 +14,10 @@ cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu �
 
 **Cách làm:** [Đã có] ModelConfig `default-model-config` trỏ tới `/v1` của agentgateway (`agents/agents.yaml`). [Cần làm] dẫn link tới file trong docs và giải thích.
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+**Kết quả:** đã có ModelConfig dùng chung trên cluster thứ hai ngày 2026-11-19, nhưng chưa đi qua agentgateway.
+kagent 0.9.12 cài bằng Helm với [`k8s/kagent-values.yaml`](../../edai2/k8s/kagent-values.yaml): provider `openAI`
+sinh ModelConfig `default-model-config` với model `qwen-3b` (vLLM, Qwen2.5-3B-Instruct, parser tool `hermes`), khoá
+lấy từ Secret `llm-api` (giá trị gốc ở Vault `secret/agents/llm`), `baseUrl` truyền lúc cài. Cả ba agent trong
+[`agents/agents-direct.yaml`](../../edai2/agents/agents-direct.yaml) dùng chung ModelConfig này. vLLM chạy trên máy
+cá nhân (GPU 8 GB, `--max-model-len 4096`) và được đưa ra ngoài qua Cloudflare tunnel; gọi không khoá trả 401, có
+khoá trả 200. Phần còn thiếu: `baseUrl` trỏ `/v1` của agentgateway như bản đích ở `agents/agents.yaml`.

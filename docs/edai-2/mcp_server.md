@@ -54,7 +54,14 @@ Upgrade thất bại sau 90 giây vì pod mới không kéo được image, và 
 
 **Cách làm:** [Đã có] `k8s/keda.yaml` có ScaledObject cho data-agent theo request/s của route `a2a-data-agent` qua agentgateway, tối thiểu 2 replica; HPA theo CPU đã bỏ khỏi `agents.yaml`. [Cần làm] chụp quá trình scale khi chạy locust.
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+**Kết quả:** phần agent dùng MCP tool đã chạy; multi-replica và auto-scale chưa làm. data-agent
+([`agents/agents-direct.yaml`](../../edai2/agents/agents-direct.yaml)) dùng RemoteMCPServer `booking-tools` trỏ thẳng
+booking-mcp trong cluster và chỉ được cấp tool `get_booking_features`; hiện chạy 1 replica, chưa có KEDA. Hỏi về cặp
+khách 18766768 và khách sạn 8528, agent gọi tool với đúng hai mã rồi trả lời theo số liệu online store (44 booking
+7 ngày, tỉ lệ huỷ 30 ngày 17,24%). Prompt yêu cầu hỏi lại khi thiếu mã; trong phạm vi thử nghiệm, model 3B vẫn có lúc
+gọi tool với `customer_id` rỗng.
+
+![kagent UI: data-agent gọi get_booking_features](../images/edai-2/kagent-data-agent.png)
 
 <a id="edai-2-20"></a>
 ## Configure Agent chạy trong Sandbox để đảm bảo security

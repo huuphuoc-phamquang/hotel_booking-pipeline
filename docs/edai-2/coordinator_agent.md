@@ -14,7 +14,13 @@ cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu �
 
 **Cách làm:** [Đã có] Coordinator scale bằng KEDA ScaledObject theo request/s qua agentgateway, cộng trigger CPU 60% (`k8s/keda.yaml`); HPA trong `agents.yaml` đã bị xoá. [Cần làm] kiểm xem kagent có ghi đè số replica không; chụp quá trình scale.
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+**Kết quả:** phần điều phối và chat trên kagent UI đã có; registry, multi-replica và auto-scale chưa làm.
+coordinator-agent ([`agents/agents-direct.yaml`](../../edai2/agents/agents-direct.yaml)) có hai tool kiểu `Agent` là
+data-agent và policy-agent, chạy 1 replica. Với câu hỏi gồm số liệu của khách 18766768 tại khách sạn 8528 và xác suất
+huỷ của booking 90000919211, coordinator tách thành hai yêu cầu, giao cho từng agent con rồi tổng hợp: khách có
+1 booking 90 ngày, tỉ lệ huỷ 0%, lead time trung bình 6 ngày; booking có xác suất huỷ 13,14% (model v1).
+
+![kagent UI: coordinator-agent gọi data-agent và policy-agent](../images/edai-2/kagent-coordinator.png)
 
 <a id="edai-2-26"></a>
 ## Publish Agent ở này lên registry đã deploy để đảm bảo governance.

@@ -27,8 +27,19 @@ Trước drift, xác suất dự báo lệch xác suất thật dưới 0,05 ở
 <a id="edai-2-57"></a>
 ## Idea 2 (edai-2): HITL cho bán vượt
 
-**Rubric:** edai-2 · dòng 57 · 2 điểm · nhóm *Novel ideas*
+Tool `propose_overbooking` tính K cho từng khách sạn × đêm bằng phân phối Poisson-binomial chính xác trên xác suất
+huỷ trong `gold.booking_risk`, với ngưỡng c_spoil / (c_spoil + c_walk), rồi so với số phòng trong `gold.hotel_rooms`.
+Tool này chỉ đề xuất. Việc ghi K bằng `apply_overbooking` nằm trong `requireApproval` của policy-agent
+([`agents/agents-direct.yaml`](../../edai2/agents/agents-direct.yaml)), nên kagent dừng lời gọi cho tới khi người
+duyệt bấm Approve hoặc Reject.
 
-**Cách làm:** Idea 2 - Human-in-the-loop cho bán vượt. Tool `propose_overbooking` tính K cho từng khách sạn × đêm bằng phân phối Poisson-binomial chính xác trên xác suất trong `gold.booking_risk`, với ngưỡng c_spoil / (c_spoil + c_walk). Việc ghi K bằng `apply_overbooking` phải qua `requireApproval` của kagent (Approve hoặc Reject trên UI). Minh chứng: trace phê duyệt và test giá trị biên.
+Thử trên cluster thứ hai ngày 2026-11-19: policy-agent đề xuất K cho khách sạn 8528 đêm 2025-01-29, người dùng đồng ý
+K = 1, lời gọi `apply_overbooking(8528, 2025-01-29, 1)` chuyển sang trạng thái *Approval required*. Chỉ sau khi bấm
+Approve, `gold.overbooking_limits` mới có dòng `8528 | 2025-01-29 | 1`. Qua A2A, cùng lời gọi đó trả task ở trạng thái
+`input-required`. Logic K được kiểm bằng `tests/test_overbooking.py` (chạy trong build #7 của Jenkins): giá trị biên
+p = 0 và p = 1, không có booking, chi phí không dương, xác suất ngoài [0, 1]; phân phối so với liệt kê đủ 2^n trường
+hợp; và tính chất K không giảm khi chi phí chuyển khách giảm.
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+![Approval required cho apply_overbooking](../images/edai-2/kagent-hitl-approval.png)
+
+![Sau khi Approve, K được ghi](../images/edai-2/kagent-hitl-approved.png)
