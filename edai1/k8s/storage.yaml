@@ -77,9 +77,11 @@ spec:
           ports: [{ containerPort: 5432 }]
           readinessProbe:
             exec: { command: ["pg_isready", "-U", "postgres"] }
-          volumeMounts: [{ name: data, mountPath: /var/lib/postgresql/data }]
+          # /dev/shm mặc định của pod chỉ 64MB: query song song (hash join) trên bảng lớn báo DiskFull
+          volumeMounts: [{ name: data, mountPath: /var/lib/postgresql/data }, { name: dshm, mountPath: /dev/shm }]
           resources:
             requests: { cpu: "2", memory: 8Gi }
+      volumes: [{ name: dshm, emptyDir: { medium: Memory, sizeLimit: 1Gi } }]
   volumeClaimTemplates:
     - metadata: { name: data }
       spec:
