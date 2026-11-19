@@ -988,7 +988,7 @@
       <div class="registry-header-bar liquid-glass">
         <div>
           <div style="font-size: 15px; font-weight: 700;">Agent đang chạy trên cluster</div>
-          <div class="muted">Nguồn: kagent controller <code>/api/agents</code> và A2A agent card <code>/.well-known/agent.json</code> của từng agent</div>
+          <div class="muted">Nguồn: kagent controller <code>/api/agents</code> và A2A agent card <code>/.well-known/agent-card.json</code> của từng agent</div>
         </div>
         <div class="registry-stats-row">
           <div class="stat-pill"><span>Agent</span><span id="sAgents">—</span></div>
@@ -1110,8 +1110,9 @@
     const out = [];
     for (const row of rows) {
       const name = row.agent.metadata.name;
-      const card = await fetch(A2A(name) + ".well-known/agent.json").then((x) => x.ok ? x.json() : null).catch(() => null);
-      if (card) out.push({ name, row, card });     // agent đã xoá còn trong DB của controller nhưng không có card
+      // controller trả lỗi JSON-RPC với HTTP 200 khi agent không tồn tại: chỉ nhận card có name
+      const card = await fetch(A2A(name) + ".well-known/agent-card.json").then((x) => x.ok ? x.json() : null).catch(() => null);
+      if (card?.name) out.push({ name, row, card });   // agent đã xoá vẫn còn trong DB của controller
     }
     agents = out.sort((a, b) => a.name.localeCompare(b.name));
     renderAgentList();
@@ -1297,11 +1298,11 @@
       top.append(left, el("span", "state-chip " + (a.row.deploymentReady ? "ok" : "err"), a.row.deploymentReady ? "Ready" : "Not ready"));
       const meta = el("div", "card-meta-list");
       const add = (k, v) => { const r = el("div", "meta-item"); r.append(el("span", null, k), el("span", null, v)); meta.append(r); };
-      add("version", a.card.version || "—");
+      add("protocol version", a.card.protocolVersion || "—");
       add("model", `${a.row.modelProvider} · ${a.row.model}`);
       add("replicas", String(replicas(a.row)));
       add("tools", toolNames(a.row).join(", ") || "—");
-      add("protocol", `A2A ${a.card.protocolVersion || ""} · streaming ${a.card.capabilities?.streaming ? "có" : "không"}`);
+      add("transport", `${a.card.preferredTransport || "JSONRPC"} · streaming ${a.card.capabilities?.streaming ? "có" : "không"}`);
       add("skills", String((a.card.skills || []).length));
       const btn = el("button", "liquid-btn", "Xem agent card JSON");
       btn.onclick = () => { $("cardModalTitle").textContent = a.name + " · agent card"; $("cardModalBody").textContent = pretty(a.card); $("cardModal").classList.add("open"); };
