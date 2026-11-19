@@ -1,14 +1,33 @@
-# Bản đang chạy: data-agent, policy-agent (HITL) và coordinator-agent gọi thẳng booking-mcp trong cluster, prompt viết
-# inline, 1 replica, chưa qua agentgateway/Langfuse. Bản đích ở agents.yaml. Áp dụng: kubectl apply -f agents/agents-direct.yaml
+# Bản đang chạy trên GKE: data-agent, policy-agent (HITL) và coordinator-agent; LLM và MCP đi qua agentgateway với JWT
+# Keycloak (gateway/deploy.sh tạo Secret token), prompt viết inline, 1 replica, chưa có Langfuse. Bản đích ở agents.yaml.
+# Áp dụng: kubectl apply -f agents/agents-gke.yaml
+# Mỗi agent 1 RemoteMCPServer mang token riêng: mcpAuthorization của gateway lọc tool theo claim role của token.
 apiVersion: kagent.dev/v1alpha2
 kind: RemoteMCPServer
 metadata:
-  name: booking-tools
+  name: booking-tools-data
   namespace: kagent
 spec:
-  description: Tool đọc online feature store, dự đoán rủi ro huỷ phòng và tra chính sách (RAG)
+  description: Tool đọc online feature store qua agentgateway (token role=data-agent)
   protocol: STREAMABLE_HTTP
-  url: http://booking-mcp.agents.svc.cluster.local/mcp/
+  url: http://agentgateway.gateway.svc.cluster.local:3000/mcp
+  headersFrom:
+    - name: Authorization
+      valueFrom: { type: Secret, name: mcp-token-data, key: Authorization }
+---
+apiVersion: kagent.dev/v1alpha2
+kind: RemoteMCPServer
+metadata:
+  name: booking-tools-policy
+  namespace: kagent
+spec:
+  description: Tool dự đoán huỷ, RAG chính sách và bán vượt qua agentgateway (token role=policy-agent)
+  protocol: STREAMABLE_HTTP
+  url: http://agentgateway.gateway.svc.cluster.local:3000/mcp
+  timeout: 60s                       # lần gọi search_policy đầu tiên nạp bge-m3
+  headersFrom:
+    - name: Authorization
+      valueFrom: { type: Secret, name: mcp-token-policy, key: Authorization }
 ---
 apiVersion: kagent.dev/v1alpha2
 kind: Agent
@@ -36,7 +55,7 @@ spec:
         mcpServer:
           apiGroup: kagent.dev
           kind: RemoteMCPServer
-          name: booking-tools
+          name: booking-tools-data
           toolNames: [get_booking_features]
     deployment:
       replicas: 1
@@ -69,7 +88,7 @@ spec:
         mcpServer:
           apiGroup: kagent.dev
           kind: RemoteMCPServer
-          name: booking-tools
+          name: booking-tools-policy
           toolNames: [predict_cancellation, search_policy, propose_overbooking, apply_overbooking]
           requireApproval: [apply_overbooking]      # HITL: UI kagent dừng chờ người duyệt trước khi ghi K
     deployment:

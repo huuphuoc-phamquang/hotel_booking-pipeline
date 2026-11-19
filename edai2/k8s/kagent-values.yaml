@@ -3,8 +3,8 @@
 # 12 vCPU. Chỉ giữ controller + UI; tắt các agent / tool server có sẵn của chart.
 #   helm install kagent-crds oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds --version 0.9.12 -n kagent --create-namespace
 #   helm install kagent oci://ghcr.io/kagent-dev/kagent/helm/kagent --version 0.9.12 -n kagent -f k8s/kagent-values.yaml \
-#     --set database.postgres.url=<DSN database kagent> --set providers.openAI.config.baseUrl=<LLM /v1>
-# Secret llm-api (key api_key) chứa khoá LLM; giá trị gốc nằm ở Vault secret/agents/llm.
+#     --set database.postgres.url=<DSN database kagent>        # chạy sau gateway/deploy.sh (tạo Secret llm-api)
+# Secret llm-api (key api_key) chứa JWT của client kagent (gateway/deploy.sh cấp); khoá vLLM chỉ nằm ở agentgateway.
 database:
   postgres:
     bundled: { enabled: false }       # dùng Postgres sẵn có của data platform (database kagent), không thêm pod
@@ -16,7 +16,7 @@ providers:
     apiKeySecretRef: llm-api
     apiKeySecretKey: api_key
     config:
-      baseUrl: ""                     # đặt lúc cài: URL tunnel tới vLLM, sau này là agentgateway /v1
+      baseUrl: http://agentgateway.gateway.svc.cluster.local:3000/v1
 kmcp: { enabled: false }
 kagent-tools: { enabled: false }
 k8s-agent: { enabled: false }
