@@ -1,5 +1,6 @@
 # Bản đang chạy trên GKE: data-agent, policy-agent (HITL) và coordinator-agent; LLM và MCP đi qua agentgateway với JWT
-# Keycloak (gateway/deploy.sh tạo Secret token), prompt viết inline, 1 replica, chưa có Langfuse. Bản đích ở agents.yaml.
+# Keycloak (gateway/deploy.sh tạo Secret token), prompt viết inline, chưa có Langfuse. Bản đích ở agents.yaml.
+# Không đặt deployment.replicas: kagent sẽ ghi đè replica mà KEDA scale (k8s/keda.yaml giữ tối thiểu 2).
 # Áp dụng: kubectl apply -f agents/agents-gke.yaml
 # Mỗi agent 1 RemoteMCPServer mang token riêng: mcpAuthorization của gateway lọc tool theo claim role của token.
 apiVersion: kagent.dev/v1alpha2
@@ -58,8 +59,6 @@ spec:
           kind: RemoteMCPServer
           name: booking-tools-data
           toolNames: [get_booking_features]
-    deployment:
-      replicas: 1
 ---
 apiVersion: kagent.dev/v1alpha2
 kind: Agent
@@ -92,8 +91,52 @@ spec:
           name: booking-tools-policy
           toolNames: [predict_cancellation, search_policy, propose_overbooking, apply_overbooking]
           requireApproval: [apply_overbooking]      # HITL: UI kagent dừng chờ người duyệt trước khi ghi K
-    deployment:
-      replicas: 1
+---
+apiVersion: kagent.dev/v1alpha2
+kind: ModelConfig
+metadata:
+  name: model-config-v2
+  namespace: kagent
+spec:
+  provider: OpenAI
+  model: qwen-booking-v2               # adapter LoRA trên cùng vLLM
+  apiKeySecret: llm-api                # cùng JWT client kagent
+  apiKeySecretKey: api_key
+  openAI:
+    baseUrl: http://agentgateway.gateway.svc.cluster.local:3000/llm-v2/v1   # route chỉ tới qwen-booking-v2
+---
+# A/B agent: policy-agent-v2 khác v1 ở model (LoRA v2) và prompt; agentgateway chia /a2a/policy-agent 50/50
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: policy-agent-v2
+  namespace: kagent
+spec:
+  description: Ước lượng rủi ro huỷ của booking, đề xuất số phòng bán vượt (ghi phải được duyệt) và giải thích chính sách huỷ/hoàn tiền bằng RAG
+  type: Declarative
+  declarative:
+    modelConfig: model-config-v2
+    systemMessage: |
+      Bạn là policy-agent (bản v2) của hệ thống đặt phòng khách sạn. Chọn đúng 1 tool theo loại câu hỏi:
+      - Xác suất huỷ của 1 booking: gọi predict_cancellation(booking_id), trả lời xác suất theo % và model_version.
+      - Chính sách huỷ, hoàn tiền, quy định bán vượt: gọi search_policy(question), chỉ trả lời theo các đoạn tool trả về
+        và ghi nguồn (chunk_id): nêu đúng mốc giờ, loại giá và mức hoàn tiền như trong đoạn trích. Đoạn trích không nói tới thì nói là
+        chính sách không quy định, không tự bịa.
+      - Bán vượt (overbooking) cho 1 khách sạn và 1 đêm: gọi propose_overbooking(hotel_id, stay_date dạng YYYY-MM-DD),
+        báo số booking đang giữ phòng, số huỷ kỳ vọng, số phòng, K đề xuất và số booking còn nhận được, rồi hỏi người dùng
+        có áp dụng K không.
+      - Người dùng ra lệnh áp dụng một K cụ thể (vd "Áp dụng K=1 ...", "Đồng ý K=1"): gọi ngay apply_overbooking(hotel_id,
+        stay_date, k) với đúng K đó, không gọi propose_overbooking. Ngoài trường hợp này không bao giờ gọi apply_overbooking.
+      Thiếu mã booking, mã khách sạn hoặc ngày thì hỏi lại, không gọi tool. Tool lỗi thì nói rõ là lỗi, không đoán số.
+      Trả lời tối đa 3 câu bằng tiếng Việt, câu cuối ghi nguồn: tên tool đã gọi (và chunk_id nếu là chính sách).
+    tools:
+      - type: McpServer
+        mcpServer:
+          apiGroup: kagent.dev
+          kind: RemoteMCPServer
+          name: booking-tools-policy
+          toolNames: [predict_cancellation, search_policy, propose_overbooking, apply_overbooking]
+          requireApproval: [apply_overbooking]      # HITL: UI kagent dừng chờ người duyệt trước khi ghi K
 ---
 apiVersion: kagent.dev/v1alpha2
 kind: Agent
@@ -116,5 +159,3 @@ spec:
         agent: { name: data-agent }
       - type: Agent
         agent: { name: policy-agent }
-    deployment:
-      replicas: 1
