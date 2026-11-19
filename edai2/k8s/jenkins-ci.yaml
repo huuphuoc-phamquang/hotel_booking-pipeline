@@ -1,0 +1,50 @@
+# Jenkins (VM cicd-vm, iac/ansible) chạy build trong pod agent trên GKE, namespace ci (edai2/ci/pod-template.yaml).
+#   - SA jenkins: Jenkins controller dùng token của SA này để tạo / xoá pod agent trong namespace ci
+#   - SA jenkins-deployer: pod agent chạy bằng SA này, đủ quyền helm upgrade vào agents và ml (không cluster-admin)
+# Pod agent gọi ngược về Jenkins qua IP nội bộ của VM (firewall booking-cicd-from-pods: 10.20.0.0/16 -> 8080, 50000).
+#   kubectl apply -f k8s/jenkins-ci.yaml
+apiVersion: v1
+kind: Namespace
+metadata: { name: ci }
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata: { name: jenkins, namespace: ci }
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: jenkins-token
+  namespace: ci
+  annotations: { kubernetes.io/service-account.name: jenkins }
+type: kubernetes.io/service-account-token
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata: { name: jenkins-agents, namespace: ci }
+rules:
+  - apiGroups: [""]
+    resources: [pods, pods/exec, pods/log, events, secrets]
+    verbs: [create, delete, get, list, patch, update, watch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata: { name: jenkins-agents, namespace: ci }
+roleRef: { apiGroup: rbac.authorization.k8s.io, kind: Role, name: jenkins-agents }
+subjects: [{ kind: ServiceAccount, name: jenkins, namespace: ci }]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata: { name: jenkins-deployer, namespace: ci }
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata: { name: jenkins-deployer, namespace: agents }
+roleRef: { apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: edit }
+subjects: [{ kind: ServiceAccount, name: jenkins-deployer, namespace: ci }]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata: { name: jenkins-deployer, namespace: ml }
+roleRef: { apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: edit }
+subjects: [{ kind: ServiceAccount, name: jenkins-deployer, namespace: ci }]
