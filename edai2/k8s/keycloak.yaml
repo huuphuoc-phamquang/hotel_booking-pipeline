@@ -1,0 +1,92 @@
+# Keycloak cấp JWT cho agent (client_credentials); agentgateway kiểm chữ ký, issuer, audience và claim role.
+# shortcut: start-dev + H2 trong pod, realm nạp lại từ ConfigMap mỗi lần khởi động (không giữ trạng thái); cần
+# start --optimized + Postgres + TLS khi có người dùng thật, hoặc khi đổi realm bằng UI.
+# Secret keycloak-clients (KEYCLOAK_ADMIN_PASSWORD, *_SECRET) do gateway/deploy.sh tạo, không nằm trong repo.
+apiVersion: v1
+kind: Namespace
+metadata: { name: auth }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: agents-realm, namespace: auth }
+data:
+  # Mỗi agent 1 client: aud=agentgateway, claim role=<tên client> cho mcpAuthorization.
+  # shortcut: token sống 30 ngày vì kagent chỉ nhận khoá tĩnh (Secret); gateway/deploy.sh cấp lại token khi chạy.
+  agents-realm.json: |
+    {
+      "realm": "agents", "enabled": true, "accessTokenLifespan": 2592000,
+      "clients": [
+        {"clientId": "kagent", "secret": "${KAGENT_SECRET}", "role": "llm"},
+        {"clientId": "data-agent", "secret": "${DATA_AGENT_SECRET}", "role": "data-agent"},
+        {"clientId": "policy-agent", "secret": "${POLICY_AGENT_SECRET}", "role": "policy-agent"},
+        {"clientId": "coordinator-agent", "secret": "${COORDINATOR_AGENT_SECRET}", "role": "coordinator-agent"}
+      ]
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: keycloak, namespace: auth }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: keycloak } }
+  template:
+    metadata: { labels: { app: keycloak } }
+    spec:
+      initContainers:
+        # Dựng realm đầy đủ (mapper aud + role) từ danh sách client gọn ở trên
+        - name: render-realm
+          image: python:3.12-slim
+          command: ["python", "-c"]
+          args:
+            - |
+              import json
+              src = json.load(open("/src/agents-realm.json"))
+              def mapper(name, kind, cfg):
+                  return {"name": name, "protocol": "openid-connect", "protocolMapper": kind,
+                          "config": {"access.token.claim": "true", "id.token.claim": "false", **cfg}}
+              src["clients"] = [{
+                  "clientId": c["clientId"], "secret": c["secret"], "enabled": True, "publicClient": False,
+                  "serviceAccountsEnabled": True, "standardFlowEnabled": False, "directAccessGrantsEnabled": False,
+                  "protocolMappers": [
+                      mapper("aud", "oidc-audience-mapper", {"included.custom.audience": "agentgateway"}),
+                      mapper("role", "oidc-hardcoded-claim-mapper",
+                             {"claim.name": "role", "claim.value": c["role"], "jsonType.label": "String"})]}
+                  for c in src["clients"]]
+              json.dump(src, open("/import/agents-realm.json", "w"))
+          volumeMounts:
+            - { name: realm-src, mountPath: /src }
+            - { name: realm, mountPath: /import }
+      containers:
+        - name: keycloak
+          image: quay.io/keycloak/keycloak:26.3.3
+          args: ["start-dev", "--import-realm"]
+          env:
+            # issuer cố định = tên service trong cluster, kể cả khi lấy token qua port-forward
+            - { name: KC_HOSTNAME, value: "http://keycloak.auth.svc.cluster.local:8080" }
+            - { name: KC_HEALTH_ENABLED, value: "true" }
+            - { name: KC_BOOTSTRAP_ADMIN_USERNAME, value: admin }
+            - { name: JAVA_OPTS_KC_HEAP, value: "-XX:MaxRAMPercentage=60" }
+          envFrom:
+            - secretRef: { name: keycloak-clients }   # KC_BOOTSTRAP_ADMIN_PASSWORD + *_SECRET thay vào realm lúc import
+          ports:
+            - { name: http, containerPort: 8080 }
+          readinessProbe:
+            httpGet: { path: /health/ready, port: 9000 }
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          resources:
+            requests: { cpu: 250m, memory: 640Mi }
+            limits: { cpu: "1", memory: 1Gi }
+          volumeMounts:
+            - { name: realm, mountPath: /opt/keycloak/data/import }
+      volumes:
+        - { name: realm-src, configMap: { name: agents-realm } }
+        - { name: realm, emptyDir: {} }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: keycloak, namespace: auth }
+spec:
+  selector: { app: keycloak }
+  ports:
+    - { name: http, port: 8080, targetPort: 8080 }

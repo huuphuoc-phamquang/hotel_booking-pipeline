@@ -1,0 +1,42 @@
+# agentgateway chạy standalone trong namespace gateway, cấu hình từ gateway/agentgateway.yaml.
+# ConfigMap agentgateway-config và Secret vllm-key do gateway/deploy.sh tạo (thay LLM_HOST, khoá vLLM từ Vault).
+apiVersion: v1
+kind: Namespace
+metadata: { name: gateway }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: agentgateway, namespace: gateway }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: agentgateway } }
+  template:
+    metadata:
+      labels: { app: agentgateway }
+    spec:
+      containers:
+        - name: agentgateway
+          image: ghcr.io/agentgateway/agentgateway:v1.6.0
+          args: ["-f", "/config/config.yaml"]
+          ports:
+            - { name: http, containerPort: 3000 }
+          readinessProbe:
+            httpGet: { path: /healthz/ready, port: 15021 }
+            periodSeconds: 5
+          resources:
+            requests: { cpu: 50m, memory: 64Mi }
+            limits: { cpu: 500m, memory: 256Mi }
+          volumeMounts:
+            - { name: config, mountPath: /config }
+            - { name: vllm-key, mountPath: /secrets }
+      volumes:
+        - { name: config, configMap: { name: agentgateway-config } }
+        - { name: vllm-key, secret: { secretName: vllm-key, items: [{ key: key, path: vllm-key }] } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: agentgateway, namespace: gateway }
+spec:
+  selector: { app: agentgateway }
+  ports:
+    - { name: http, port: 3000, targetPort: 3000 }
