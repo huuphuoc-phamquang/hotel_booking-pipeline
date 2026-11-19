@@ -27,6 +27,28 @@ variable "zone" {
   type    = string
   default = "asia-southeast1-b" # có L4
 }
+# tài khoản mới (12 vCPU, SSD 250GB, 0 GPU): -var cpu_machine_type=e2-standard-4 -var cpu_disk_type=pd-standard
+#   -var cpu_max_nodes=3 -var gpu_max_nodes=0 -var spark_max_nodes=0
+variable "cpu_machine_type" {
+  type    = string
+  default = "e2-standard-8"
+}
+variable "cpu_disk_type" {
+  type    = string
+  default = "pd-balanced" # pd-standard không tính vào quota SSD_TOTAL_GB
+}
+variable "cpu_max_nodes" {
+  type    = number
+  default = 6
+}
+variable "gpu_max_nodes" {
+  type    = number
+  default = 1
+}
+variable "spark_max_nodes" {
+  type    = number
+  default = 7 # n2: quota N2_CPUS riêng; CPUS_ALL_REGIONS đã nâng 64 -> 128
+}
 variable "budget" {
   type    = number
   default = 7900000 # ≈ $300, theo tiền tệ billing account (VND)
@@ -49,14 +71,16 @@ module "network" {
 }
 
 module "gke" {
-  source          = "../../modules/gke"
-  name            = "booking-ai"
-  zone            = var.zone
-  network         = module.network.network
-  subnetwork      = module.network.subnetwork
-  cpu_max_nodes   = 6
-  gpu_max_nodes   = 1
-  spark_max_nodes = 7 # n2: quota N2_CPUS riêng; CPUS_ALL_REGIONS đã nâng 64 -> 128
+  source           = "../../modules/gke"
+  name             = "booking-ai"
+  zone             = var.zone
+  network          = module.network.network
+  subnetwork       = module.network.subnetwork
+  cpu_machine_type = var.cpu_machine_type
+  cpu_disk_type    = var.cpu_disk_type
+  cpu_max_nodes    = var.cpu_max_nodes
+  gpu_max_nodes    = var.gpu_max_nodes
+  spark_max_nodes  = var.spark_max_nodes
 }
 
 module "registry" {

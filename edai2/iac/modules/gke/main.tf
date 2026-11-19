@@ -11,6 +11,8 @@ variable "subnetwork" { type = string }
 variable "cpu_max_nodes" { type = number }
 variable "gpu_max_nodes" { type = number }
 variable "spark_max_nodes" { type = number }
+variable "cpu_machine_type" { type = string }
+variable "cpu_disk_type" { type = string }
 
 resource "google_container_cluster" "main" {
   name                     = var.name
@@ -43,16 +45,17 @@ resource "google_container_node_pool" "cpu" {
     max_node_count = var.cpu_max_nodes
   }
   node_config {
-    machine_type = "e2-standard-8"
+    machine_type = var.cpu_machine_type
     spot         = true
     disk_size_gb = 100
-    disk_type    = "pd-balanced"
+    disk_type    = var.cpu_disk_type
     oauth_scopes = ["https://www.googleapis.com/auth/cloud-platform"]
     workload_metadata_config { mode = "GKE_METADATA" }
   }
 }
 
 resource "google_container_node_pool" "spark" {
+  count    = var.spark_max_nodes > 0 ? 1 : 0 # 0: bỏ pool (tài khoản free trial)
   name     = "spark-spot"
   cluster  = google_container_cluster.main.name
   location = var.zone
@@ -73,6 +76,7 @@ resource "google_container_node_pool" "spark" {
 }
 
 resource "google_container_node_pool" "gpu" {
+  count    = var.gpu_max_nodes > 0 ? 1 : 0 # free trial không có quota GPU
   name     = "gpu-l4"
   cluster  = google_container_cluster.main.name
   location = var.zone
