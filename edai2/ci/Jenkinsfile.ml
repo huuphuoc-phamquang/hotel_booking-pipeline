@@ -65,7 +65,7 @@ pipeline {
             kubectl -n ml patch isvc cancel-risk-bulk --type json -p "[
               {\"op\": \"replace\", \"path\": \"/spec/predictor/containers/0/image\", \"value\": \"$REGISTRY/ml/cancel-risk:v$V\"}]"
             kubectl -n ml wait isvc/cancel-risk-bulk --for=condition=Ready --timeout=300s
-            kubectl -n airflow exec deploy/airflow-scheduler -- airflow dags trigger rescore_active
+            kubectl -n data exec deploy/airflow-scheduler -- airflow dags trigger rescore_active
           fi
         '''
       }
