@@ -64,11 +64,14 @@ Thử trên cluster thứ hai ngày 2026-11-19:
 <a id="edai-2-41"></a>
 ## UI cho agent registry
 
-**Rubric:** edai-2 · dòng 41 · 2 điểm · nhóm *External Routing & Gateway (NGINX Ingress Controller)* › *Các service cần được hide đằng sau gateway*
+UI của agentregistry (dòng 8) đứng sau NGINX Ingress `agentregistry` trong
+[`k8s/ingress.yaml`](../../edai2/k8s/ingress.yaml), host `registry.34.124.198.171.nip.io`, cùng lớp bảo vệ với UI test
+agent: basic auth bằng Secret htpasswd `kagent-ui-auth` (bản sao trong namespace `agentregistry`) và `limit-rps` 10.
+Service `agentregistry` chỉ là ClusterIP. Kiểm ngày 2026-11-19: không đăng nhập trả 401, đăng nhập trả 200, API
+`/v0/agents` qua ingress trả đủ 4 agent.
 
-**Cách làm:** [Đã có] Ingress `registry.agents.booking.local`. [Cần làm] deploy registry rồi chụp.
+![UI agentregistry qua ingress](../images/edai-2/registry-agents.png)
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
 
 <a id="edai-2-42"></a>
 ## Setup authentication cho UI test agent ở trên

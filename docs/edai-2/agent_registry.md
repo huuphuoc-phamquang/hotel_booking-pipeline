@@ -2,16 +2,24 @@
 
 Registry lưu agent card và MCP server.
 
-Mỗi mục dưới đây ứng với một dòng của rubric. Phần **Cách làm** mô tả giải pháp đã triển khai, đồng bộ từ
-cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu đo được hoặc ảnh chụp (`docs/images/`).
+Mỗi mục ứng với một dòng của rubric, ghi lại phần đã triển khai và kết quả (số liệu đo được, ảnh chụp trong
+`docs/images/`).
 
 <a id="edai-2-8"></a>
 ## Deploy registry for agent theo tutorial này
 
-**Rubric:** edai-2 · dòng 8 · 2 điểm · nhóm *Deploy registry for agent theo tutorial này*
+agentregistry v0.4.0 (aregistry.ai) cài bằng Helm chart chính thức
+`oci://ghcr.io/agentregistry-dev/agentregistry/charts/agentregistry` với
+[`k8s/agentregistry-values.yaml`](../../edai2/k8s/agentregistry-values.yaml), namespace `agentregistry`, trên cluster
+thứ hai ngày 2026-11-19. Registry dùng Postgres sẵn có của data platform (database `agentregistry`, extension pgvector)
+thay cho Postgres bundled để không thêm pod; chuỗi kết nối nằm trong Secret `agentregistry-db`. Một pod phục vụ cả
+web UI, REST API (`/v0/...`, tài liệu ở `/docs`) và MCP endpoint của registry; UI ra ngoài qua Ingress
+`registry.34.124.198.171.nip.io` có basic auth (dòng 41).
 
-**Cần nộp (cả nhóm):** Document thể hiện show cái ảnh registry UI có agent, và link tới code chứa registry
+Catalog hiện có 4 agent (`coordinator-agent`, `data-agent`, `policy-agent`, `policy-agent-v2`) và 1 MCP server
+`booking-tools`, cùng tag `f808e37` là commit đang deploy. Mỗi agent ghi lại tiêu đề và mô tả từ agent card A2A,
+model, MCP server dùng, repository kèm commit và thư mục `edai2/agents`, cùng địa chỉ A2A qua agentgateway.
 
-**Cách làm:** [Đã có] `ci/publish_agent_card.py` lấy agent card A2A qua agentgateway rồi đăng lên registry, version là commit. [Thiết kế] Deploy agent registry theo aregistry.ai. [Cần làm] chụp registry UI có các agent.
+![agentregistry: catalog 4 agent](../images/edai-2/registry-agents.png)
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+![agentregistry: chi tiết policy-agent](../images/edai-2/registry-agent-detail.png)

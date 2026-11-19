@@ -2,31 +2,42 @@
 
 Coordinator điều phối các agent con; tài liệu gồm số replica, autoscale và registry.
 
-Mỗi mục dưới đây ứng với một dòng của rubric. Phần **Cách làm** mô tả giải pháp đã triển khai, đồng bộ từ
-cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu đo được hoặc ảnh chụp (`docs/images/`).
+Mỗi mục ứng với một dòng của rubric, ghi lại phần đã triển khai và kết quả (số liệu đo được, ảnh chụp trong
+`docs/images/`).
 
 <a id="edai-2-25"></a>
 ## Deploy 1 Coordinator Agent với multi-replica và auto-scale sử dụng cái này
 
-**Rubric:** edai-2 · dòng 25 · 2 điểm · nhóm *Deploy 1 Coordinator Agent* › *Điều phối 2 Agent ở trên*
-
-**Cần nộp (cả nhóm):** + Document phải show được Agent đã có trên registry, được deploy với multi-replica, có khả năng scale (có hình ảnh thể hiện đã test thử) + Document show KAgent UI chat với Agent
-
-**Cách làm:** [Đã có] Coordinator scale bằng KEDA ScaledObject theo request/s qua agentgateway, cộng trigger CPU 60% (`k8s/keda.yaml`); HPA trong `agents.yaml` đã bị xoá. [Cần làm] kiểm xem kagent có ghi đè số replica không; chụp quá trình scale.
-
-**Kết quả:** phần điều phối và chat trên kagent UI đã có; registry, multi-replica và auto-scale chưa làm.
 coordinator-agent ([`agents/agents-gke.yaml`](../../edai2/agents/agents-gke.yaml)) có hai tool kiểu `Agent` là
-data-agent và policy-agent, chạy 1 replica. Với câu hỏi gồm số liệu của khách 18766768 tại khách sạn 8528 và xác suất
-huỷ của booking 90000919211, coordinator tách thành hai yêu cầu, giao cho từng agent con rồi tổng hợp: khách có
-1 booking 90 ngày, tỉ lệ huỷ 0%, lead time trung bình 6 ngày; booking có xác suất huỷ 13,14% (model v1).
+data-agent và policy-agent. Với câu hỏi gồm số liệu của khách 18766768 tại khách sạn 8528 và xác suất huỷ của booking
+90000919211, coordinator tách thành hai yêu cầu, giao cho từng agent con rồi tổng hợp: khách có 1 booking 90 ngày,
+tỉ lệ huỷ 0%, lead time trung bình 6 ngày; booking có xác suất huỷ 13,14% (model v1). Coordinator đã có trên
+agentregistry (dòng 26, ảnh catalog bên dưới).
+
+Coordinator chạy 2 replica và autoscale 2–4 bằng KEDA ScaledObject `coordinator-agent` trong
+[`k8s/keda.yaml`](../../edai2/k8s/keda.yaml), với hai trigger: request/giây của route `/a2a/coordinator-agent` trên
+agentgateway (ngưỡng 1) và CPU 60%; KEDA lấy số replica lớn hơn của hai trigger. Agent không đặt
+`deployment.replicas` để kagent không ghi đè replica do KEDA chọn. Phép thử tải và scale chạy trên data-agent với
+cùng cơ chế (dòng 19: 2 → 4 replica khi vượt ngưỡng, về 2 sau 5 phút).
 
 ![kagent UI: coordinator-agent gọi data-agent và policy-agent](../images/edai-2/kagent-coordinator.png)
+
+![agentregistry: catalog có coordinator-agent](../images/edai-2/registry-agents.png)
+
+![KEDA scale data-agent 2 → 4 replica](../images/edai-2/keda-scale.png)
 
 <a id="edai-2-26"></a>
 ## Publish Agent ở này lên registry đã deploy để đảm bảo governance.
 
-**Rubric:** edai-2 · dòng 26 · 2 điểm · nhóm *Deploy 1 Coordinator Agent* › *Điều phối 2 Agent ở trên*
+Script [`ci/publish_agent_card.py`](../../edai2/ci/publish_agent_card.py) đăng agent lên agentregistry (dòng 8):
+lấy agent card A2A từ kagent controller, dựng resource `ar.dev/v1alpha1` gồm `MCPServer` `booking-tools` (route `/mcp`
+của agentgateway) và `Agent` (tiêu đề, mô tả, model, MCP server, repository và commit), rồi gửi `POST /v0/apply`.
+Tag là commit đang deploy, nên mỗi lần deploy để lại một phiên bản; apply lại cùng tag thì cập nhật. Card lấy từ
+controller chứ không qua `/a2a/policy-agent` của gateway, vì route đó chia 50/50 và có lúc trả card của v2; script
+dừng nếu tên trong card không khớp agent. Stage `Deploy agents` của [`ci/Jenkinsfile`](../../edai2/ci/Jenkinsfile)
+gọi script này cho cả 4 agent sau khi rollout.
 
-**Cách làm:** [Đã có] `ci/Jenkinsfile` đăng data-agent, policy-agent, policy-agent-v2 và coordinator-agent lên registry sau khi rollout. [Cần làm] chụp registry.
+Ngày 2026-11-19 script được chạy từ máy của nhóm (port-forward tới controller và registry) với tag `f808e37`:
+`coordinator-agent` cùng hai agent con và `policy-agent-v2` có trên registry kèm MCP server `booking-tools`. Stage Jenkins chưa chạy vì tham số `WITH_AGENTS` còn tắt.
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+![agentregistry: catalog 4 agent](../images/edai-2/registry-agents.png)

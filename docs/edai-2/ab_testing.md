@@ -8,13 +8,35 @@ cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu �
 <a id="edai-2-52"></a>
 ## Perform A/B test for agents with different model config and monitor them
 
-**Rubric:** edai-2 · dòng 52 · 1 điểm · nhóm *A/B Testing* › *When you deploy a new model, don't replace the old one directly, you should do A/B test, monitor it, and deploy.*
+policy-agent có hai bản chạy song song trong [`agents/agents-gke.yaml`](../../edai2/agents/agents-gke.yaml):
 
-**Cần nộp (cả nhóm):** Document về A/B test được implement như thế nào, dashboard như thế nào
+| | policy-agent (v1) | policy-agent-v2 |
+|---|---|---|
+| ModelConfig | `default-model-config` → `/v1` của gateway (90/10 qwen-3b / LoRA) | `model-config-v2` → `/llm-v2/v1`, chỉ adapter `qwen-booking-v2` |
+| Prompt | trả lời ngắn gọn | tối đa 3 câu, câu cuối ghi nguồn (tool, chunk_id) |
+| Tool, HITL | 4 tool, `apply_overbooking` cần duyệt | giống v1 |
 
-**Cách làm:** [Đã có] Trong `agents.yaml`, policy-agent-v2 dùng ModelConfig `model-config-v2` (route `/llm-v2` chỉ tới qwen-v2) và prompt riêng; agentgateway chia `/a2a/policy-agent` 50/50. [Cần làm] dashboard so sánh latency, token, tỉ lệ tool lỗi và tỉ lệ đề xuất bị từ chối.
+agentgateway chia route `/a2a/policy-agent` 50/50 giữa hai bản; `/a2a/policy-agent-v2` gọi thẳng v2
+([`gateway/agentgateway.yaml`](../../edai2/gateway/agentgateway.yaml)). Metric của gateway
+(`agentgateway_requests_total`, `request_duration_seconds`, `gen_ai_client_token_usage`, nhãn `backend` và
+`gen_ai_request_model`) được Prometheus scrape qua ServiceMonitor; dashboard Grafana `agent-ab`
+([`observability/dashboards/agent-ab.json`](../../edai2/observability/dashboards/agent-ab.json)) so sánh số request, tỉ lệ
+lỗi, latency p50/p95 theo bản, token và thời gian gọi LLM theo model.
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+[`tests/ab_agent.py`](../../edai2/tests/ab_agent.py) gửi 20 câu hỏi (xác suất huỷ, chính sách, bán vượt) qua
+`/a2a/policy-agent/` ngày 2026-11-19 và ghi bản trả lời theo `kagent_app_name`:
+
+| Bản | Lượt | p50 | max | completed | tool lỗi | token output TB |
+|---|---|---|---|---|---|---|
+| policy-agent (v1) | 13 | 4,5 s | 13,7 s | 13 | 0 | 85 |
+| policy-agent-v2 | 7 | 5,7 s | 17,5 s | 7 | 0 | 49 |
+
+v2 trả lời ngắn hơn đúng như prompt (token output thấp hơn khoảng 42%) nhưng chậm hơn, vì adapter LoRA thêm chi phí
+trên cùng vLLM (dashboard: thời gian gọi LLM p50 của `qwen-booking-v2` cao hơn `qwen-3b`). Mẫu 20 lượt còn nhỏ và tỉ
+lệ chia thực tế là 13/7, nên kết quả chỉ mang tính định hướng; chưa đánh giá độ đúng nội dung câu trả lời.
+
+![Dashboard Grafana A/B agent](../images/edai-2/grafana-agent-ab.png)
+
 
 <a id="edai-2-53"></a>
 ## Perform A/B test for different LLM versions on the LLM inference platform

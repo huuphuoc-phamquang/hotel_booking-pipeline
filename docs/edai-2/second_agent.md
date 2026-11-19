@@ -15,8 +15,10 @@ cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu �
 **Cách làm:** [Đã có] policy-agent có bốn tool: `predict_cancellation` (ML, Feast online + KServe), `search_policy` (RAG), `propose_overbooking` (K tính từ `gold.booking_risk`, so với số phòng trong `gold.hotel_rooms`) và `apply_overbooking` (ghi K, cần `requireApproval` - Idea 2). [Cần làm] multi-replica, KEDA, Agent Substrate (sandbox), registry; chụp UI chat.
 
 **Kết quả:** policy-agent chạy trên cluster thứ hai ngày 2026-11-19 với đủ bốn tool
-([`agents/agents-gke.yaml`](../../edai2/agents/agents-gke.yaml)); multi-replica, KEDA, sandbox và registry chưa
-làm. Kết quả gọi thử qua A2A và kagent UI:
+([`agents/agents-gke.yaml`](../../edai2/agents/agents-gke.yaml)), đi qua agentgateway (RemoteMCPServer
+`booking-tools-policy`, token role `policy-agent`), chạy 2 replica và autoscale 2–4 bằng KEDA giống data-agent
+(dòng 19), đã đăng lên agentregistry (dòng 21); riêng sandbox (Agent Substrate, dòng 20) chưa làm vì cần kagent 1.x.
+Kết quả gọi thử qua A2A và kagent UI:
 
 - `predict_cancellation(90000919211)`: Feast online + KServe trả xác suất huỷ 13,14%, `model_version` 1.
 - `search_policy`: lấy đoạn `policies/cancellation.md#0` từ online store (15 chunk, bge-m3); câu trả lời nêu đúng mốc

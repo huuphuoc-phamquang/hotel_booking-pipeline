@@ -50,18 +50,28 @@ Upgrade thất bại sau 90 giây vì pod mới không kéo được image, và 
 <a id="edai-2-19"></a>
 ## Deploy 1 Agent sử dụng MCP tool ở trên với multi-replica và auto-scale sử dụng cái này
 
-**Rubric:** edai-2 · dòng 19 · 2 điểm · nhóm *Web API kéo dữ liệu user (đã lưu thông qua feature pipeline) và chunk (đã được lưu thông qua RAG pipeline)* › *Có sử dụng FastAPI + data validation (với pydantic)*
+data-agent ([`agents/agents-gke.yaml`](../../edai2/agents/agents-gke.yaml)) dùng MCP server booking-mcp qua
+RemoteMCPServer `booking-tools-data` (route `/mcp` của agentgateway, token role `data-agent`) và chỉ được cấp tool
+`get_booking_features`. Hỏi về cặp khách 18766768 và khách sạn 8528, agent gọi tool với đúng hai mã rồi trả lời theo
+số liệu online store (1 booking 90 ngày, tỉ lệ huỷ 0%; khách sạn 44 booking 7 ngày, tỉ lệ huỷ 30 ngày 17,24%).
 
-**Cách làm:** [Đã có] `k8s/keda.yaml` có ScaledObject cho data-agent theo request/s của route `a2a-data-agent` qua agentgateway, tối thiểu 2 replica; HPA theo CPU đã bỏ khỏi `agents.yaml`. [Cần làm] chụp quá trình scale khi chạy locust.
+Autoscale dùng KEDA 2.20.2 (Helm `kedacore/keda`, namespace `keda`). Mỗi agent có một ScaledObject trong
+[`k8s/keda.yaml`](../../edai2/k8s/keda.yaml): tối thiểu 2, tối đa 4 replica, trigger Prometheus theo request/giây của
+route A2A trên agentgateway (`agentgateway_requests_total`, ngưỡng 1 request/giây mỗi replica vì mỗi lượt agent chờ
+LLM khoảng 5 s); KEDA tự tạo HPA `keda-hpa-<agent>`. kagent đặt lại `deployment.replicas` của Deployment mỗi lần
+reconcile nếu Agent có trường này (đã thử: scale tay lên 2 bị kéo về 1 ngay), nên Agent trong
+[`agents/agents-gke.yaml`](../../edai2/agents/agents-gke.yaml) không đặt `replicas` và để KEDA quản lý.
 
-**Kết quả:** phần agent dùng MCP tool đã chạy; multi-replica và auto-scale chưa làm. data-agent
-([`agents/agents-gke.yaml`](../../edai2/agents/agents-gke.yaml)) dùng RemoteMCPServer `booking-tools-data` (qua
-agentgateway, token role `data-agent`) và chỉ được cấp tool `get_booking_features`; hiện chạy 1 replica, chưa có KEDA. Hỏi về cặp
-khách 18766768 và khách sạn 8528, agent gọi tool với đúng hai mã rồi trả lời theo số liệu online store (44 booking
-7 ngày, tỉ lệ huỷ 30 ngày 17,24%). Prompt yêu cầu hỏi lại khi thiếu mã; trong phạm vi thử nghiệm, model 3B vẫn có lúc
-gọi tool với `customer_id` rỗng.
+[`tests/keda_load.sh`](../../edai2/tests/keda_load.sh) tạo khoảng 10 request/giây vào route `/a2a/data-agent` (GET
+agent card qua gateway, không gọi LLM) trong 150 s và in trạng thái HPA mỗi 20 s. Lần chạy ngày 2026-11-19 bắt đầu
+ở 2/2 replica (metric 0,25); 20 s sau metric 1,57 request/giây mỗi replica vượt ngưỡng, desired lên 4; 20 s tiếp theo
+4/4 replica Ready. Hết tải, HPA giữ 4 replica trong 5 phút (cửa sổ ổn định mặc định) rồi về 2. Ở lần chạy đầu, hai
+pod mới không đủ chỗ nên cluster autoscaler của GKE thêm node thứ ba, kéo image kagent (339 MB) mất 53 s, tổng cộng
+khoảng 2,5 phút tới khi Ready.
 
 ![kagent UI: data-agent gọi get_booking_features](../images/edai-2/kagent-data-agent.png)
+
+![KEDA scale data-agent 2 → 4 replica](../images/edai-2/keda-scale.png)
 
 <a id="edai-2-20"></a>
 ## Configure Agent chạy trong Sandbox để đảm bảo security
@@ -75,8 +85,15 @@ gọi tool với `customer_id` rỗng.
 <a id="edai-2-21"></a>
 ## Publish Agent ở trên lên registry đã deploy để đảm bảo governance
 
-**Rubric:** edai-2 · dòng 21 · 1 điểm · nhóm *Web API kéo dữ liệu user (đã lưu thông qua feature pipeline) và chunk (đã được lưu thông qua RAG pipeline)* › *Có sử dụng FastAPI + data validation (với pydantic)*
+Script [`ci/publish_agent_card.py`](../../edai2/ci/publish_agent_card.py) đăng agent lên agentregistry (dòng 8):
+lấy agent card A2A từ kagent controller, dựng resource `ar.dev/v1alpha1` gồm `MCPServer` `booking-tools` (route `/mcp`
+của agentgateway) và `Agent` (tiêu đề, mô tả, model, MCP server, repository và commit), rồi gửi `POST /v0/apply`.
+Tag là commit đang deploy, nên mỗi lần deploy để lại một phiên bản; apply lại cùng tag thì cập nhật. Card lấy từ
+controller chứ không qua `/a2a/policy-agent` của gateway, vì route đó chia 50/50 và có lúc trả card của v2; script
+dừng nếu tên trong card không khớp agent. Stage `Deploy agents` của [`ci/Jenkinsfile`](../../edai2/ci/Jenkinsfile)
+gọi script này cho cả 4 agent sau khi rollout.
 
-**Cách làm:** [Đã có] `ci/publish_agent_card.py`, Jenkins gọi sau khi rollout từng agent. [Cần làm] publish data-agent, chụp registry UI.
+Ngày 2026-11-19 script được chạy từ máy của nhóm (port-forward tới controller và registry) với tag `f808e37`:
+`data-agent` (tool `get_booking_features`) có trên registry kèm MCP server `booking-tools`. Stage Jenkins chưa chạy vì tham số `WITH_AGENTS` còn tắt.
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+![agentregistry: catalog 4 agent](../images/edai-2/registry-agents.png)
