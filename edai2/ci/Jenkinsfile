@@ -26,7 +26,11 @@ pipeline {
           sh 'PYTHONPATH="mcp_server:dags:observability" pytest tests/ --ignore=tests/test_drift_api.py --cov=mcp_server --cov=observability --cov-fail-under=90 --junitxml=report.xml -o asyncio_mode=auto'
           sh 'pip install -r drift_api/requirements.txt && PYTHONPATH=drift_api pytest tests/test_drift_api.py --cov=drift_api --cov-fail-under=90'
           sh '''
-            CHANGED=$(git diff --name-only origin/main...HEAD -- 'mcp_server/*.py' | paste -sd, -)
+            # so với commit build thành công gần nhất (lần đầu: commit trước); git lỗi thì dừng, không âm thầm bỏ mutmut
+            BASE=${GIT_PREVIOUS_SUCCESSFUL_COMMIT:-HEAD~1}
+            FILES=$(git diff --relative --name-only "$BASE" HEAD -- 'mcp_server/*.py')
+            CHANGED=$(echo "$FILES" | paste -sd, -)
+            echo "mcp_server thay đổi từ $BASE: ${CHANGED:-không có}"
             if [ -n "$CHANGED" ]; then
               mutmut run --paths-to-mutate "$CHANGED"   # mutmut 2.x (pin <3; bản 3 bỏ cờ này)
               python ci/check_mutation_score.py --min 0.8
@@ -56,7 +60,11 @@ open('drift_api/reference/MODEL_VERSION', 'w').write(mv.version)"'''
       steps {
         dir('edai2') {
           withVault([vaultSecrets: [[path: 'secret/ci/registry', secretValues: [[envVar: 'REG_KEY', vaultKey: 'json_key']]]]]) {
-            sh 'echo "$REG_KEY" | docker login -u _json_key --password-stdin https://asia-southeast1-docker.pkg.dev'
+            // khoá lưu base64 một dòng (plugin Vault chỉ che được secret một dòng); set +x để trace không in lệnh
+            sh '''
+              set +x
+              printenv REG_KEY | docker login -u _json_key_base64 --password-stdin https://asia-southeast1-docker.pkg.dev
+            '''
             sh '''
               for app in $APPS; do
                 docker build -f docker/api.Dockerfile --build-arg APP=${app%%:*} -t $REGISTRY/${app#*:}:$TAG .
