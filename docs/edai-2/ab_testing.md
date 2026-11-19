@@ -2,8 +2,8 @@
 
 A/B testing cho agent, LLM và model inference.
 
-Mỗi mục dưới đây ứng với một dòng của rubric. Phần **Cách làm** mô tả giải pháp đã triển khai, đồng bộ từ
-cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu đo được hoặc ảnh chụp (`docs/images/`).
+Mỗi mục ứng với một dòng của rubric, ghi lại phần đã triển khai và kết quả (số liệu đo được, ảnh chụp trong
+`docs/images/`).
 
 <a id="edai-2-52"></a>
 ## Perform A/B test for agents with different model config and monitor them
@@ -41,15 +41,12 @@ lệ chia thực tế là 13/7, nên kết quả chỉ mang tính định hướ
 <a id="edai-2-53"></a>
 ## Perform A/B test for different LLM versions on the LLM inference platform
 
-**Rubric:** edai-2 · dòng 53 · 1 điểm · nhóm *A/B Testing* › *When you deploy a new model, don't replace the old one directly, you should do A/B test, monitor it, and deploy.*
+Phiên bản LLM mới được thử theo hai bước, không thay thẳng bản cũ.
 
-**Cách làm:** [Đã có] agentgateway chia trọng số 90/10 giữa qwen v1 và v2; dashboard `observability/dashboards/llm-agents.json` hiển thị token, TTFT, round-trip theo model. [Cần làm] chia traffic 90/10 qua agentgateway trên GKE khi có GPU (đã A/B offline v1 và v1b trên vLLM laptop).
-
-**Kết quả:** A/B **offline** giữa hai phiên bản LLM, chạy ngày 2026-11-19 trên vLLM 0.9.2 ở laptop GPU (chưa có
-agentgateway và GPU trên GKE, nên chưa chia traffic 90/10 và chưa có dashboard theo model). Một vLLM phục vụ cùng lúc
-Qwen2.5-1.5B gốc và hai adapter LoRA: `qwen-booking-v1` (fine-tune với 400 hội thoại tính K + 29 câu chính sách và PII,
-2 epoch) và `qwen-booking-v1b` (60 hội thoại K, 4 epoch). Cả ba trả lời cùng 6 câu hỏi, temperature 0; đáp án K đối chiếu
-với `overbooking.limit`, chính sách đối chiếu với `policies/*.md`.
+**A/B offline** chạy ngày 2026-11-19 trên vLLM 0.9.2 ở laptop GPU. Một vLLM phục vụ cùng lúc Qwen2.5-1.5B gốc và hai
+adapter LoRA: `qwen-booking-v1` (fine-tune với 400 hội thoại tính K + 29 câu chính sách và PII, 2 epoch) và
+`qwen-booking-v1b` (60 hội thoại K, 4 epoch). Cả ba trả lời cùng 6 câu hỏi, temperature 0; đáp án K đối chiếu với
+`overbooking.limit`, chính sách đối chiếu với `policies/*.md`.
 
 | Nhóm câu hỏi | base | v1 | v1b |
 |---|---|---|---|
@@ -62,11 +59,19 @@ phần từ chối PII: model 1,5B học khuôn câu trả lời chứ không h�
 `propose_overbooking`, chính sách lấy qua RAG (`search_policy`), PII chặn ở lớp ngoài (`llm_metrics.py`); fine-tune chỉ
 nên dùng để dạy cách gọi tool và giọng trả lời.
 
-Sau đó, chia traffic online đã chạy qua agentgateway (route `/v1` trong
-[`gateway/agentgateway.yaml`](../../edai2/gateway/agentgateway.yaml)): weight 90 tới model gốc `qwen-3b`, weight 10 tới
-adapter `qwen-booking-v2`, cùng một vLLM (Qwen2.5-3B). Ngày 2026-11-19, 13 request LLM hợp lệ của agent qua
-gateway chia thành 12 tới `qwen-3b` và 1 tới `qwen-booking-v2` (trường `gen_ai.request.model` trong log
-gateway, ảnh ở `global_model_config.md`); mẫu còn nhỏ nên tỉ lệ chưa phản ánh đúng 90/10. Dashboard so sánh theo model
-vẫn chưa có.
+**A/B online** qua agentgateway trên GKE: route `/v1` trong
+[`gateway/agentgateway.yaml`](../../edai2/gateway/agentgateway.yaml) chia weight 90 tới model gốc `qwen-3b` và weight 10
+tới adapter `qwen-booking-v2`, cùng một vLLM (Qwen2.5-3B); mọi agent dùng ModelConfig chung trỏ vào route này nên đổi
+tỉ lệ hay rút bản mới chỉ cần sửa gateway. Prometheus scrape metric của gateway (ServiceMonitor trong
+[`k8s/agentgateway.yaml`](../../edai2/k8s/agentgateway.yaml)); hai panel cuối của dashboard `agent-ab`
+([`observability/dashboards/agent-ab.json`](../../edai2/observability/dashboards/agent-ab.json)) so sánh token
+input/output và thời gian gọi LLM p50 theo `gen_ai_request_model`.
+
+Từ khi bật scrape (14:08) tới 15:08 ngày 2026-11-19, route `/v1` có 29 request thành công: 27 tới `qwen-3b` và 2 tới
+`qwen-booking-v2` (khoảng 93/7, sát trọng số 90/10). Tính cả route `/llm-v2` của policy-agent-v2, `qwen-booking-v2`
+nhận 15 request. Trên dashboard, thời gian gọi LLM p50 của `qwen-booking-v2` cao hơn `qwen-3b` (adapter LoRA thêm
+chi phí trên cùng GPU); số mẫu của bản v2 còn ít nên chưa đủ để quyết định promote.
 
 ![A/B offline giữa base, v1 và v1b](../images/edai-2/llm-ab-offline.png)
+
+![Dashboard agent-ab: token và thời gian gọi LLM theo model](../images/edai-2/grafana-agent-ab.png)
