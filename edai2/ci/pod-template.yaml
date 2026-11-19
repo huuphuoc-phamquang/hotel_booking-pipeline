@@ -9,7 +9,7 @@ spec:
       image: jenkins/inbound-agent:latest-jdk21
     - name: tools
       # plugin Kubernetes đọc file nguyên văn, không thay biến: đổi project GCP thì sửa đường dẫn này
-      image: asia-southeast1-docker.pkg.dev/hotel-booking-edai2/booking/ci/tools:2
+      image: asia-southeast1-docker.pkg.dev/hotel-booking-edai2/booking/ci/tools:3
       command: ["sleep", "infinity"]
       env:
         - { name: DOCKER_HOST, value: tcp://localhost:2375 }
