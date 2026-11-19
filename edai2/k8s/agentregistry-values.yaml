@@ -1,0 +1,14 @@
+# agentregistry v0.4.0 (aregistry.ai): catalog agent / MCP server cho governance, UI + API ở cổng 12121.
+#   kubectl -n data exec postgres-0 -- psql -U postgres -c "CREATE DATABASE agentregistry;"   (+ CREATE EXTENSION vector)
+#   kubectl -n agentregistry create secret generic agentregistry-db --from-literal=AGENT_REGISTRY_DATABASE_URL=<DSN>
+#   helm install agentregistry oci://ghcr.io/agentregistry-dev/agentregistry/charts/agentregistry --version 0.4.0 \
+#     -n agentregistry -f k8s/agentregistry-values.yaml
+# Dùng Postgres sẵn có của data platform (database agentregistry, pgvector) thay Postgres bundled để không thêm pod.
+database:
+  postgres:
+    type: external
+    external:
+      secretRef: { name: agentregistry-db, key: AGENT_REGISTRY_DATABASE_URL }
+resources:
+  requests: { cpu: 100m, memory: 192Mi }   # cluster 12 vCPU: hạ request mặc định 250m
+  limits: { cpu: "1", memory: 1Gi }

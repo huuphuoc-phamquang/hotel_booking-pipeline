@@ -52,9 +52,28 @@ spec:
     - host: agents.34.124.198.171.nip.io
       http:
         paths: [{ path: /, pathType: Prefix, backend: { service: { name: kagent-ui, port: { number: 8080 } } } }]
+---
+# UI + API agentregistry (k8s/agentregistry-values.yaml). Ingress phải cùng namespace với service và Secret htpasswd:
+#   kubectl -n kagent get secret kagent-ui-auth -o yaml | sed 's/namespace: kagent/namespace: agentregistry/' | kubectl apply -f -
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: agentregistry
+  namespace: agentregistry
+  annotations:
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: kagent-ui-auth
+    nginx.ingress.kubernetes.io/auth-realm: "Agent registry"
+    nginx.ingress.kubernetes.io/limit-rps: "10"
+spec:
+  ingressClassName: nginx
+  rules:
     - host: registry.agents.booking.local
       http:
-        paths: [{ path: /, pathType: Prefix, backend: { service: { name: agent-registry, port: { number: 8080 } } } }]
+        paths: [{ path: /, pathType: Prefix, backend: { service: { name: agentregistry, port: { number: 12121 } } } }]
+    - host: registry.34.124.198.171.nip.io
+      http:
+        paths: [{ path: /, pathType: Prefix, backend: { service: { name: agentregistry, port: { number: 12121 } } } }]
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress

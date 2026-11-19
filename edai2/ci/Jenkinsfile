@@ -109,10 +109,15 @@ open('drift_api/reference/MODEL_VERSION', 'w').write(mv.version)"'''
       steps {
         dir('edai2') {
           sh 'kubectl apply -f build/agents.yaml'
+          // agentregistry v0.4.0 (k8s/agentregistry-values.yaml); card lấy từ kagent controller trong cluster
           sh '''
-            for a in data-agent policy-agent policy-agent-v2 coordinator-agent; do
+            POLICY=predict_cancellation,search_policy,propose_overbooking,apply_overbooking
+            for spec in data-agent:get_booking_features:qwen-3b policy-agent:$POLICY:qwen-3b \
+                        policy-agent-v2:$POLICY:qwen-booking-v2 coordinator-agent::qwen-3b; do
+              a=${spec%%:*}; rest=${spec#*:}; tools=${rest%%:*}; model=${rest#*:}
               kubectl -n kagent rollout status deploy/$a --timeout=180s
-              python ci/publish_agent_card.py --agent $a --registry http://agent-registry.kagent:8080
+              python ci/publish_agent_card.py --agent $a --tools "$tools" --model $model --tag $TAG \
+                --registry http://agentregistry.agentregistry.svc.cluster.local:12121
             done
           '''
         }
