@@ -12,7 +12,7 @@ cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu �
 
 **Cần nộp (cả nhóm):** Document tương tự bên trên
 
-**Cách làm:** [Đã có] policy-agent có bốn tool: `predict_cancellation` (ML, Feast online + KServe), `search_policy` (RAG), `propose_overbooking` (K tính từ `gold.booking_risk`, so với số phòng trong `gold.hotel_rooms`) và `apply_overbooking` (ghi K, cần `requireApproval` - Idea 2). [Cần làm] multi-replica, KEDA, Agent Substrate (sandbox), registry; chụp UI chat.
+**Cách làm:** [Đã có] policy-agent có 4 tool: `predict_cancellation` (Feast online + KServe), `search_policy` (RAG), `propose_overbooking`, `apply_overbooking` (cần duyệt, Idea 2); đi qua agentgateway, KEDA 2–4 replica, đã đăng agentregistry. [Cần làm] sandbox (Agent Substrate, cần kagent 1.x).
 
 **Kết quả:** policy-agent chạy trên cluster thứ hai ngày 2026-11-19 với đủ bốn tool
 ([`agents/agents-gke.yaml`](../../edai2/agents/agents-gke.yaml)), đi qua agentgateway (RemoteMCPServer

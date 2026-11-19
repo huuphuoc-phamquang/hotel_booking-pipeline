@@ -78,7 +78,7 @@ khoảng 2,5 phút tới khi Ready.
 
 **Rubric:** edai-2 · dòng 20 · 1 điểm · nhóm *Web API kéo dữ liệu user (đã lưu thông qua feature pipeline) và chunk (đã được lưu thông qua RAG pipeline)* › *Có sử dụng FastAPI + data validation (với pydantic)*
 
-**Cách làm:** [Thiết kế] `k8s/agent-substrate.yaml`: WorkerPool gVisor, SandboxAgent runtime go cho data-agent và NetworkPolicy chỉ cho agent gọi agentgateway và DNS. Các field của Substrate cần kiểm bằng `kubectl explain` với bản đã cài. [Cần làm] chụp agent chạy trong sandbox.
+**Cách làm:** [Thiết kế] `k8s/agent-substrate.yaml`: WorkerPool gVisor, SandboxAgent cho data-agent và NetworkPolicy chỉ cho agent gọi agentgateway và DNS. [Cần làm] nâng kagent lên 1.x (có Agent Substrate) rồi chạy agent trong sandbox; kagent 0.9.12 đang dùng không có Substrate.
 
 **Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
 
