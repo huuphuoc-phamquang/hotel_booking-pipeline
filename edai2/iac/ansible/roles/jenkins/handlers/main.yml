@@ -1,0 +1,9 @@
+# Plugin cài vào jenkins_home (volume); JCasC chỉ áp dụng khi plugin configuration-as-code đã có, nên restart sau cài.
+- name: Cài plugin Jenkins
+  ansible.builtin.command: docker exec jenkins jenkins-plugin-cli --plugin-file /var/jenkins_conf/plugins.txt
+  changed_when: true
+  notify: Khởi động lại Jenkins
+
+- name: Khởi động lại Jenkins
+  ansible.builtin.command: docker restart jenkins
+  changed_when: true

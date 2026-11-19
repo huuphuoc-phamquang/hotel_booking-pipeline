@@ -1,0 +1,56 @@
+# Jenkins Configuration as Code (plugin configuration-as-code), nạp lúc Jenkins khởi động.
+# ${GKE_TOKEN}, ${GKE_CA}, ${VAULT_TOKEN}: biến môi trường của container, Ansible đặt từ extra-vars (không vào repo).
+jenkins:
+  clouds:
+    - kubernetes:
+        name: gke
+        serverUrl: "{{ gke_server }}"
+        serverCertificate: "${GKE_CA}"
+        credentialsId: gke-jenkins-token
+        namespace: ci
+        # pod agent trên GKE gọi về IP nội bộ của VM (cùng VPC), WebSocket qua 8080 nên không cần mở 50000
+        jenkinsUrl: "http://{{ ansible_default_ipv4.address }}:8080"
+        webSocket: true
+        containerCapStr: "3"
+  globalNodeProperties:
+    - envVars:
+        env:
+          - key: GCP_PROJECT
+            value: "{{ gcp_project }}"
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - string:
+              scope: GLOBAL
+              id: gke-jenkins-token
+              description: token ServiceAccount ci/jenkins (edai2/k8s/jenkins-ci.yaml)
+              secret: "${GKE_TOKEN}"
+          - vaultTokenCredential:
+              scope: GLOBAL
+              id: vault-token
+              description: token Vault policy jenkins (chỉ đọc secret/ci/*)
+              token: "${VAULT_TOKEN}"
+unclassified:
+  hashicorpVault:
+    configuration:
+      vaultUrl: "http://{{ ansible_default_ipv4.address }}:8200"
+      vaultCredentialId: vault-token
+      engineVersion: 2
+jobs:
+  - script: |
+      [['booking-mcp', 'edai2/ci/Jenkinsfile'], ['data-pipeline', 'ci/Jenkinsfile.data']].each { name, path ->
+        pipelineJob(name) {
+          definition {
+            cpsScm {
+              scm {
+                git {
+                  remote { url('{{ repo_url }}') }
+                  branch('*/main')
+                }
+              }
+              scriptPath(path)
+            }
+          }
+        }
+      }

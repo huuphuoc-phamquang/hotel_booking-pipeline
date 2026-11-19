@@ -2,12 +2,47 @@
   community.docker.docker_volume:
     name: jenkins_home
 
-- name: Container Jenkins LTS (plugin Vault, Kubernetes cài qua UI hoặc JCasC)
+- name: Thư mục cấu hình Jenkins (plugin + JCasC)
+  ansible.builtin.file:
+    path: /opt/jenkins
+    state: directory
+    owner: "1000"                    # user jenkins trong container
+    mode: "0750"
+
+- name: Danh sách plugin
+  ansible.builtin.copy:
+    src: plugins.txt
+    dest: /opt/jenkins/plugins.txt
+    owner: "1000"
+    mode: "0644"
+  notify: Cài plugin Jenkins
+
+- name: Cấu hình JCasC (cloud Kubernetes GKE, Vault, job pipeline)
+  ansible.builtin.template:
+    src: casc.yaml.j2
+    dest: /opt/jenkins/casc.yaml
+    owner: "1000"
+    mode: "0640"
+  notify: Khởi động lại Jenkins
+
+- name: Container Jenkins LTS
   community.docker.docker_container:
     name: jenkins
     image: jenkins/jenkins:lts-jdk21
     restart_policy: unless-stopped
     ports: ["8080:8080", "50000:50000"]
-    volumes: [jenkins_home:/var/jenkins_home]
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /opt/jenkins:/var/jenkins_conf:ro
     env:
       JAVA_OPTS: -Djenkins.install.runSetupWizard=true
+      CASC_JENKINS_CONFIG: /var/jenkins_conf/casc.yaml
+      GKE_TOKEN: "{{ jenkins_gke_token }}"
+      GKE_CA: "{{ jenkins_gke_ca }}"
+      VAULT_TOKEN: "{{ jenkins_vault_token }}"
+  no_log: true                       # env chứa token
+
+- name: Jenkins phải lắng nghe
+  ansible.builtin.wait_for:
+    port: 8080
+    timeout: 120

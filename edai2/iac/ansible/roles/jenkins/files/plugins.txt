@@ -1,0 +1,9 @@
+configuration-as-code
+job-dsl
+kubernetes
+hashicorp-vault-plugin
+plain-credentials
+workflow-aggregator
+git
+junit
+pipeline-stage-view
