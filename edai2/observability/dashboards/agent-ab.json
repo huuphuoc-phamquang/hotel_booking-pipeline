@@ -1,0 +1,212 @@
+{
+ "uid": "agent-ab",
+ "title": "A/B agent: policy-agent v1 vs v2",
+ "schemaVersion": 39,
+ "time": {
+  "from": "now-3h",
+  "to": "now"
+ },
+ "refresh": "30s",
+ "tags": [
+  "booking",
+  "ab"
+ ],
+ "panels": [
+  {
+   "id": 1,
+   "type": "stat",
+   "title": "Request A2A theo bản (trong khoảng thời gian)",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 0,
+    "w": 8,
+    "h": 6
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "label_replace(label_replace(sum by (backend) (increase(agentgateway_requests_total{route=\"default/a2a-policy-agent\"}[$__range])), \"variant\", \"v1 policy-agent\", \"backend\", \".*/backend0\"), \"variant\", \"v2 policy-agent-v2\", \"backend\", \".*/backend1\")",
+     "legendFormat": "{{variant}}"
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "type": "stat",
+   "title": "Tỉ lệ request lỗi (status ≠ 2xx)",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 8,
+    "y": 0,
+    "w": 8,
+    "h": 6
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percentunit"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "label_replace(label_replace((sum by (backend) (increase(agentgateway_requests_total{route=\"default/a2a-policy-agent\",status!~\"2..\"}[$__range])) or sum by (backend) (increase(agentgateway_requests_total{route=\"default/a2a-policy-agent\"}[$__range])) * 0) / sum by (backend) (increase(agentgateway_requests_total{route=\"default/a2a-policy-agent\"}[$__range])), \"variant\", \"v1 policy-agent\", \"backend\", \".*/backend0\"), \"variant\", \"v2 policy-agent-v2\", \"backend\", \".*/backend1\")",
+     "legendFormat": "{{variant}}"
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "type": "stat",
+   "title": "Latency p50 theo bản",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 16,
+    "y": 0,
+    "w": 8,
+    "h": 6
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "s"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "label_replace(label_replace(histogram_quantile(0.5, sum by (le, backend) (increase(agentgateway_request_duration_seconds_bucket{route=\"default/a2a-policy-agent\"}[$__range]))), \"variant\", \"v1 policy-agent\", \"backend\", \".*/backend0\"), \"variant\", \"v2 policy-agent-v2\", \"backend\", \".*/backend1\")",
+     "legendFormat": "{{variant}}"
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "type": "timeseries",
+   "title": "Request/s theo bản",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 6,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "reqps"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "label_replace(label_replace(sum by (backend) (rate(agentgateway_requests_total{route=\"default/a2a-policy-agent\"}[2m])), \"variant\", \"v1 policy-agent\", \"backend\", \".*/backend0\"), \"variant\", \"v2 policy-agent-v2\", \"backend\", \".*/backend1\")",
+     "legendFormat": "{{variant}}"
+    }
+   ]
+  },
+  {
+   "id": 5,
+   "type": "timeseries",
+   "title": "Latency p95 theo bản",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 6,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "s"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "label_replace(label_replace(histogram_quantile(0.95, sum by (le, backend) (rate(agentgateway_request_duration_seconds_bucket{route=\"default/a2a-policy-agent\"}[5m]))), \"variant\", \"v1 policy-agent\", \"backend\", \".*/backend0\"), \"variant\", \"v2 policy-agent-v2\", \"backend\", \".*/backend1\")",
+     "legendFormat": "{{variant}}"
+    }
+   ]
+  },
+  {
+   "id": 6,
+   "type": "timeseries",
+   "title": "Token LLM theo model (input / output)",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 14,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "sum by (gen_ai_request_model, gen_ai_token_type) (increase(agentgateway_gen_ai_client_token_usage_sum[5m]))",
+     "legendFormat": "{{gen_ai_request_model}} {{gen_ai_token_type}}"
+    }
+   ]
+  },
+  {
+   "id": 7,
+   "type": "timeseries",
+   "title": "Thời gian gọi LLM p50 theo model",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 14,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "s"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "expr": "histogram_quantile(0.5, sum by (le, gen_ai_request_model) (rate(agentgateway_gen_ai_server_request_duration_bucket[5m])))",
+     "legendFormat": "{{gen_ai_request_model}}"
+    }
+   ]
+  }
+ ]
+}
