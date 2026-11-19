@@ -41,6 +41,8 @@ jobs:
   - script: |
       [['booking-mcp', 'edai2/ci/Jenkinsfile'], ['data-pipeline', 'ci/Jenkinsfile.data']].each { name, path ->
         pipelineJob(name) {
+          // VM không nhận webhook GitHub (firewall chỉ mở cho IP nhóm): poll repo 2 phút một lần, có commit mới thì build
+          properties { pipelineTriggers { triggers { pollSCM { scmpoll_spec('H/2 * * * *') } } } }
           definition {
             cpsScm {
               scm {
