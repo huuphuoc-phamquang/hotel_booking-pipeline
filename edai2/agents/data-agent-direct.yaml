@@ -1,0 +1,42 @@
+# Giai đoạn A (đang chạy): data-agent gọi thẳng booking-mcp trong cluster, prompt viết inline, chưa qua agentgateway/Langfuse.
+# Bản đích ở agents.yaml. Áp dụng: kubectl apply -f agents/data-agent-direct.yaml
+apiVersion: kagent.dev/v1alpha2
+kind: RemoteMCPServer
+metadata:
+  name: booking-tools
+  namespace: kagent
+spec:
+  description: Tool đọc online feature store, dự đoán rủi ro huỷ phòng và tra chính sách (RAG)
+  protocol: STREAMABLE_HTTP
+  url: http://booking-mcp.agents.svc.cluster.local/mcp/
+---
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: data-agent
+  namespace: kagent
+spec:
+  description: Trả lời câu hỏi về lịch sử đặt/huỷ của khách và nhu cầu hiện tại của khách sạn
+  type: Declarative
+  declarative:
+    modelConfig: default-model-config
+    systemMessage: |
+      Bạn là data-agent của hệ thống đặt phòng khách sạn. Khi được hỏi về khách hoặc khách sạn, luôn gọi tool
+      get_booking_features với customer_id và hotel_id rồi trả lời ngắn gọn bằng tiếng Việt dựa trên số liệu tool trả về:
+      số booking 90 ngày, tỉ lệ huỷ 90 ngày, lead time trung bình của khách; số booking 7 ngày, tỉ lệ huỷ 30 ngày và
+      số booking 1 giờ gần nhất của khách sạn. Trường nào là null thì nói là chưa có dữ liệu, không tự đoán.
+      Tool cần đủ cả customer_id và hotel_id: câu hỏi thiếu một trong hai thì KHÔNG gọi tool, hỏi lại người dùng mã còn thiếu.
+      Tool báo lỗi thì nói rõ là không lấy được dữ liệu, không dùng số liệu của các lượt trước để trả lời thay.
+      Trả lời đúng 2 dòng theo mẫu, mỗi dòng chỉ dùng trường của đối tượng đó:
+      - Khách <customer_id>: <bookings_90d> booking 90 ngày, tỉ lệ huỷ <cancel_rate_90d theo %>, lead time TB <avg_lead_days_90d> ngày.
+      - Khách sạn <hotel_id>: <bookings_7d> booking 7 ngày, tỉ lệ huỷ 30 ngày <cancel_rate_30d theo %>, <bookings_1h> booking trong 1 giờ qua.
+      Sau đó thêm 1 câu nhận xét ngắn (khách có hay huỷ không, khách sạn đông hay vắng).
+    tools:
+      - type: McpServer
+        mcpServer:
+          apiGroup: kagent.dev
+          kind: RemoteMCPServer
+          name: booking-tools
+          toolNames: [get_booking_features]
+    deployment:
+      replicas: 1
