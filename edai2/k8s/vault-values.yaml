@@ -1,0 +1,29 @@
+# Vault trên GKE (rubric edai-2 › Security › Centralize secret management): 1 server standalone lưu file trên PVC,
+# Agent Injector bơm secret vào pod theo annotation (helm/api/templates/deployment.yaml), UI qua port-forward.
+#   helm install vault hashicorp/vault --version 0.30.1 -n vault --create-namespace -f k8s/vault-values.yaml
+#   bash k8s/vault-setup.sh      # init/unseal lần đầu, KV v2, auth kubernetes, policy + role cho booking-mcp
+# shortcut: standalone 1 key share, không HA/auto-unseal; nâng lên HA Raft + GCP KMS auto-unseal khi dùng thật.
+server:
+  standalone:
+    enabled: true
+    config: |
+      ui = true
+      listener "tcp" {
+        tls_disable = 1
+        address = "[::]:8200"
+        cluster_address = "[::]:8201"
+      }
+      storage "file" {
+        path = "/vault/data"
+      }
+  dataStorage:
+    size: 5Gi
+    storageClass: standard
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+ui:
+  enabled: true
+injector:
+  enabled: true
+  resources:
+    requests: { cpu: 50m, memory: 64Mi }
