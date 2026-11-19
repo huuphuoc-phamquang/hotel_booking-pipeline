@@ -1,0 +1,52 @@
+# Agent Workbench (ui/index.html): UI thử agent, chat A2A thật qua kagent controller, sau NGINX Ingress có basic auth
+# và rate limit. ConfigMap tạo từ file (chạy từ thư mục edai2):
+#   kubectl -n kagent create configmap agent-workbench --from-file=ui/index.html --from-file=default.conf=ui/nginx.conf \
+#     --dry-run=client -o yaml | kubectl apply -f - && kubectl -n kagent rollout restart deploy/agent-workbench
+# Secret kagent-ui-auth (htpasswd) dùng chung với Ingress kagent-ui trong k8s/ingress.yaml.
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: agent-workbench, namespace: kagent }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: agent-workbench } }
+  template:
+    metadata: { labels: { app: agent-workbench } }
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27-alpine
+          ports: [{ containerPort: 8080 }]
+          readinessProbe: { httpGet: { path: /healthz, port: 8080 } }
+          resources:
+            requests: { cpu: 10m, memory: 16Mi }
+            limits: { cpu: 200m, memory: 64Mi }
+          volumeMounts:
+            - { name: site, mountPath: /usr/share/nginx/html/index.html, subPath: index.html }
+            - { name: site, mountPath: /etc/nginx/conf.d/default.conf, subPath: default.conf }
+      volumes:
+        - { name: site, configMap: { name: agent-workbench } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: agent-workbench, namespace: kagent }
+spec:
+  selector: { app: agent-workbench }
+  ports: [{ port: 8080, targetPort: 8080 }]
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: agent-workbench
+  namespace: kagent
+  annotations:
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: kagent-ui-auth
+    nginx.ingress.kubernetes.io/auth-realm: "Agent test UI"
+    nginx.ingress.kubernetes.io/limit-rps: "10"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"   # lượt chat dài (coordinator ~20 s)
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: workbench.34.124.198.171.nip.io
+      http:
+        paths: [{ path: /, pathType: Prefix, backend: { service: { name: agent-workbench, port: { number: 8080 } } } }]
