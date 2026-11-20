@@ -71,14 +71,19 @@ pipeline {
       }
     }
     stage('E2E stream') {
-      steps { dir('edai1') { sh 'PYTHONPATH=. pytest tests/test_stream_e2e.py -q' } }   // dùng đúng 2 image vừa build
+      // basetemp trong workspace: container dind chỉ thấy workspace (volume chung của pod), không thấy /tmp của container tools,
+      // nên config.yaml mount -v vào generator phải nằm trong workspace
+      steps { dir('edai1') { sh 'PYTHONPATH=. pytest tests/test_stream_e2e.py -q --basetemp="$PWD/.pytest-e2e"' } }   // dùng đúng 2 image vừa build
     }
     stage('Deploy DAG') {
       steps {
         // DAG nằm trong image airflow-booking (edai1/k8s/airflow.Dockerfile, không git-sync): đổi tag image của chart
         // trong namespace data, --atomic tự rollback nếu pod mới không Ready; rồi kiểm không có DAG nào lỗi import.
         sh '''
+          set -e
           helm repo add apache-airflow https://airflow.apache.org && helm repo update
+          # useHelmHooks: false -> Job cũ còn sót sẽ bị lỗi spec.template immutable khi đổi tag image
+          kubectl -n data delete job airflow-run-airflow-migrations airflow-create-user --ignore-not-found
           helm upgrade airflow apache-airflow/airflow --version 1.16.0 -n data -f edai1/k8s/airflow-values.yaml \
             --set images.airflow.repository=$REGISTRY/data/airflow-booking --set images.airflow.tag=$TAG --atomic --timeout 15m
           af() { kubectl -n data exec deploy/airflow-scheduler -c scheduler -- airflow "$@"; }
@@ -86,7 +91,7 @@ pipeline {
             af variables set spark_image $REGISTRY/data/spark-booking:$TAG
           fi
           af dags reserialize
-          test "$(af dags list-import-errors -o json)" = "[]"
+          test "$(af dags list-import-errors -o json 2>/dev/null | tr -d '[:space:]')" = "[]"
         '''
       }
     }
