@@ -566,15 +566,15 @@ data:
        "targets": [
         {
          "refId": "A",
-         "expr": "sum by (route) (rate(agentgateway_requests_total{route=~\"a2a-.*\"}[1m]))",
+         "expr": "sum by (route) (rate(agentgateway_requests_total{route=~\".*a2a-.*\"}[2m]))",
          "legendFormat": "{{route}}"
         }
        ]
       },
       {
        "id": 6,
-       "type": "timeseries",
-       "title": "Số lần gọi agent",
+       "type": "stat",
+       "title": "Tổng số lần gọi agent (A2A · 2xx / lỗi)",
        "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -587,15 +587,15 @@ data:
        },
        "fieldConfig": {
         "defaults": {
-         "unit": "ops"
+         "unit": "short"
         },
         "overrides": []
        },
        "targets": [
         {
          "refId": "A",
-         "expr": "sum by (agent) (rate(agent_calls_total[5m]))",
-         "legendFormat": "{{agent}}"
+         "expr": "sum by (route, status) (agentgateway_requests_total{route=~\".*a2a-.*\"})",
+         "legendFormat": "{{route}} ({{status}})"
         }
        ]
       }

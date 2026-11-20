@@ -87,12 +87,19 @@ nhận `BK-<id>` không bị chặn, còn `4111 1111 1111 1111` bị chặn. Ph�
 <a id="edai-2-51"></a>
 ## Đảm bảo ít nhất các metrics · Agent-related telemetry data
 
-Cùng lần chạy ở dòng 46. booking-mcp đếm số lần gọi từng tool (`mcp_tool_calls_total`) và số lần tool lỗi
-(`mcp_tool_failures_total`), hiển thị trên dashboard `observability/dashboards/booking-apis.json`. Metric `agent_calls_total`
-và request A2A qua agentgateway nằm ở dashboard `observability/dashboards/llm-agents.json` nhưng chưa có số liệu, vì agent
-chưa deploy.
+Cùng lần chạy ở dòng 46, `booking-mcp` đếm số lần gọi từng tool (`mcp_tool_calls_total`) và số lần tool lỗi
+(`mcp_tool_failures_total`), hiển thị trên dashboard [`observability/dashboards/booking-apis.json`](../../edai2/observability/dashboards/booking-apis.json).
+Ngày 2026-11-20 trên GKE, sau khi triển khai đủ `agentgateway` và các agent (`coordinator-agent`, `data-agent`,
+`policy-agent`), dashboard [`observability/dashboards/llm-agents.json`](../../edai2/observability/dashboards/llm-agents.json)
+ghi nhận số lần gọi và lỗi theo từng agent qua metric `agentgateway_requests_total{route=~".*a2a-.*"}`:
 
-| Tool | Số lần gọi | Số lần lỗi |
+| Agent (route A2A) | Thành công (`200`) | Lỗi xác thực (`401`) |
+|---|---|---|
+| `default/a2a-coordinator` | 21 | 1 |
+| `default/a2a-data-agent` | 21 | 2 |
+| `default/a2a-policy-agent` | 21 | 2 |
+
+| Tool MCP | Số lần gọi | Số lần lỗi |
 |---|---|---|
 | `get_booking_features` | 692 | 0 |
 | `propose_overbooking` | 692 | 0 |
@@ -100,6 +107,8 @@ chưa deploy.
 
 Trên panel "MCP tool: số lần gọi / lỗi", bốn đường (ba đường số lần gọi và đường lỗi của `predict_cancellation`) trùng
 nhau, vì ba tool được gọi cùng nhịp và `predict_cancellation` lỗi ở mọi lần gọi.
+
+![Grafana: số lần gọi và lỗi theo từng agent (A2A)](../images/edai-2/grafana-agent-calls.png)
 
 ![Grafana: số lần gọi và lỗi theo tool MCP](../images/edai-2/grafana-mcp-tools.png)
 
