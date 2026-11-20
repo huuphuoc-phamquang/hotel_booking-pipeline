@@ -136,8 +136,14 @@ def emit_from_airflow(table_ref: str, check: str, passed: bool) -> None:
     của Connection là Personal Access Token (GMS bật xác thực)."""
     import re
 
+    from airflow.exceptions import AirflowNotFoundException
     from airflow.hooks.base import BaseHook
-    conn = BaseHook.get_connection("datahub_rest_default")
+    try:
+        conn = BaseHook.get_connection("datahub_rest_default")
+    except AirflowNotFoundException:
+        # shortcut: cluster chưa deploy DataHub thì chỉ log kết quả kiểm, tạo Connection khi có DataHub để đẩy lên
+        print(f"DataHub chưa cấu hình, bỏ qua emit: {table_ref} {check}={passed}")
+        return
     # host có thể đã gồm scheme + cổng (http://gms:8080) hoặc chỉ tên host, cổng nằm ở trường port của Connection
     gms = conn.host if "://" in conn.host else f"http://{conn.host}"
     gms = gms if not conn.port or re.search(r":\d+$", gms) else f"{gms}:{conn.port}"

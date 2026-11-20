@@ -28,6 +28,9 @@ COPY edai2/dags/.airflowignore /tmp/ignore2
 RUN cat /tmp/ignore1 /tmp/ignore2 > /opt/airflow/dags/.airflowignore
 COPY edai1/sql/ /opt/airflow/sql/
 COPY edai1/governance/ /opt/airflow/governance/
-COPY edai2/feature_repo/ /opt/airflow/feature_repo/
+COPY --chown=airflow:root edai2/feature_repo/ /opt/airflow/feature_repo/
+# Airflow 2.10 ghim SQLAlchemy 1.4, chưa có dialect psycopg (v3): registry Feast trong image này dùng psycopg2
+RUN sed -i 's#postgresql+psycopg://#postgresql+psycopg2://#' /opt/airflow/feature_repo/feature_store.yaml \
+ && grep -q 'postgresql+psycopg2://' /opt/airflow/feature_repo/feature_store.yaml
 # governance là package dùng chung; dp2 tìm sql ở dags/../sql; drift_stats nằm cùng thư mục dags
 ENV PYTHONPATH=/opt/airflow

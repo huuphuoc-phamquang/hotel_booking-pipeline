@@ -25,6 +25,9 @@ EMBED_DIM = 1024                              # = vector_length của policy_chu
 # bge-m3 ~2,2GB trong RAM: pod riêng cho task embed (KubernetesExecutor), không chạy trong worker mặc định 1Gi
 EMBED_POD = {"pod_override": k8s.V1Pod(spec=k8s.V1PodSpec(containers=[k8s.V1Container(
     name="base", resources=k8s.V1ResourceRequirements(requests={"memory": "4Gi", "cpu": "1"}, limits={"memory": "6Gi"}))]))}
+# Feast materialize kéo cả cửa sổ ngày vào pandas: worker mặc định 2Gi bị OOMKilled sau ~45 s
+MATERIALIZE_POD = {"pod_override": k8s.V1Pod(spec=k8s.V1PodSpec(containers=[k8s.V1Container(
+    name="base", resources=k8s.V1ResourceRequirements(requests={"memory": "2Gi"}, limits={"memory": "8Gi"}))]))}
 FEAT_BATCH = AirflowDataset("postgres://postgres:5432/warehouse/gold/feat_hotel_demand")   # do dp3_offline_features (edai1) bắn
 ONLINE_BATCH = AirflowDataset("feast://online/batch")   # score_bookings lắng nghe Dataset này
 BATCH_VIEWS = ["booking_attributes", "customer_booking_stats", "hotel_demand"]
@@ -106,7 +109,7 @@ def feast_materialize_incremental():
     max_active_runs=1: khi backfill DP1-DP3, online store đi tuần tự từng ngày để score_bookings chấm đúng as-of.
     Backfill: online store mới (feast teardown + apply), `feast materialize` 1 lần tới ngày đầu, rồi backfill DP1-DP3."""
 
-    @task(outlets=[ONLINE_BATCH])
+    @task(outlets=[ONLINE_BATCH], executor_config=MATERIALIZE_POD)
     def materialize(triggering_dataset_events=None) -> None:
         """Materialize đúng cửa sổ ngày logic của các run DP3 vừa xong (không dùng mốc incremental chung của Feast,
         không dùng giờ máy) nên backfill được; Feast lấy event_timestamp trong [start, end] gồm cả 2 đầu."""

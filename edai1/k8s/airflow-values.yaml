@@ -2,6 +2,10 @@
 # KubernetesExecutor (mỗi task 1 pod, không cần Redis/Celery); metadata DB là database airflow trên Postgres sẵn có.
 # Connection và Variable tạo bằng CLI sau khi cài (lưu trong metadata DB, thấy được ở Admin > Connections).
 executor: KubernetesExecutor
+# job migrate DB / tạo user chạy như resource thường: với `helm --wait`, hook post-install chỉ chạy sau khi pod Ready,
+# mà pod lại chờ migrate xong -> kẹt tới timeout
+migrateDatabaseJob: { useHelmHooks: false, applyCustomEnv: false }
+createUserJob: { useHelmHooks: false, applyCustomEnv: false }
 images:
   airflow: { repository: REGISTRY/data/airflow-booking, tag: TAG, pullPolicy: IfNotPresent }
 postgresql: { enabled: false }
@@ -17,6 +21,9 @@ env:
   - { name: AIRFLOW__LOGGING__REMOTE_LOGGING, value: "True" }
   - { name: AIRFLOW__LOGGING__REMOTE_BASE_LOG_FOLDER, value: "s3://lake/airflow-logs" }
   - { name: AIRFLOW__LOGGING__REMOTE_LOG_CONN_ID, value: minio_landing }
+# FEAST_PG_HOST/USER/PASSWORD cho feature_repo/feature_store.yaml (DAG RAG, materialize); có ở cả pod task KubernetesExecutor
+extraEnvFrom: |
+  - secretRef: { name: feast-pg }
 dags:
   persistence: { enabled: false }
   gitSync: { enabled: false }                   # DAG nằm trong image (k8s/airflow.Dockerfile)
