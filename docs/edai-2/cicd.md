@@ -12,9 +12,19 @@ cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu �
 
 **Cần nộp (cả nhóm):** Document show các CICD pipelines đã chạy và từng step trong component làm gì + link tới các Jenkinsfile tương ứng
 
-**Cách làm:** [Đã có] `ci/Jenkinsfile.data` chạy DAG integrity test (có `rag_data_pipeline`) trong image Airflow, rồi deploy DAG bằng image Airflow (DAG nằm trong image, `helm upgrade --atomic`) và kiểm Airflow parse không lỗi. [Cần làm] chụp lần chạy và giải thích từng stage.
+**Cách làm:** [Đã có] [`ci/Jenkinsfile.data`](../../ci/Jenkinsfile.data) chạy DAG integrity test (có `rag_data_pipeline`) trong image Airflow, lấy secret registry từ Vault, rồi deploy DAG bằng image Airflow (DAG nằm trong image, `helm upgrade --atomic`) và kiểm Airflow parse không lỗi.
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+**Kết quả:** Pipeline `data-pipeline` trên Jenkins (`cicd-vm`) đã chạy thành công ở **Build #14** (commit `d48433b`, ngày 2026-11-21) với từng stage:
+
+- **Checkout SCM (6 s):** kéo mã nguồn từ nhánh `main` trên GitHub (Jenkins poll repo 2 phút/lần).
+- **Test (song song):**
+  - `DAG integrity` (3 min 37 s): chạy [`ci/test_dags.sh`](../../ci/test_dags.sh) bên trong image `apache/airflow:2.10.5-python3.12`, xác nhận import và cấu trúc hợp lệ cho toàn bộ DAG (`4 passed`, gồm `rag_data_pipeline`, `feast_materialize_incremental`, `feast_materialize_realtime`, DP1–DP3).
+  - `generator + SQL + GX` (5 min 11 s): chạy `test_stream_gen.py`, `test_gold_sql.py`, `test_bronze_checks.py` (`27 passed`).
+- **Build & push images (11 min 17 s):** lấy `REG_KEY` (base64 một dòng) từ Vault `secret/ci/registry`, đăng nhập Artifact Registry (`Login Succeeded`, không lộ secret), build và push `data/airflow-booking:d48433b` (cùng `data/generator:d48433b`, `data/flink-booking:d48433b`) kèm tag `:latest` để dùng `--cache-from`.
+- **E2E stream (3 min 33 s):** kiểm end-to-end nhánh stream (`3 passed`).
+- **Deploy DAG (2 min 51 s):** xoá Job migrate/create-user cũ nếu còn sót, chạy `helm upgrade airflow --atomic` trong namespace `data` lên **revision 6 (`STATUS: deployed`)** với image `data/airflow-booking:d48433b`, gọi `airflow dags reserialize` và kiểm `airflow dags list-import-errors -o json` trả về `[]` (`Finished: SUCCESS`).
+
+![Jenkins Stage View: data-pipeline build #12–#14](../images/edai-2/jenkins-data-stage-view.png)
 
 <a id="edai-2-34"></a>
 ## Agent kéo dữ liệu
@@ -63,6 +73,13 @@ khoá mới lưu dạng base64 một dòng và lệnh login chạy với `set +x
 
 **Rubric:** edai-2 · dòng 36 · 2 điểm · nhóm *CI/CD*
 
-**Cách làm:** [Đã có] `ci/Jenkinsfile.data` build image Flink, chạy e2e stream trên Docker (Kafka → Flink → Postgres), rồi apply FlinkDeployment (offline). Job 2 cho online là DAG `feast_materialize_realtime`, deploy cùng các DAG khác. [Cần làm] chụp lần chạy.
+**Cách làm:** [Đã có] [`ci/Jenkinsfile.data`](../../ci/Jenkinsfile.data) build image Flink, chạy e2e stream trên Docker (Kafka → Flink → Postgres), rồi apply FlinkDeployment (offline). Job 2 cho online là DAG `feast_materialize_realtime`, deploy cùng các DAG khác.
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+**Kết quả:** Đã chạy thành công ở **Build #14** của job `data-pipeline` trên Jenkins (commit `d48433b`, ngày 2026-11-21):
+
+- **Build & push image Flink (Job 1):** [`ci/Jenkinsfile.data`](../../ci/Jenkinsfile.data) build `edai1/k8s/flink.Dockerfile` và push `data/flink-booking:d48433b` (cùng `data/generator:d48433b`) lên Artifact Registry bằng secret từ Vault.
+- **E2E stream (3 min 33 s):** chạy [`edai1/tests/test_stream_e2e.py`](../../edai1/tests/test_stream_e2e.py) bằng đúng 2 image vừa build (`booking-generator:multistage` → Kafka → Flink `booking-flink:local` → PostgreSQL): **3 passed trong 210,25 s** (`test_minute_reconciliation`, `test_dlq_matches_injected_violations`, `test_realtime_feature_written` xác nhận ghi `gold.feat_hotel_realtime`).
+- **Deploy Job 2 (Online Store):** DAG `feast_materialize_realtime` nằm trong image `data/airflow-booking:d48433b`, được deploy tự động qua `helm upgrade airflow --atomic` lên **revision 6** (namespace `data`) và kiểm không có lỗi import.
+- **Deploy Flink Job 1 (Offline Store):** stage `Deploy Flink Job 1` đặt tham số `WITH_FLINK_DEPLOY=false` và bỏ qua có chủ đích trên cluster thứ 2 (không cài Flink Operator); khi bật trên cluster có Flink Operator, stage này apply [`edai1/k8s/flink.yaml`](../../edai1/k8s/flink.yaml) với tag mới và chờ `lifecycleState=STABLE`.
+
+![Jenkins Stage View: data-pipeline build #12–#14](../images/edai-2/jenkins-data-stage-view.png)
