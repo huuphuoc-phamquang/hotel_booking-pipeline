@@ -13,9 +13,8 @@ pipeline {
     booleanParam(name: 'WITH_FLINK_DEPLOY', defaultValue: false, description: 'apply FlinkDeployment (cần Flink Operator trên cluster)')
   }
   environment {
-    REGISTRY        = "asia-southeast1-docker.pkg.dev/${env.GCP_PROJECT}/booking"
-    TAG             = "${env.GIT_COMMIT.take(7)}"
-    DOCKER_BUILDKIT = "1"
+    REGISTRY = "asia-southeast1-docker.pkg.dev/${env.GCP_PROJECT}/booking"
+    TAG      = "${env.GIT_COMMIT.take(7)}"
   }
   stages {
     stage('Test') {
