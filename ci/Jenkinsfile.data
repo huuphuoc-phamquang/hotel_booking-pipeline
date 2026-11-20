@@ -22,8 +22,9 @@ pipeline {
         stage('generator + SQL + GX') {
           steps {
             dir('edai1') {
+              sh 'until docker info >/dev/null 2>&1; do sleep 2; done'
               sh 'pip install -q -r requirements.txt pytest jsonschema "psycopg[binary]" great_expectations'
-              sh 'pytest tests/test_stream_gen.py tests/test_gold_sql.py tests/test_bronze_checks.py -q'
+              sh 'PYTHONPATH=. pytest tests/test_stream_gen.py tests/test_gold_sql.py tests/test_bronze_checks.py -q'
             }
           }
         }
@@ -31,12 +32,17 @@ pipeline {
           when { expression { params.WITH_SPARK_BUILD } }
           steps {
             dir('edai1') {
-              sh 'pip install -q pyspark==3.5.6 setuptools pytest && pytest tests/test_silver_quotes.py tests/test_silver_bookings.py -q'
+              sh 'pip install -q pyspark==3.5.6 setuptools pytest && PYTHONPATH=. pytest tests/test_silver_quotes.py tests/test_silver_bookings.py -q'
             }
           }
         }
         stage('DAG integrity') {
-          steps { sh 'docker run --rm -v "$PWD:/opt/booking" -w /opt/booking apache/airflow:2.10.5-python3.12 bash ci/test_dags.sh' }
+          steps {
+            sh '''
+              until docker info >/dev/null 2>&1; do sleep 2; done
+              docker run --rm -v "$PWD:/opt/booking" -w /opt/booking apache/airflow:2.10.5-python3.12 bash ci/test_dags.sh
+            '''
+          }
         }
       }
     }
@@ -64,7 +70,7 @@ pipeline {
       }
     }
     stage('E2E stream') {
-      steps { dir('edai1') { sh 'pytest tests/test_stream_e2e.py -q' } }   // dùng đúng 2 image vừa build
+      steps { dir('edai1') { sh 'PYTHONPATH=. pytest tests/test_stream_e2e.py -q' } }   // dùng đúng 2 image vừa build
     }
     stage('Deploy DAG') {
       steps {
