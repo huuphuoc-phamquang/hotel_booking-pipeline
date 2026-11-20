@@ -36,7 +36,10 @@ PG_PORT = 55433
 
 
 def sh(*args, check=True, **kw):
-    return subprocess.run(["docker", *args], check=check, capture_output=True, text=True, **kw)
+    r = subprocess.run(["docker", *args], capture_output=True, text=True, **kw)
+    if check and r.returncode:
+        raise RuntimeError(f"docker {' '.join(args)} exited {r.returncode}\nSTDOUT:\n{r.stdout[-2000:]}\nSTDERR:\n{r.stderr[-2000:]}")
+    return r
 
 
 def small_config(tmp) -> str:
@@ -45,7 +48,11 @@ def small_config(tmp) -> str:
     cfg["shards_per_day"] = 2
     cfg["cancel_lookback_days"] = 20
     path = os.path.join(tmp, "config.yaml")
-    yaml.safe_dump(cfg, open(path, "w", encoding="utf-8"), allow_unicode=True)
+    with open(path, "w", encoding="utf-8") as f:
+        yaml.safe_dump(cfg, f, allow_unicode=True)
+    # booking-generator chạy USER appuser (non-root); pytest chạy root tạo tmp 0700 -> cần chmod để container đọc được
+    os.chmod(tmp, 0o755)
+    os.chmod(path, 0o644)
     return path
 
 

@@ -59,14 +59,23 @@ pipeline {
               IMGS="docker/Dockerfile:data/generator k8s/flink.Dockerfile:data/flink-booking"
               if [ "$WITH_SPARK_BUILD" = true ]; then IMGS="$IMGS k8s/spark.Dockerfile:data/spark-booking"; fi
               for img in $IMGS; do
-                docker build -f ${img%%:*} -t $REGISTRY/${img#*:}:$TAG . && docker push $REGISTRY/${img#*:}:$TAG
+                df=${img%%:*}; repo=$REGISTRY/${img#*:}
+                docker pull "$repo:latest" || true
+                docker build --cache-from "$repo:latest" -f "$df" -t "$repo:$TAG" -t "$repo:latest" .
+                docker push "$repo:$TAG" && docker push "$repo:latest"
               done
               docker tag $REGISTRY/data/generator:$TAG booking-generator:multistage
               docker tag $REGISTRY/data/flink-booking:$TAG booking-flink:local
             '''
           }
           // Airflow build từ gốc repo: image chứa DAG của cả edai1 lẫn edai2
-          sh 'docker build -f edai1/k8s/airflow.Dockerfile -t $REGISTRY/data/airflow-booking:$TAG . && docker push $REGISTRY/data/airflow-booking:$TAG'
+          sh '''
+            set -e
+            repo=$REGISTRY/data/airflow-booking
+            docker pull "$repo:latest" || true
+            docker build --cache-from "$repo:latest" -f edai1/k8s/airflow.Dockerfile -t "$repo:$TAG" -t "$repo:latest" .
+            docker push "$repo:$TAG" && docker push "$repo:latest"
+          '''
         }
       }
     }
