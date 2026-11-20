@@ -8,6 +8,10 @@
 // Secret: registry + kubeconfig từ Vault. Chạy từ gốc repo.
 pipeline {
   agent { kubernetes { yamlFile 'edai2/ci/pod-template.yaml'; defaultContainer 'tools' } }
+  parameters {
+    booleanParam(name: 'WITH_SPARK_BUILD', defaultValue: false, description: 'build + push image spark-booking (chỉ bật khi cluster có Spark)')
+    booleanParam(name: 'WITH_FLINK_DEPLOY', defaultValue: false, description: 'apply FlinkDeployment (cần Flink Operator trên cluster)')
+  }
   environment {
     REGISTRY = "asia-southeast1-docker.pkg.dev/${env.GCP_PROJECT}/booking"
     TAG      = "${env.GIT_COMMIT.take(7)}"
@@ -24,6 +28,7 @@ pipeline {
           }
         }
         stage('Spark') {
+          when { expression { params.WITH_SPARK_BUILD } }
           steps {
             dir('edai1') {
               sh 'pip install -q pyspark==3.5.6 setuptools pytest && pytest tests/test_silver_quotes.py tests/test_silver_bookings.py -q'
@@ -38,10 +43,15 @@ pipeline {
     stage('Build & push images') {
       steps {
         withVault([vaultSecrets: [[path: 'secret/ci/registry', secretValues: [[envVar: 'REG_KEY', vaultKey: 'json_key']]]]]) {
-          sh 'echo "$REG_KEY" | docker login -u _json_key --password-stdin https://asia-southeast1-docker.pkg.dev'
+          sh '''
+            set +x
+            printenv REG_KEY | docker login -u _json_key_base64 --password-stdin https://asia-southeast1-docker.pkg.dev
+          '''
           dir('edai1') {
             sh '''
-              for img in docker/Dockerfile:data/generator k8s/spark.Dockerfile:data/spark-booking k8s/flink.Dockerfile:data/flink-booking; do
+              IMGS="docker/Dockerfile:data/generator k8s/flink.Dockerfile:data/flink-booking"
+              if [ "$WITH_SPARK_BUILD" = true ]; then IMGS="$IMGS k8s/spark.Dockerfile:data/spark-booking"; fi
+              for img in $IMGS; do
                 docker build -f ${img%%:*} -t $REGISTRY/${img#*:}:$TAG . && docker push $REGISTRY/${img#*:}:$TAG
               done
               docker tag $REGISTRY/data/generator:$TAG booking-generator:multistage
@@ -57,23 +67,24 @@ pipeline {
       steps { dir('edai1') { sh 'pytest tests/test_stream_e2e.py -q' } }   // dùng đúng 2 image vừa build
     }
     stage('Deploy DAG') {
-      when { branch 'main' }
       steps {
         // DAG nằm trong image airflow-booking (edai1/k8s/airflow.Dockerfile, không git-sync): đổi tag image của chart
-        // trong namespace data, --atomic tự rollback nếu pod mới không Ready; rồi trỏ Variable spark_image sang image
-        // Spark cùng commit và kiểm không có DAG nào lỗi import.
+        // trong namespace data, --atomic tự rollback nếu pod mới không Ready; rồi kiểm không có DAG nào lỗi import.
         sh '''
+          helm repo add apache-airflow https://airflow.apache.org && helm repo update
           helm upgrade airflow apache-airflow/airflow --version 1.16.0 -n data -f edai1/k8s/airflow-values.yaml \
             --set images.airflow.repository=$REGISTRY/data/airflow-booking --set images.airflow.tag=$TAG --atomic --timeout 15m
           af() { kubectl -n data exec deploy/airflow-scheduler -c scheduler -- airflow "$@"; }
-          af variables set spark_image $REGISTRY/data/spark-booking:$TAG
+          if [ "$WITH_SPARK_BUILD" = true ]; then
+            af variables set spark_image $REGISTRY/data/spark-booking:$TAG
+          fi
           af dags reserialize
-          test -z "$(af dags list-import-errors -o plain | tail -n +2)"
+          test "$(af dags list-import-errors -o json)" = "[]"
         '''
       }
     }
     stage('Deploy Flink Job 1') {
-      when { branch 'main' }
+      when { expression { params.WITH_FLINK_DEPLOY } }
       steps {
         sh '''
           sed "s#REGISTRY/data/flink-booking:TAG#$REGISTRY/data/flink-booking:$TAG#" edai1/k8s/flink.yaml | kubectl apply -f -
