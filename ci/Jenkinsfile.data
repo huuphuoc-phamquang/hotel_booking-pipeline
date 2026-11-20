@@ -13,8 +13,9 @@ pipeline {
     booleanParam(name: 'WITH_FLINK_DEPLOY', defaultValue: false, description: 'apply FlinkDeployment (cần Flink Operator trên cluster)')
   }
   environment {
-    REGISTRY = "asia-southeast1-docker.pkg.dev/${env.GCP_PROJECT}/booking"
-    TAG      = "${env.GIT_COMMIT.take(7)}"
+    REGISTRY        = "asia-southeast1-docker.pkg.dev/${env.GCP_PROJECT}/booking"
+    TAG             = "${env.GIT_COMMIT.take(7)}"
+    DOCKER_BUILDKIT = "1"
   }
   stages {
     stage('Test') {
@@ -55,6 +56,7 @@ pipeline {
           '''
           dir('edai1') {
             sh '''
+              set -e
               IMGS="docker/Dockerfile:data/generator k8s/flink.Dockerfile:data/flink-booking"
               if [ "$WITH_SPARK_BUILD" = true ]; then IMGS="$IMGS k8s/spark.Dockerfile:data/spark-booking"; fi
               for img in $IMGS; do
