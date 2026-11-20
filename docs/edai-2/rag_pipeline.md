@@ -14,19 +14,24 @@ cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu �
 
 **Cần nộp (cả nhóm):** Document show ảnh pipeline đã chạy thành công trên Airflow, và lineage thể hiện trên DataHub + link tới code pipeline
 
-**Cách làm:** [Đã có] `rag_pipeline.py` chia chunk, embed bằng bge-m3 rồi ghi vào Feast `policy_chunks`; tài liệu chính sách nằm ở `policies/*.md`. Task embed chạy trên pod riêng 4–6Gi (`executor_config`), chart booking-mcp nâng limit lên 4Gi. [Cần làm] chụp lần chạy trên Airflow.
+**Cách làm:** [Đã có] [`edai2/dags/rag_pipeline.py`](../../edai2/dags/rag_pipeline.py) chia chunk, embed bằng bge-m3 rồi ghi vào Feast `policy_chunks`; tài liệu chính sách nằm ở `policies/*.md`. Task embed chạy trên pod riêng 4–6Gi (`executor_config`), chart booking-mcp nâng limit lên 4Gi.
 
-**Kết quả:** các bước của DAG `rag_data_pipeline` chạy trên GKE ngày 2026-11-18 trong một pod dùng image booking-mcp,
-chưa chạy qua Airflow (image Airflow trên cluster là của edai-1, chưa có code edai-2). Ba tài liệu `policies/*.md`
-(260, 315 và 193 token) cho ra 3 chunk 512 token, qua đủ ba kiểm tra (`has_chunks`, `chunk_id_unique`,
-`no_empty_chunk`). bge-m3 embed thành ma trận (3, 1024) và ghi vào online store `policy_chunks` trong 39 s.
+**Kết quả:** DAG `rag_data_pipeline` ([`edai2/dags/rag_pipeline.py`](../../edai2/dags/rag_pipeline.py)) đã chạy thành công cả 4 task (`load_docs` → `chunk_docs` → `validate_chunks` → `embed_and_push`) trên Airflow 2.10.5 (GKE namespace `data`, Helm release `airflow`, image `airflow-booking:be6c2e2-3`) ngày 2026-11-19. Ba tài liệu `policies/*.md` (260, 315 và 193 token) cho ra 3 chunk 512 token, qua đủ ba kiểm tra (`has_chunks=True`, `chunk_id_unique=True`, `no_empty_chunk=True`). Task `embed_and_push` chạy trên pod riêng (`EMBED_POD`, request 4Gi / limit 6Gi), dùng `BAAI/bge-m3` sinh vector 1024 chiều, ghi 3 dòng có đủ `doc_sha256`, `embed_model` và `embedding` vào bảng offline `gold.feat_policy_chunks` đồng thời cập nhật online store `feast_online.booking_policy_chunks`.
 
 Truy vấn thử "Khách huỷ phòng trước bao nhiêu ngày thì được hoàn tiền?" trả về `policies/cancellation.md#0` gần nhất
 (distance 0,234), đúng tài liệu chính sách huỷ. Hai kết quả còn lại ghép nhầm `chunk_id` với `text` và không xếp theo
 khoảng cách, nghi do `retrieve_online_documents_v2` của Feast 0.68 trên PostgreSQL; lỗi này chưa được điều tra. Lần chạy
 đầu còn lộ một lỗi cấu hình đã sửa: Feast chỉ nhận tên metric viết thường (`cosine`).
 
-![RAG pipeline chạy trên GKE](../images/edai-2/rag-pipeline-run.png)
+![Helm release và pod Airflow trên GKE](../images/edai-2/airflow-helm-pods.png)
+
+![DAG rag_data_pipeline chạy thành công 4 task trên Airflow](../images/edai-2/airflow-rag-graph.png)
+
+![Log validate_chunks trên Airflow](../images/edai-2/airflow-rag-validate-log.png)
+
+![Dữ liệu gold.feat_policy_chunks và feast_online.booking_policy_chunks](../images/edai-2/feast-online-policy-chunks.png)
+
+![RAG pipeline chạy thử trong pod trên GKE](../images/edai-2/rag-pipeline-run.png)
 
 <a id="edai-2-10"></a>
 ## Đảm bảo data governance cho pipeline
