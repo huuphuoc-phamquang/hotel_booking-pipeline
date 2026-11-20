@@ -8,12 +8,7 @@ Mỗi mục ứng với một dòng của rubric, ghi lại phần đã triển 
 <a id="edai-1-34"></a>
 ## Visualize tables on all zones
 
-ERD của từng zone (Bronze `raw_`, Silver `stg_`, Gold) vẽ bằng draw.io từ schema trong code
-(`generator/offline_gen.py`, `storage/optimize.sql`, `schema/gold_schema.sql`); bản Mermaid có cùng bảng và quan hệ nằm
-trong phần thu gọn bên dưới mỗi ảnh. Mỗi bảng có một dòng mô tả vai trò. Trên DataHub, 3 recipe trong
-`governance/datahub/` (postgres cho Gold, iceberg cho Silver, s3 cho Bronze) ingest schema, và
-`emit_datahub.emit_table_docs` gắn mô tả cùng tag zone cho 26 bảng; `tests/test_datahub_recipes.py` kiểm tên dataset
-khớp với lineage. Phần DataHub chạy trên GKE ngày 2026-11-18.
+ERD của cả ba zone (Bronze `raw_`, Silver `stg_`, Gold) được xuất bằng DBeaver (tầng Gold đọc trực tiếp từ PostgreSQL trên GKE kèm CloudBeaver `edai1/k8s/cloudbeaver.yaml`; Bronze và Silver dựng từ schema trong `generator/offline_gen.py`, `storage/optimize.sql`); bản Mermaid có cùng bảng và quan hệ nằm trong phần thu gọn bên dưới mỗi ảnh. Mỗi bảng có một dòng mô tả vai trò. Trên DataHub, 3 recipe trong `governance/datahub/` (postgres cho Gold, iceberg cho Silver, s3 cho Bronze) ingest schema, và `emit_datahub.emit_table_docs` gắn mô tả cùng tag zone cho 26 bảng; `tests/test_datahub_recipes.py` kiểm tên dataset khớp với lineage. Phần DataHub chạy trên GKE ngày 2026-11-18.
 
 Lọc theo tag zone trên DataHub ra đủ 26 bảng: 8 bảng Bronze trên S3, 2 bảng Silver trên Iceberg, 16 bảng
 Gold trên PostgreSQL. Tab Columns của bảng Gold hiện khoá chính và khoá ngoại. Bronze và Silver là file Parquet và bảng

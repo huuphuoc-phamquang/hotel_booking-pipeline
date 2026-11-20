@@ -26,6 +26,8 @@ Tổng cộng sau materialize, online store `feast_online` có 1.584.578 booking
 
 ![Dữ liệu customer_booking_stats đã materialize lên online store](../images/edai-2/feast-online-customer-stats.png)
 
+![Schema 5 bảng Feast Online Store (feast_online) xuất từ DBeaver](../images/edai-2/schema-feast-online.png)
+
 <a id="edai-2-12"></a>
 ## Deploy các jobs chịu trách nhiệm push streaming feature vào OFFLINE & ONLINE store
 

@@ -1,0 +1,84 @@
+# CloudBeaver (DBeaver Web UI) trên GKE (namespace data): xem ER Diagram thật và truy vấn trực tiếp
+# PostgreSQL warehouse (schema gold, feast_online, iceberg_tables) ngay trong cluster.
+# Truy cập: kubectl -n data port-forward svc/cloudbeaver 8978:8978 -> http://localhost:8978
+# Tài khoản đăng nhập: admin / mật khẩu POSTGRES_PASSWORD trong secret data-secrets.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloudbeaver-datasources
+  namespace: data
+data:
+  initial-data-sources.conf: |
+    {
+      "folders": {},
+      "connections": {
+        "booking-warehouse-pg": {
+          "provider": "postgresql",
+          "driver": "postgres-jdbc",
+          "name": "Booking Warehouse (Gold & Feast)",
+          "save-password": false,
+          "configuration": {
+            "host": "postgres.data.svc.cluster.local",
+            "port": "5432",
+            "database": "warehouse",
+            "url": "jdbc:postgresql://postgres.data.svc.cluster.local:5432/warehouse",
+            "configurationType": "MANUAL",
+            "type": "dev",
+            "auth-model": "native",
+            "user": "postgres"
+          }
+        }
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudbeaver
+  namespace: data
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: cloudbeaver } }
+  template:
+    metadata: { labels: { app: cloudbeaver } }
+    spec:
+      containers:
+        - name: cloudbeaver
+          image: dbeaver/cloudbeaver:24.3.0
+          env:
+            - { name: CB_SERVER_NAME, value: "Booking Data Warehouse (CloudBeaver)" }
+            - { name: CB_ADMIN_NAME, value: "admin" }
+            - name: CB_ADMIN_PASSWORD
+              valueFrom: { secretKeyRef: { name: data-secrets, key: POSTGRES_PASSWORD } }
+            - { name: CLOUDBEAVER_POLICY_REQUIRE_MIXED_CASE, value: "false" }
+            - { name: CLOUDBEAVER_APP_GRANT_CONNECTIONS_ACCESS_TO_ANONYMOUS_TEAM, value: "true" }
+            - { name: CLOUDBEAVER_APP_SUPPORTS_CUSTOM_CONNECTIONS, value: "true" }
+          ports: [{ containerPort: 8978 }]
+          readinessProbe:
+            httpGet: { path: /, port: 8978 }
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          volumeMounts:
+            - name: workspace
+              mountPath: /opt/cloudbeaver/workspace
+            - name: datasources
+              mountPath: /opt/cloudbeaver/conf/initial-data-sources.conf
+              subPath: initial-data-sources.conf
+          resources:
+            requests: { cpu: "250m", memory: 512Mi }
+            limits: { memory: 1Gi }
+      volumes:
+        - name: workspace
+          emptyDir: {}
+        - name: datasources
+          configMap:
+            name: cloudbeaver-datasources
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloudbeaver
+  namespace: data
+spec:
+  selector: { app: cloudbeaver }
+  ports: [{ name: http, port: 8978, targetPort: 8978 }]
