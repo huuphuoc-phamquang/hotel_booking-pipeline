@@ -37,6 +37,16 @@ Tổng cộng sau materialize, online store `feast_online` có 1.584.578 booking
 
 **Cần nộp (cả nhóm):** Document show ảnh các jobs đã chạy thành công, dữ liệu đã có + link tới code của các jobs
 
-**Cách làm:** [Đã có] Job 1: Flink tính cửa sổ trượt 1 giờ, bước 5 phút, upsert `gold.feat_hotel_realtime` (offline). Job 2: DAG `feast_materialize_realtime` chạy mỗi 5 phút, đưa `hotel_realtime` lên online với cửa sổ [`max(event_timestamp)` − 2 giờ, `max`] theo giờ dữ liệu. [Cần làm] chụp 2 job đang chạy và feature có dữ liệu ở cả online lẫn offline.
+**Cách làm:** [Đã có] Job 1: Flink ([`edai1/flink_jobs/`](../../edai1/flink_jobs/), [`edai1/k8s/flink.yaml`](../../edai1/k8s/flink.yaml)) tính cửa sổ trượt 1 giờ, bước 5 phút, upsert `gold.feat_hotel_realtime` (offline). Job 2: DAG [`feast_materialize_realtime`](../../edai2/dags/rag_pipeline.py) chạy mỗi 5 phút, đưa `hotel_realtime` lên online với cửa sổ [`max(event_timestamp)` − 2 giờ, `max`] theo giờ dữ liệu.
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+**Kết quả:** Cả 2 job đã chạy thành công trên GKE:
+- **Job 1 (Flink → Offline Store):** FlinkDeployment trên GKE tiêu thụ stream từ Kafka (`booking_events`), tính cửa sổ trượt 1 giờ (bước 5 phút) và upsert 5.083.405 dòng (`2025-12-31 20:10:00` → `2026-01-03 01:15:00`) vào bảng offline `gold.feat_hotel_realtime`.
+- **Job 2 (Airflow `feast_materialize_realtime` → Online Store):** Ngày 2026-11-20 trên Airflow 2.10.5 (GKE namespace `data`), DAG `feast_materialize_realtime` chạy thành công (`scheduled` 27 s, `manual` 32 s), truy vấn `max(event_timestamp)` từ `gold.feat_hotel_realtime` rồi materialize feature view `hotel_realtime` trong cửa sổ 2 giờ `[2026-01-02 23:15:00+00, 2026-01-03 01:15:00+00]` lên `feast_online.booking_hotel_realtime` (49.596 khách sạn có `bookings_1h`, mốc mới nhất `2026-01-03 01:15:00+00`).
+
+![Job 1: Flink job graph đẩy streaming feature vào offline store](../images/edai-1/flink-job-graph.png)
+
+![Job 2: DAG feast_materialize_realtime chạy thành công trên Airflow](../images/edai-2/airflow-materialize-realtime-graph.png)
+
+![Log task materialize của feast_materialize_realtime](../images/edai-2/airflow-materialize-realtime-log.png)
+
+![Dữ liệu hotel_realtime trên cả Offline Store và Online Store](../images/edai-2/feast-realtime-offline-online.png)
