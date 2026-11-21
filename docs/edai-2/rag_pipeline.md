@@ -40,6 +40,12 @@ khoảng cách, nghi do `retrieve_online_documents_v2` của Feast 0.68 trên Po
 
 > Đảm bảo data governance cho pipeline (tương tự mini-coursework)
 
-**Cách làm:** [Đã có] Inlets, outlets tạo lineage trên DataHub từ `docs/policies` tới `policy_chunks`. Pipeline kiểm số chunk > 0, `chunk_id` không trùng và embedding đúng 1024 chiều; mỗi chunk ghi `doc_sha256` (version tài liệu) và `embed_model`. [Cần làm] chụp lineage và tab Validation.
+**Cách làm:** [Đã có] Inlets, outlets trong [`edai2/dags/rag_pipeline.py`](../../edai2/dags/rag_pipeline.py) tạo lineage trên DataHub từ `docs/policies` (S3) tới `warehouse.gold.feat_policy_chunks` (PostgreSQL). Pipeline kiểm số chunk > 0 (`has_chunks`), `chunk_id` không trùng (`chunk_id_unique`), không chunk rỗng (`no_empty_chunk`) và embedding đúng 1024 chiều; mỗi chunk ghi `doc_sha256` (version tài liệu) và `embed_model`.
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+**Kết quả:** Ngày 2026-11-21 trên GKE (namespace `data`, DataHub 1.1.11 + OpenSearch + Kafka), sau khi cấu hình Connection `datahub_rest_default` trong Airflow và chạy lại `rag_data_pipeline` (`success` trong 2 m 21 s), DataHub ghi nhận đầy đủ:
+- **Lineage (`DataHub › Lineage`):** `docs/policies` → 4 task của DAG `rag_data_pipeline` (`load_docs` → `chunk_docs` → `validate_chunks` → `embed_and_push`) → `warehouse.gold.feat_policy_chunks`.
+- **Validation (`DataHub › Quality › Assertions`):** cả 3 assertion `has_chunks`, `chunk_id_unique`, `no_empty_chunk` đều đạt trạng thái `Passing` (dấu tích xanh trên dataset `warehouse.gold.feat_policy_chunks`).
+
+![DataHub Lineage của rag_data_pipeline](../images/edai-2/datahub-rag-lineage.png)
+
+![DataHub Assertions của warehouse.gold.feat_policy_chunks](../images/edai-2/datahub-rag-validation.png)
