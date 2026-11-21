@@ -99,7 +99,7 @@ open('drift_api/reference/MODEL_VERSION', 'w').write(mv.version)"'''
               [envVar: 'LANGFUSE_PUBLIC_KEY', vaultKey: 'public_key'],
               [envVar: 'LANGFUSE_SECRET_KEY', vaultKey: 'secret_key'],
               [envVar: 'LANGFUSE_HOST', vaultKey: 'host']]]]]) {
-            sh 'python ci/render_agents.py --prompt-label production --out build/agents.yaml'
+            sh 'python ci/render_agents.py --src agents/agents-gke.yaml --prompt-label production --out build/agents.yaml'
           }
         }
       }

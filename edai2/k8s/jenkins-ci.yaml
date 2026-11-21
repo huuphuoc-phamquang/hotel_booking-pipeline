@@ -82,3 +82,18 @@ kind: RoleBinding
 metadata: { name: jenkins-deployer-monitoring, namespace: ml }
 roleRef: { apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: jenkins-deployer-monitoring }
 subjects: [{ kind: ServiceAccount, name: jenkins-deployer, namespace: ci }]
+---
+# ClusterRole edit không gồm CRD của kagent: stage Deploy agents apply Agent, RemoteMCPServer, ModelConfig
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata: { name: jenkins-deployer-kagent }
+rules:
+  - apiGroups: [kagent.dev]
+    resources: [agents, remotemcpservers, modelconfigs]
+    verbs: [create, delete, get, list, patch, update, watch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata: { name: jenkins-deployer-kagent, namespace: kagent }
+roleRef: { apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: jenkins-deployer-kagent }
+subjects: [{ kind: ServiceAccount, name: jenkins-deployer, namespace: ci }]
