@@ -47,6 +47,8 @@ Các build trước đó lần lượt lộ ra và được sửa: docker CLI th
 
 ![Jenkins Stage View: booking-mcp build #19 (WITH_AGENTS=true)](../images/edai-2/jenkins-agents-stage-view.png)
 
+![Stage Logs Deploy agents (booking-mcp build #19)](../images/edai-2/jenkins-agents-console.png)
+
 ![Secret registry lấy từ Vault, không in ra log](../images/edai-2/jenkins-vault-masked.png)
 
 ![Build image booking-mcp](../images/edai-2/jenkins-console-build.png)
@@ -65,6 +67,8 @@ Các build trước đó lần lượt lộ ra và được sửa: docker CLI th
 - `Deploy agents`: `agent.kagent.dev/coordinator-agent` được apply, `kubectl -n kagent rollout status deploy/coordinator-agent` báo `successfully rolled out`, và `publish_agent_card.py` đăng ký `Agent coordinator-agent` tag `762fa7b` (`created`) lên `agentregistry`.
 
 ![Jenkins Stage View: booking-mcp build #19 (WITH_AGENTS=true)](../images/edai-2/jenkins-agents-stage-view.png)
+
+![Stage Logs Deploy agents (booking-mcp build #19)](../images/edai-2/jenkins-agents-console.png)
 
 <a id="edai-2-36"></a>
 ## CI/CD cho stream feature jobs
