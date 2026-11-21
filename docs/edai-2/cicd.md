@@ -31,27 +31,21 @@ cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu �
 
 **Rubric:** edai-2 · dòng 34 · 2 điểm · nhóm *CI/CD* › *CI/CD cho các MCP Servers & Agents ở trên (Build & package xong MCP Servers => Deploy Agent with the corresponding MCP Servers) (Agent cần sử dụng System Prompt từ một Prompt Management tool như Langfuse)*
 
-**Cách làm:** [Đã có] Jenkinsfile gồm các bước test → build (secret từ Vault) → helm → `ci/render_agents.py` (lấy prompt từ Langfuse) → deploy agent; agent build chạy trên `ci/pod-template.yaml` và `ci/tools.Dockerfile`. [Cần làm] stage Fetch prompt + Deploy agents khi có Langfuse và kagent (nửa MCP server đã chạy, build #7).
+**Cách làm:** [Đã có] [`edai2/ci/Jenkinsfile`](../../edai2/ci/Jenkinsfile) gồm các bước `Test` → `Build & push images` (secret từ Vault) → `Deploy APIs` (Helm `--atomic`) → `Fetch prompt` (`ci/render_agents.py` lấy prompt label `production` từ Langfuse) → `Deploy agents` (apply `Agent` + `rollout status` + `publish_agent_card.py` lên `agentregistry`); agent build chạy trên [`ci/pod-template.yaml`](../../edai2/ci/pod-template.yaml) và [`ci/tools.Dockerfile`](../../edai2/ci/tools.Dockerfile).
 
-**Kết quả:** nửa MCP server của pipeline đã chạy trên cluster thứ hai ngày 2026-11-19; nửa agent (stage `Fetch prompt` và
-`Deploy agents`) chưa chạy vì cluster chưa có Langfuse và kagent, Jenkinsfile đặt `WITH_AGENTS=false` nên hai stage này
-được bỏ qua có chủ đích.
+**Kết quả:** Toàn bộ pipeline `booking-mcp` (cả nửa MCP server lẫn nửa agent với `WITH_AGENTS=true`) đã chạy thành công ở **Build #19** (commit `762fa7b`, ngày 2026-11-21) trên Jenkins (`cicd-vm`):
 
-- **Hạ tầng CI:** Jenkins chạy trên VM `cicd-vm` (role Ansible `jenkins`), cấu hình hoàn toàn bằng JCasC: cloud
-  Kubernetes trỏ GKE (agent là pod trong namespace `ci`, kết nối về Jenkins bằng WebSocket qua IP nội bộ), plugin
-  HashiCorp Vault trỏ Vault trên cùng VM, và 2 job pipeline `booking-mcp`, `data-pipeline` đọc thẳng từ GitHub, poll
-  repo 2 phút một lần. RBAC của agent nằm trong `edai2/k8s/jenkins-ci.yaml`.
-- **Secret:** khoá service account `jenkins-ci` (chỉ quyền ghi Artifact Registry) nằm trong Vault `secret/ci/registry`;
-  Jenkins chỉ có token đọc `secret/ci/*`. Log build hiện `Retrieving secret` rồi `Login Succeeded`, không in giá trị.
-- **Build #7** (tự chạy khi có commit mới): Test 79 pass, coverage `mcp_server` + `observability` 96% và drift-api 100%;
-  build và push image `agents/booking-mcp:1f26787`; `helm upgrade --atomic` lên revision 9, pod mới Ready.
+- **Hạ tầng CI & Secret:** Jenkins chạy trên VM `cicd-vm` (JCasC + Kubernetes agent trong namespace `ci`, RBAC trong [`edai2/k8s/jenkins-ci.yaml`](../../edai2/k8s/jenkins-ci.yaml)); secret Artifact Registry (`secret/ci/registry`) và Langfuse (`secret/ci/langfuse`, host `https://jp.cloud.langfuse.com`) được nạp từ HashiCorp Vault, không lộ giá trị ra log.
+- **Test (4 min 46 s) & Build & push (22 min 15 s):** Test pass 79 case (coverage `mcp_server` + `observability` 96%, `drift-api` 100%), build và push `agents/booking-mcp:762fa7b`.
+- **Deploy APIs (1 min 22 s):** `helm upgrade --install booking-mcp` trong namespace `agents` lên **revision 30 (`STATUS: deployed`)**.
+- **Fetch prompt (1 min 8 s):** lấy 4 system prompt gắn nhãn `production` (`data-agent`, `policy-agent`, `policy-agent-v2`, `coordinator`) từ Langfuse bằng [`ci/render_agents.py`](../../edai2/ci/render_agents.py) ra `build/agents.yaml`.
+- **Deploy agents (47 s):** `kubectl apply -f build/agents.yaml`, đợi `rollout status` thành công và chạy [`ci/publish_agent_card.py`](../../edai2/ci/publish_agent_card.py) đăng ký `MCPServer booking-tools` (`762fa7b`) và `Agent data-agent` (`762fa7b`, `created`) lên `agentregistry` (`Finished: SUCCESS`).
 
-Các build #2–#6 trước đó lần lượt lộ ra và được sửa: docker CLI thiếu trong image tools, git từ chối workspace do khác
-uid (`safe.directory`), thiếu quyền `servicemonitors`, và vượt quota CPU khi chart chạy 2 replica (thêm biến
-`API_REPLICAS`). Build #1 in khoá registry nhiều dòng ra log vì plugin chỉ che được secret một dòng: khoá đó đã bị thu hồi,
-khoá mới lưu dạng base64 một dòng và lệnh login chạy với `set +x`.
+Các build trước đó lần lượt lộ ra và được sửa: docker CLI thiếu trong image tools, git từ chối workspace do khác uid (`safe.directory`), thiếu quyền `servicemonitors`, vượt quota CPU khi chart chạy 2 replica (`API_REPLICAS`), và giảm `requests.memory` của `booking-mcp` xuống `1Gi` để RollingUpdate đủ chỗ trên 2 node.
 
-![Jenkins Stage View: build #2 đến #7](../images/edai-2/jenkins-stage-view.png)
+![Langfuse Prompts gắn nhãn production cho 4 agent](../images/edai-2/langfuse-prompts.png)
+
+![Jenkins Stage View: booking-mcp build #19 (WITH_AGENTS=true)](../images/edai-2/jenkins-agents-stage-view.png)
 
 ![Secret registry lấy từ Vault, không in ra log](../images/edai-2/jenkins-vault-masked.png)
 
@@ -64,9 +58,13 @@ khoá mới lưu dạng base64 một dòng và lệnh login chạy với `set +x
 
 **Rubric:** edai-2 · dòng 35 · 2 điểm · nhóm *CI/CD* › *CI/CD cho các MCP Servers & Agents ở trên (Build & package xong MCP Servers => Deploy Agent with the corresponding MCP Servers) (Agent cần sử dụng System Prompt từ một Prompt Management tool như Langfuse)*
 
-**Cách làm:** [Đã có] `ci/Jenkinsfile`: `render_agents.py` lấy prompt từ Langfuse → apply agent → kiểm rollout status từng agent (có coordinator) → `publish_agent_card.py`. [Cần làm] chụp lần chạy.
+**Cách làm:** [Đã có] [`edai2/ci/Jenkinsfile`](../../edai2/ci/Jenkinsfile): `render_agents.py` lấy prompt `coordinator` (label `production`) từ Langfuse → `kubectl apply -f build/agents.yaml` → kiểm `rollout status` từng agent (gồm `coordinator-agent`) → `publish_agent_card.py` đăng ký lên `agentregistry`.
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+**Kết quả:** Trong cùng **Build #19** (`WITH_AGENTS=true`, commit `762fa7b`, ngày 2026-11-21), sau khi `booking-mcp` lên revision 30 và `data-agent`, `policy-agent`, `policy-agent-v2` sẵn sàng, pipeline chạy tiếp cho `coordinator-agent`:
+- `Fetch prompt`: kéo system prompt `coordinator` v1 (label `production`) từ Langfuse vào `build/agents.yaml`.
+- `Deploy agents`: `agent.kagent.dev/coordinator-agent` được apply, `kubectl -n kagent rollout status deploy/coordinator-agent` báo `successfully rolled out`, và `publish_agent_card.py` đăng ký `Agent coordinator-agent` tag `762fa7b` (`created`) lên `agentregistry`.
+
+![Jenkins Stage View: booking-mcp build #19 (WITH_AGENTS=true)](../images/edai-2/jenkins-agents-stage-view.png)
 
 <a id="edai-2-36"></a>
 ## CI/CD cho stream feature jobs
