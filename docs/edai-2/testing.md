@@ -7,14 +7,16 @@ Unit test, phân lớp tương đương và giá trị biên (EP/BVA), mutation 
 
 `edai2/tests/test_server.py` và `edai2/tests/test_cancel_risk.py` kiểm Web API của `booking-mcp` bằng fixture, monkeypatch và respx (giả Feast và KServe); `edai2/tests/test_overbooking.py` kiểm hàm tính `K`.
 
-Chạy cục bộ: `51` test đạt, coverage `mcp_server/server.py` `95%` và `overbooking.py` `100%` (trên Jenkins Build #19 toàn bộ suite đạt `79` test pass, coverage `96%`–`100%`). **[update sau]:** Bổ sung ảnh chụp bảng coverage chi tiết nếu cần.
+Chạy kiểm thử trong container (`python:3.12-slim`): `54` test đạt (`15,99 s`), tổng coverage `95,26%` (`mcp_server/server.py` `95%`, `mcp_server/overbooking.py` `100%`; trên Jenkins Build #19 toàn bộ suite đạt `79` test pass, coverage `96%`–`100%`).
+
+![Unit test và EP/BVA đạt 54/54 test, coverage 95,26%](../images/edai-2/pytest-coverage.png)
 
 <a id="edai-2-29"></a>
 ## Thiết kế test theo Equivalence Partitioning & Boundary Value Analysis
 
 Test tham số hoá theo các lớp tương đương và giá trị biên: xác suất trong `[0, 1]` trả về từ KServe, `booking_id`, và `K` (`p = 0` hoặc `1`, không có booking, chi phí `≤ 0`). `tests/test_overbooking.py` dùng Hypothesis để đối chiếu `K` với định nghĩa trực tiếp.
 
-Các test `edai2/tests/test_overbooking.py` chạy cục bộ và trên Jenkins đều đạt. **[update sau]:** Bổ sung ảnh chụp log chạy EP/BVA nếu cần.
+Các test `edai2/tests/test_overbooking.py` đều đạt trong lần chạy `54/54` ở trên (ảnh kết quả mục `#edai-2-28`) và trên Jenkins Build #19.
 
 <a id="edai-2-30"></a>
 ## Kiểm thử đột biến (Mutation Testing) với mutmut
