@@ -61,19 +61,16 @@ Airflow DP2 ra đúng log của `silver_bookings`, `stage_gold`, `upsert_gold`.
 <a id="edai-2-49"></a>
 ## Tương tự cho traces · edai-2 · Observability
 
-Cùng lần chạy ở dòng 46. Jaeger (`observability/stack/jaeger.yaml`) nhận OTLP gRPC cổng 4317; booking-mcp bật
-tracing khi có biến `OTEL_EXPORTER_OTLP_ENDPOINT`, gửi span của FastAPI, span `feast.online` cho mỗi lần đọc online
-store và span httpx cho lời gọi KServe. Jaeger UI truy cập qua ingress (dòng 39). Tracing cho agentgateway và trace
-xuyên suốt A2A → MCP → KServe chưa làm, vì agent và KServe chưa deploy.
+Jaeger ([`observability/stack/jaeger.yaml`](../../edai2/observability/stack/jaeger.yaml)) nhận OTLP gRPC cổng 4317 và mở UI qua ingress (dòng 39). Cả `booking-mcp` (FastAPI, span `feast.online` cho mỗi lần đọc online store và httpx tới KServe khi có biến `OTEL_EXPORTER_OTLP_ENDPOINT`) lẫn `agentgateway` ([`gateway/agentgateway.yaml`](../../edai2/gateway/agentgateway.yaml), bật `config.tracing.otlpEndpoint` và `randomSampling: true`) đều gửi trace về `jaeger-collector.monitoring.svc.cluster.local:4317` và truyền tiếp W3C `traceparent` xuyên suốt các dịch vụ.
 
-Trace `POST /v1/cancel-risk` (13,43 ms, 7 span) gồm span FastAPI, hai span `feast.online` (đọc `booking_attributes`
-1,78 ms, rồi feature ngữ cảnh 2,23 ms) và span `POST` gọi KServe (4,99 ms). Span cuối bị đánh dấu lỗi do chưa có service
-KServe, và lỗi lan lên span gốc. Trace của `POST /mcp` cho thấy cùng
-chuỗi span khi gọi qua tool MCP.
+- **Chạy đơn lẻ `booking-mcp` (ngày 2026-11-18, trước khi deploy KServe):** trace `POST /v1/cancel-risk` (13,43 ms, 7 span) gồm span FastAPI, hai span `feast.online` (1,78 ms và 2,23 ms) và span `POST` gọi KServe (4,99 ms, đánh dấu lỗi vì KServe chưa deploy).
+- **Trace phân tán liên thông qua gateway → MCP → Feast → KServe (ngày 2026-11-21):** một lượt gọi MCP `predict_cancellation(120152161878)` qua `agentgateway` → `booking-mcp` → Feast online → KServe `cancel-risk` (trả `probability = 0,0643`, `model_version = 1`) tạo thành **1 trace duy nhất** (`1a3bf0b`, 2 service, độ sâu 4, 11 span, tổng **2,33 s**): `agentgateway` (`tools/call` → `tools/call booking-tools_predict_cancellation` 4,45 ms) → `booking-mcp` (`POST /mcp` → hai span `feast.online` 190,26 ms và 126,72 ms → `POST` gọi KServe 1,78 s).
 
 ![Jaeger: danh sách trace của booking-mcp](../images/edai-2/jaeger-traces.png)
 
 ![Jaeger: chi tiết trace POST /v1/cancel-risk](../images/edai-2/jaeger-trace-detail.png)
+
+![Jaeger: trace phân tán agentgateway → booking-mcp → Feast → KServe](../images/edai-2/jaeger-gateway-mcp-kserve.png)
 
 <a id="edai-2-50"></a>
 ## Đảm bảo ít nhất các metrics · LLM-related telemetry data

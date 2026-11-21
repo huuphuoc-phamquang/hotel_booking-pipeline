@@ -6,6 +6,10 @@
 #   - A/B test LLM versions                    : backend LLM chia weight 90/10 giữa qwen-3b và LoRA qwen-booking-v2
 # LLM_HOST được thay lúc deploy (gateway/deploy.sh): host của vLLM (tunnel Cloudflare, đổi mỗi lần tunnel khởi động lại).
 # Khoá vLLM chỉ nằm ở gateway (/secrets/vllm-key); agent chỉ cầm JWT do Keycloak cấp.
+config:
+  tracing:
+    otlpEndpoint: http://jaeger-collector.monitoring.svc.cluster.local:4317
+    randomSampling: true
 binds:
   - port: 3000
     listeners:
