@@ -1,0 +1,15 @@
+# ClusterIssuer của cert-manager để cấp chứng chỉ TLS thật từ Let's Encrypt (HTTP-01 qua NGINX Ingress).
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: huuphuoc.phamquang@gmail.com
+    privateKeySecretRef:
+      name: letsencrypt-prod-account-key
+    solvers:
+      - http01:
+          ingress:
+            ingressClassName: nginx

@@ -86,9 +86,9 @@ metadata:
 spec:
   ingressClassName: nginx
   tls:
-    - hosts: [api.booking.example.com]
+    - hosts: [api.34-124-198-171.sslip.io]
       secretName: api-booking-tls
   rules:
-    - host: api.booking.example.com
+    - host: api.34-124-198-171.sslip.io
       http:
         paths: [{ path: /, pathType: Prefix, backend: { service: { name: agentgateway, port: { number: 3000 } } } }]

@@ -33,6 +33,8 @@ Trước drift, xác suất dự báo lệch xác suất thật dưới 0,05 ở
 
 ![Bảng gold.booking_risk đã chấm trên cluster GKE](../images/edai-2/idea1-cluster-tables.png)
 
+![Bảng đối chiếu calibration, 10 decile và sai số K trên cluster](../images/edai-2/idea1-cluster-eval.png)
+
 ![Idea 1: Reliability và sai số K trên gold.booking_risk của cluster](../images/edai-2/idea1-cluster-calibration.png)
 
 <a id="edai-2-57"></a>

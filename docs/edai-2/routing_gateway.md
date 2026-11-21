@@ -98,6 +98,14 @@ Tab *Auth & Rate limit* của Agent Workbench gửi request thật qua ingress, 
 
 > Làm cái này cho Web API kéo dữ liệu. Mọi người có thể tham khảo 2 đồ án sau: cái này và cái này
 
-**Cách làm:** [Đã có] cert-manager cấp chứng chỉ Let's Encrypt cho `api.booking.example.com`. [Cần làm] cần domain thật trỏ về ingress; chụp chứng chỉ hợp lệ.
+**Cách làm:** [Đã có] [`cert-issuer.yaml`](../../edai2/k8s/cert-issuer.yaml) cấu hình `ClusterIssuer` `letsencrypt-prod` (ACME HTTP-01 qua `nginx`), Ingress `feature-api` trong [`ingress.yaml`](../../edai2/k8s/ingress.yaml) gắn domain `api.34-124-198-171.sslip.io` trỏ về `agentgateway:3000` (cổng `/mcp` và `/v1`) với secret TLS `api-booking-tls`.
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+**Kết quả:** Ngày 2026-11-21 trên GKE, sau khi mở tạm `loadBalancerSourceRanges` của `ingress-nginx-controller` để máy chủ ACME gọi HTTP-01, `cert-manager` cấp thành công chứng chỉ **Let's Encrypt (`YR2`)** cho `api.34-124-198-171.sslip.io` (`certificate/api-booking-tls` `READY = True`, `order` & `challenge` `valid`, hiệu lực `2026-11-21` → `2027-02-19`).
+
+Kiểm tra trực tiếp bằng Python `ssl` và `curl.exe -sI https://api.34-124-198-171.sslip.io/mcp` (không dùng `-k`, xác thực chuỗi tin cậy mặc định của hệ điều hành): TLS bắt tay thành công với `subject = api.34-124-198-171.sslip.io`, `issuer = Let's Encrypt`, và `agentgateway` trả `401 Unauthorized` (`no bearer token found`) chứng tỏ luồng HTTPS đã thông suốt tới gateway.
+
+![Chứng chỉ Let's Encrypt thật cho api.34-124-198-171.sslip.io](../images/edai-2/https-cert-cli.png)
+
+![Trình duyệt xác nhận Connection is secure và Certificate is valid](../images/edai-2/https-browser.png)
+
+![Ingress feature-api và Certificate api-booking-tls READY=True](../images/edai-2/https-k8s-cert.png)
