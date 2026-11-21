@@ -7,6 +7,6 @@ env:
   KSERVE_URL: http://cancel-risk-predictor.ml.svc.cluster.local/v1/models/cancel-risk:predict
   KSERVE_BULK_URL: http://cancel-risk-bulk-predictor.ml.svc.cluster.local/v1/models/cancel-risk:predict
   HF_HOME: /tmp/hf                   # user app không có home: cache bge-m3 của sentence-transformers ghi vào /tmp
-resources:                           # bge-m3 (~2,2GB) nạp trong process cho search_policy
-  requests: { cpu: 500m, memory: 3Gi }
+resources:                           # bge-m3 (~2,2GB) nạp lazy khi gọi search_policy; request 1Gi để RollingUpdate đủ chỗ trên 2 node
+  requests: { cpu: 250m, memory: 1Gi }
   limits: { cpu: "2", memory: 4Gi }
