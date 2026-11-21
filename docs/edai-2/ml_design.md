@@ -10,6 +10,8 @@ cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu �
 
 **Rubric:** edai-2 · dòng 55 · 2 điểm · nhóm *Repository Design*
 
-**Cách làm:** [Đã có] `README.md` ở gốc repo trình bày bài toán (dự báo cancellation để overbooking, có người duyệt), sơ đồ `docs/architecture/booking-overbooking.png` (nguồn `.drawio`), mục lục, cấu trúc repo, luồng dữ liệu theo ngày và link tới `docs/README.md`; mọi file mã đều có docstring đầu file.
+**Cách làm:** [Đã có] [`README.md`](../../README.md) ở gốc repo trình bày bài toán (dự báo cancellation để overbooking, có người duyệt), sơ đồ [`docs/architecture/booking-overbooking.png`](../architecture/booking-overbooking.png) (nguồn `.drawio`), mục lục, cấu trúc repo, luồng dữ liệu theo ngày và link tới [`docs/README.md`](../README.md); mọi file mã đều có docstring đầu file.
 
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+**Kết quả:** Đã hoàn thiện [`README.md`](../../README.md), [`docs/README.md`](../README.md) và sơ đồ kiến trúc tổng thể [`booking-overbooking.drawio`](../architecture/booking-overbooking.drawio) theo đúng quy tắc ô A2 (mỗi thành phần chính là 1 deployable unit, phân biệt luồng dữ liệu và luồng người dùng/MLOps bằng màu sắc và đánh số thứ tự `1→n`).
+
+![Sơ đồ kiến trúc tổng thể booking-overbooking](../architecture/booking-overbooking.png)

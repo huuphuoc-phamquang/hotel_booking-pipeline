@@ -24,6 +24,8 @@ Mẫu 5% booking cửa sổ [2025-01-01, 2025-06-01), train XGBoost 1 node (bỏ
 Lần chạy đầu lộ một lỗi thật đã sửa: `LABEL_SQL` dùng toán tử phần trăm, mà `pd.read_sql` qua psycopg 3 coi ký tự này là
 placeholder, nên đổi sang `mod(booking_id, 100)`. Kết quả train ở dòng 14.
 
+![Job train-cancel-risk hoàn thành 4 step trên GKE và bảng Iceberg ml.train_cancel_risk trong Postgres](../images/edai-2/ml-run-steps.png)
+
 <a id="edai-2-14"></a>
 ## Lưu model, data và các metadata liên quan khác ở mỗi training run lên MLFlow, tự động gắn…
 

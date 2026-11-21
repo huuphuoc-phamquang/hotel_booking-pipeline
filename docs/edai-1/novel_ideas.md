@@ -37,3 +37,5 @@ Nhờ có truth, phép đối soát chỉ ra đúng lỗi nào nằm ở đâu: 
 tối ưu khớp với các lần restart (dòng 18).
 
 ![Đối soát baseline, bản tối ưu và truth](../images/edai-1/flink-perday-compare.png)
+
+![Truy vấn tổng hợp stream_bookings_1m + stream_late_bookings trên PostgreSQL](../images/edai-1/flink-perday-postgres.png)
