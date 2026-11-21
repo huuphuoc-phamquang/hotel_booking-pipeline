@@ -2,13 +2,10 @@
 
 Thiết kế bảng theo zone, dimension SCD2, bảng feature, quan hệ dim–fact và quy ước đặt tên.
 
-Mỗi mục ứng với một dòng của rubric, ghi lại phần đã triển khai và kết quả (số liệu đo được, ảnh chụp trong
-`docs/images/`).
-
 <a id="edai-1-34"></a>
-## Visualize tables on all zones
+## Sơ đồ bảng dữ liệu qua các zone (Bronze, Silver, Gold)
 
-ERD của cả ba zone (Bronze `raw_`, Silver `stg_`, Gold) được xuất bằng DBeaver (tầng Gold đọc trực tiếp từ PostgreSQL trên GKE kèm CloudBeaver `edai1/k8s/cloudbeaver.yaml`; Bronze và Silver dựng từ schema trong `generator/offline_gen.py`, `storage/optimize.sql`); bản Mermaid có cùng bảng và quan hệ nằm trong phần thu gọn bên dưới mỗi ảnh. Mỗi bảng có một dòng mô tả vai trò. Trên DataHub, 3 recipe trong `governance/datahub/` (postgres cho Gold, iceberg cho Silver, s3 cho Bronze) ingest schema, và `emit_datahub.emit_table_docs` gắn mô tả cùng tag zone cho 26 bảng; `tests/test_datahub_recipes.py` kiểm tên dataset khớp với lineage. Phần DataHub chạy trên GKE ngày 2026-11-18.
+ERD của cả ba zone (Bronze `raw_`, Silver `stg_`, Gold) được xuất bằng DBeaver (tầng Gold đọc trực tiếp từ PostgreSQL trên GKE kèm CloudBeaver `edai1/k8s/cloudbeaver.yaml`; Bronze và Silver dựng từ schema trong `generator/offline_gen.py`, `storage/optimize.sql`); bản Mermaid có cùng bảng và quan hệ nằm trong phần thu gọn bên dưới mỗi ảnh. Mỗi bảng có một dòng mô tả vai trò. Trên DataHub, 3 recipe trong `governance/datahub/` (postgres cho Gold, iceberg cho Silver, s3 cho Bronze) ingest schema, và `emit_datahub.emit_table_docs` gắn mô tả cùng tag zone cho 26 bảng; `tests/test_datahub_recipes.py` kiểm tên dataset khớp với lineage. Phần DataHub chạy trên GKE.
 
 Lọc theo tag zone trên DataHub ra đủ 26 bảng: 8 bảng Bronze trên S3, 2 bảng Silver trên Iceberg, 16 bảng
 Gold trên PostgreSQL. Tab Columns của bảng Gold hiện khoá chính và khoá ngoại. Bronze và Silver là file Parquet và bảng
@@ -29,14 +26,14 @@ DP1 chép nguyên dữ liệu từ landing, không biến đổi. Bốn bảng s
 
 ```mermaid
 erDiagram
-    raw_hotels ||--o{ raw_hotel_changes : "hotel_id"
-    raw_hotels ||--o{ raw_inventory : "hotel_id"
-    raw_inventory ||--o{ raw_quotes : "hotel_id, room_type, stay_date"
-    raw_quotes ||--o| raw_bookings : "quote_id = booking_id"
-    raw_hotels ||--o{ raw_bookings : "hotel_id"
-    raw_customers ||--o{ raw_bookings : "customer_id"
-    raw_bookings ||--o| raw_cancellations : "booking_id"
-    raw_bookings ||--o| raw_payments : "booking_id"
+    raw_hotels ||--o{ raw_hotel_changes: "hotel_id"
+    raw_hotels ||--o{ raw_inventory: "hotel_id"
+    raw_inventory ||--o{ raw_quotes: "hotel_id, room_type, stay_date"
+    raw_quotes ||--o| raw_bookings: "quote_id = booking_id"
+    raw_hotels ||--o{ raw_bookings: "hotel_id"
+    raw_customers ||--o{ raw_bookings: "customer_id"
+    raw_bookings ||--o| raw_cancellations: "booking_id"
+    raw_bookings ||--o| raw_payments: "booking_id"
 
     raw_quotes {
         bigint quote_id PK
@@ -124,7 +121,7 @@ Dữ liệu đã làm sạch: dedup, hợp nhất schema, gắn trạng thái hu
 
 ```mermaid
 erDiagram
-    stg_quotes ||--o| stg_bookings : "quote_id = booking_id"
+    stg_quotes ||--o| stg_bookings: "quote_id = booking_id"
 
     stg_bookings {
         bigint booking_id PK
@@ -173,17 +170,17 @@ erDiagram
 
 ```mermaid
 erDiagram
-    dim_hotel ||--o{ fact_bookings : "hotel_key (FK)"
-    dim_customer ||--o{ fact_bookings : "customer_key (FK)"
-    fact_bookings ||--|| labels_cancel : "view"
-    fact_bookings ||--o{ booking_risk : "booking_id"
-    dim_customer ||--o{ feat_customer_booking_stats : "customer_id"
-    dim_hotel ||--o{ feat_hotel_demand : "hotel_id"
-    dim_hotel ||--o{ feat_hotel_realtime : "hotel_id"
-    dim_hotel ||--o{ hotel_rooms : "hotel_id"
-    dim_hotel ||--o{ overbooking_limits : "hotel_id"
-    dim_hotel ||--o{ stream_bookings_1m : "hotel_id"
-    dim_hotel ||--o{ stream_late_bookings : "hotel_id"
+    dim_hotel ||--o{ fact_bookings: "hotel_key (FK)"
+    dim_customer ||--o{ fact_bookings: "customer_key (FK)"
+    fact_bookings ||--|| labels_cancel: "view"
+    fact_bookings ||--o{ booking_risk: "booking_id"
+    dim_customer ||--o{ feat_customer_booking_stats: "customer_id"
+    dim_hotel ||--o{ feat_hotel_demand: "hotel_id"
+    dim_hotel ||--o{ feat_hotel_realtime: "hotel_id"
+    dim_hotel ||--o{ hotel_rooms: "hotel_id"
+    dim_hotel ||--o{ overbooking_limits: "hotel_id"
+    dim_hotel ||--o{ stream_bookings_1m: "hotel_id"
+    dim_hotel ||--o{ stream_late_bookings: "hotel_id"
 
     dim_hotel {
         bigserial hotel_key PK
@@ -291,12 +288,12 @@ erDiagram
 | `stg_bookings`, `stg_customers`, `stg_hotel_changes` | bảng trung chuyển của DP2: Spark ghi thay đổi trong ngày qua JDBC, sau đó `sql/dp2_upsert_gold.sql` nạp vào dim và fact; không có trong ERD vì ghi đè mỗi lần chạy |
 
 <a id="edai-1-35"></a>
-## Dim table with SCD 2
+## Bảng Dimension áp dụng SCD Type 2
 
 `dim_hotel` có `valid_from_ts`, `valid_to_ts`, `is_current`, cập nhật bằng `sql/dp2_upsert_gold.sql`.
 `tests/test_gold_sql.py` chạy 40 ngày trên Postgres thật và xác nhận bốn điều: mỗi khách sạn có số phiên bản bằng 1 cộng
 số lần đổi giá; mỗi khách sạn có đúng một bản hiện hành; fact trỏ đúng phiên bản tại thời điểm đặt; chạy lại cùng ngày
-không làm thay đổi dữ liệu. Trên GKE, DP1–DP3 được backfill cho 2025-01-01 → 2025-01-13 (ngày 2026-11-18).
+không làm thay đổi dữ liệu. Trên GKE, DP1–DP3 được backfill cho 2025-01-01 → 2025-01-13.
 
 Phân bố số phiên bản mỗi khách sạn trong `gold.dim_hotel`: 44.237 khách sạn có 1 phiên bản, 5.442 có 2,
 311 có 3, 8 có 4 và 2 có 5. Mỗi khách sạn có đúng một dòng `is_current` (partial unique index `dim_hotel_one_current`).
@@ -311,11 +308,11 @@ ngày trỏ đúng `hotel_key` của phiên bản còn hiệu lực ngày đó:
 ![SCD2: 3 phiên bản của một khách sạn](../images/edai-1/scd2-hotel-versions.png)
 
 <a id="edai-1-36"></a>
-## Feature tables with 2 columns event_timestamp and created
+## Bảng Feature Store với cột event_timestamp và created
 
 Ba bảng feature `feat_customer_booking_stats`, `feat_hotel_demand`, `feat_hotel_realtime` trong
 `schema/gold_schema.sql` đều có hai cột `event_timestamp` (thời điểm feature có hiệu lực) và `created` (thời điểm ghi).
-DP3 ghi hai bảng đầu, Flink ghi `feat_hotel_realtime`. Phép kiểm chạy trên Postgres của GKE ngày 2026-11-18, sau
+DP3 ghi hai bảng đầu, Flink ghi `feat_hotel_realtime`. Phép kiểm chạy trên Postgres của GKE, sau
 backfill DP1–DP3 và lần chạy Flink.
 
 `information_schema.columns` xác nhận cả ba bảng đều có `event_timestamp` và `created`. Không dòng nào có
@@ -323,7 +320,7 @@ backfill DP1–DP3 và lần chạy Flink.
 `event_before_created` mà `validate_features` kiểm mỗi ngày (dòng 27).
 
 <a id="edai-1-37"></a>
-## Relationship between dim & fact tables
+## Quan hệ giữa bảng Dimension và Fact
 
 `schema/gold_schema.sql` khai báo hai khoá ngoại của `fact_bookings`: tới `dim_hotel` (`hotel_key`) và
 `dim_customer` (`customer_key`). Recipe postgres của DataHub đọc được khoá ngoại khi ingest schema.
@@ -335,8 +332,8 @@ Trên DataHub, tab Columns của `fact_bookings` đánh dấu `booking_id` là P
 
 ```mermaid
 erDiagram
-    dim_hotel ||--o{ fact_bookings : "hotel_key"
-    dim_customer ||--o{ fact_bookings : "customer_key"
+    dim_hotel ||--o{ fact_bookings: "hotel_key"
+    dim_customer ||--o{ fact_bookings: "customer_key"
 
     dim_hotel {
         bigserial hotel_key PK "surrogate key, mỗi phiên bản một key"
@@ -368,7 +365,7 @@ erDiagram
   báo khoá ngoại, vì chúng được ghi bởi job khác (DP3, Flink, `score_bookings`) và đọc theo natural key.
 
 <a id="edai-1-38"></a>
-## Naming convention
+## Quy ước đặt tên (Naming Convention)
 
 Quy ước tiền tố theo zone:
 

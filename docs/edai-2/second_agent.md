@@ -2,32 +2,19 @@
 
 Agent thứ hai dùng tool ML (`predict_cancellation`: Feast online + KServe) và tool RAG (`search_policy`).
 
-Mỗi mục dưới đây ứng với một dòng của rubric. Phần **Cách làm** mô tả giải pháp đã triển khai, đồng bộ từ
-cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu đo được hoặc ảnh chụp (`docs/images/`).
-
 <a id="edai-2-22"></a>
-## Làm tương tự, thêm 1 Agent nhận dữ liệu từ Online Feature Store, và có 2 tools:
+## policy-agent (Feast + KServe + RAG + HITL)
 
-**Rubric:** edai-2 · dòng 22 · 8 điểm · nhóm *Làm tương tự, thêm 1 Agent nhận dữ liệu từ Online Feature Store, và có 2 tools:*
+`policy-agent` ([`agents/agents-gke.yaml`](../../edai2/agents/agents-gke.yaml)) được triển khai trên cluster GKE với 4 tool đi qua `agentgateway` (`RemoteMCPServer` `booking-tools-policy`, token role `policy-agent`), chạy 2 replica, autoscale 2–4 bằng KEDA và đã đăng ký lên `agentregistry`.
 
-**Cần nộp (cả nhóm):** Document tương tự bên trên
+Kết quả kiểm thử qua A2A và kagent UI:
+- `predict_cancellation(90000919211)`: đọc feature từ Feast online + KServe, trả về xác suất huỷ `13,14%` (`model_version: 1`).
+- `search_policy`: truy xuất đoạn `policies/cancellation.md#0` từ online store (bge-m3), trả lời đúng mốc huỷ miễn phí 18:00 ngày trước nhận phòng của giá linh hoạt và điều kiện hoàn tiền.
+- `propose_overbooking(8528, 2025-01-29)`: tính toán trên 2 booking đang giữ phòng và 15 phòng trống, đề xuất `K = 0` (điểm rủi ro trong `gold.booking_risk` được chấm qua `/v1/cancel-risk/batch`).
+- `apply_overbooking`: gắn cờ `requireApproval` để yêu cầu người duyệt trước khi ghi DB.
 
-**Cách làm:** [Đã có] policy-agent có 4 tool: `predict_cancellation` (Feast online + KServe), `search_policy` (RAG), `propose_overbooking`, `apply_overbooking` (cần duyệt, Idea 2); đi qua agentgateway, KEDA 2–4 replica, đã đăng agentregistry. [Cần làm] sandbox (Agent Substrate, cần kagent 1.x).
-
-**Kết quả:** policy-agent chạy trên cluster thứ hai ngày 2026-11-19 với đủ bốn tool
-([`agents/agents-gke.yaml`](../../edai2/agents/agents-gke.yaml)), đi qua agentgateway (RemoteMCPServer
-`booking-tools-policy`, token role `policy-agent`), chạy 2 replica và autoscale 2–4 bằng KEDA giống data-agent
-(dòng 19), đã đăng lên agentregistry (dòng 21); riêng sandbox (Agent Substrate, dòng 20) chưa làm vì cần kagent 1.x.
-Kết quả gọi thử qua A2A và kagent UI:
-
-- `predict_cancellation(90000919211)`: Feast online + KServe trả xác suất huỷ 13,14%, `model_version` 1.
-- `search_policy`: lấy đoạn `policies/cancellation.md#0` từ online store (15 chunk, bge-m3); câu trả lời nêu đúng mốc
-  huỷ miễn phí 18:00 ngày trước nhận phòng của giá linh hoạt và mức hoàn của giá không hoàn tiền.
-- `propose_overbooking(8528, 2025-01-29)`: 2 booking đang giữ phòng, 15 phòng, K = 0. Điểm trong `gold.booking_risk`
-  được chấm qua `/v1/cancel-risk/batch` theo đúng truy vấn của DAG `score_bookings` (2/6 booking đã có trên online store).
-
-Hai lỗi lộ ra khi chạy và đã sửa: booking-mcp không ghi được cache của bge-m3 vì user `app` không có thư mục home
-(đặt `HF_HOME=/tmp/hf` trong `helm/api/values-booking-mcp.yaml`), và bốn chunk 512 token vượt ngữ cảnh 2048 của vLLM
-(nâng lên 4096). Model 3B chọn tool đúng với các câu hỏi trên nhưng có lúc diễn giải sai số liệu tool trả về.
+Trong quá trình chạy đã khắc phục 2 lỗi thực tế: thiết lập `HF_HOME=/tmp/hf` trong `helm/api/values-booking-mcp.yaml` để `booking-mcp` ghi được cache bge-m3, và nâng ngữ cảnh vLLM từ `2048` lên `4096` để chứa đủ 4 chunk 512 token. Model 3B chọn đúng tool cho các câu hỏi kiểm thử, dù đôi lúc vẫn cần cải thiện độ chính xác khi diễn giải lại số liệu từ tool.
 
 ![kagent UI: policy-agent trả lời bằng search_policy](../images/edai-2/kagent-policy-rag.png)
+
+**[update sau]:** Phần chạy `policy-agent` trong sandbox cô lập (Agent Substrate) hiện chưa triển khai do `kagent 0.9.12` chưa hỗ trợ; dự kiến nâng cấp lên `kagent 1.x` và cấu hình `SandboxAgent` tương tự `data-agent`.

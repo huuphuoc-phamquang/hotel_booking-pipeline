@@ -1,27 +1,14 @@
 # A2A gateway
 
-agentgateway là điểm vào duy nhất cho các agent.
-
-Mỗi mục dưới đây ứng với một dòng của rubric. Phần **Cách làm** mô tả giải pháp đã triển khai, đồng bộ từ
-cột F của rubric. Phần **Kết quả** ghi test đã chạy, số liệu đo được hoặc ảnh chụp (`docs/images/`).
+`agentgateway` là điểm vào duy nhất cho các agent theo giao thức A2A.
 
 <a id="edai-2-24"></a>
-## A2A Gateway
+## Cấu hình A2A Gateway
 
-**Rubric:** edai-2 · dòng 24 · 2 điểm · nhóm *A2A Gateway (agentgateway as A2A Gateway)*
+Các route `/a2a/data-agent`, `/a2a/policy-agent`, `/a2a/policy-agent-v2` và `/a2a/coordinator-agent` trong [`gateway/agentgateway.yaml`](../../edai2/gateway/agentgateway.yaml) được cấu hình với policy `a2a` (nhận diện lưu lượng A2A), `jwtAuth` (`mode: strict`) và `urlRewrite` về `/` của từng pod agent. Riêng `/a2a/policy-agent` chia tải 50/50 giữa `policy-agent` (v1) và `policy-agent-v2` để phục vụ A/B testing, còn `/a2a/policy-agent-v2` gọi thẳng bản v2.
 
-**Cần nộp (cả nhóm):** Tương tự bên trên
-
-**Cách làm:** [Đã có] Route `/a2a/<agent>` trên agentgateway có `jwtAuth`, policy `a2a`, `urlRewrite`; `/a2a/policy-agent` chia 50/50 giữa v1 và v2, `/a2a/policy-agent-v2` gọi thẳng v2. [Cần làm] để coordinator gọi agent con qua gateway (kagent v1alpha2 chỉ tham chiếu agent trong cluster).
-
-**Kết quả:** A2A từ bên ngoài đã đi qua gateway; coordinator gọi agent con vẫn đi thẳng trong cluster. Route
-`/a2a/data-agent`, `/a2a/policy-agent`, `/a2a/policy-agent-v2`, `/a2a/coordinator-agent` trong
-[`gateway/agentgateway.yaml`](../../edai2/gateway/agentgateway.yaml) có policy `a2a` (gateway nhận diện lưu lượng A2A),
-`jwtAuth` strict và `urlRewrite` về `/` của pod agent; `/a2a/policy-agent` chia 50/50 giữa policy-agent và
-policy-agent-v2 (A/B agent, dòng 52), `/a2a/policy-agent-v2` gọi thẳng bản v2. Kiểm ngày 2026-11-19 bằng [`gateway/check.sh`](../../edai2/gateway/check.sh): agent card của cả ba agent
-trả 401 khi không có token, 200 với token client `coordinator-agent`. Gửi `message/send` tới `/a2a/coordinator-agent/`
-kèm token đó, coordinator giao việc cho data-agent và policy-agent rồi trả lời đủ số liệu (task `completed`, 17,9 s).
-Phần còn thiếu: kagent v1alpha2 chỉ tham chiếu agent con theo tên trong cluster, nên lời gọi coordinator → agent con
-chưa qua gateway.
+Kiểm thử bằng [`gateway/check.sh`](../../edai2/gateway/check.sh): agent card của cả 3 agent trả về `401` khi thiếu token và `200` khi dùng token của client `coordinator-agent`. Khi gửi `message/send` tới `/a2a/coordinator-agent/` kèm JWT, coordinator điều phối thành công `data-agent` và `policy-agent` để trả về đủ số liệu (`completed`, 17,9 giây).
 
 ![Kiểm security & policy của agentgateway](../images/edai-2/agentgateway-check.png)
+
+**[update sau]:** Hiện tại luồng gọi từ bên ngoài vào các agent đã đi qua `agentgateway`, nhưng lời gọi nội bộ từ `coordinator-agent` tới các agent con vẫn đi thẳng trong cluster do `kagent v1alpha2` chỉ tham chiếu agent con theo tên Kubernetes. Hướng tiếp theo là cấu hình để lời gọi A2A giữa các agent cũng định tuyến qua `agentgateway` nhằm tập trung telemetry và kiểm soát quyền.

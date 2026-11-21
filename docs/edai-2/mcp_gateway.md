@@ -1,12 +1,9 @@
 # MCP gateway
 
-agentgateway là điểm vào duy nhất cho MCP server.
-
-Mỗi mục ứng với một dòng của rubric, ghi lại phần đã triển khai và kết quả (số liệu đo được, ảnh chụp trong
-`docs/images/`).
+`agentgateway` là điểm vào duy nhất cho MCP server.
 
 <a id="edai-2-23"></a>
-## MCP Gateway
+## Cấu hình MCP Gateway
 
 Route `/mcp` trong [`gateway/agentgateway.yaml`](../../edai2/gateway/agentgateway.yaml) gom MCP server `booking-tools`
 (booking-mcp, `http://booking-mcp.agents.svc.cluster.local/mcp/`) sau agentgateway v1.6.0. Agent không còn gọi thẳng
@@ -24,7 +21,7 @@ Security và policy trên route:
   được. Lý do: nguyên tắc quyền tối thiểu, và tool ghi dữ liệu (`apply_overbooking`) chỉ lộ ra với đúng agent có bước
   duyệt HITL.
 
-Kiểm bằng [`gateway/check.sh`](../../edai2/gateway/check.sh) trên cluster thứ hai ngày 2026-11-19: `/mcp` không token
+Kiểm bằng [`gateway/check.sh`](../../edai2/gateway/check.sh) trên cluster thứ hai: `/mcp` không token
 trả 401; `tools/list` với token data-agent chỉ có `get_booking_features`, với token policy-agent có bốn tool còn lại;
 data-agent gọi thẳng `predict_cancellation` bị gateway từ chối (`Unknown tool: predict_cancellation`). Qua kagent, data-agent
 và policy-agent vẫn gọi tool bình thường qua gateway, log ghi `mcp.method.name=tools/call` kèm `jwt.sub` của từng agent.

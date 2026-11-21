@@ -2,13 +2,10 @@
 
 Model được phục vụ bằng KServe theo mô hình model-inside-image.
 
-Mỗi mục ứng với một dòng của rubric, ghi lại phần đã triển khai và kết quả (số liệu đo được, ảnh chụp trong
-`docs/images/`).
-
 <a id="edai-2-15"></a>
-## Sử dụng KServe để serve model vừa train ở bên trên, dùng model-inside-image pattern
+## Phục vụ model bằng KServe (model-inside-image)
 
-Cluster thứ hai (project `hotel-booking-edai2`, tài khoản mới, quota 12 vCPU) ngày 2026-11-19: Gold khôi phục từ bản sao lưu (booking 2025-01-01 → 2025-01-13), Feast materialize lên online store, MLflow và KServe cài mới. KServe v0.15.2 cài ở chế độ RawDeployment (Deployment + Service + HPA, không
+Cluster thứ hai (project `hotel-booking-edai2`, tài khoản mới, quota 12 vCPU): Gold khôi phục từ bản sao lưu (booking 2025-01-01 → 2025-01-13), Feast materialize lên online store, MLflow và KServe cài mới. KServe v0.15.2 cài ở chế độ RawDeployment (Deployment + Service + HPA, không
 cần Knative và Istio). Image `ml/cancel-risk:v1` theo mô hình model-inside-image: model version 1 tải từ MLflow
 (`models:/cancel-risk/1`) rồi COPY vào `/mnt/models` lúc build (`serving/Dockerfile`, `MODEL_VERSION=1`), nên pod không
 tải model lúc khởi động. InferenceService dựng từ `serving/kserve-cancel-risk.yaml`, bỏ `logger` vì cluster chưa có

@@ -2,12 +2,11 @@
 
 Ba pipeline DP1–DP3 chạy trên Airflow, mỗi pipeline gồm bước ingest và bước validate.
 
-Mỗi mục ứng với một dòng của rubric, ghi lại phần đã triển khai và kết quả (số liệu đo được, ảnh chụp trong
-`docs/images/`). Mọi lần chạy dưới đây diễn ra trên GKE ngày 2026-11-18 (Airflow 2.10.5,
+Mọi lần chạy dưới đây diễn ra trên GKE (Airflow 2.10.5,
 KubernetesExecutor, image `airflow-booking:b9cf9a8-1`), backfill ngày `ds` = 2025-01-01.
 
 <a id="edai-1-22"></a>
-## Ingest stage · Pipeline to ingest raw data into bronze zone (DP1)
+## Giai đoạn Ingest · Pipeline DP1 (Raw → Bronze)
 
 DP1 gồm DAG `dp1_ingest_bronze` (`check_landing` → ingest → validate) và `dp1_load_dims`. Bước ingest là
 `SparkSubmitOperator` chạy trên Kubernetes, lấy image Spark từ Variable `spark_image`. Connection (`spark_default`,
@@ -25,7 +24,7 @@ tất cả đều success.
 ![Variables](../images/edai-1/airflow-variables.png)
 
 <a id="edai-1-23"></a>
-## Validate stage · Pipeline to ingest raw data into bronze zone (DP1)
+## Giai đoạn Validate · Pipeline DP1 (Raw → Bronze)
 
 `validate_bronze` dùng Great Expectations 1.x (`governance/bronze_checks.py`, context ephemeral, chỉ đọc
 các cột cần kiểm). `tests/test_bronze_checks.py` cho thấy landing của generator qua hết các kiểm tra, còn các lỗi cài
@@ -37,7 +36,7 @@ vào (giá âm, `quote_id` trùng, partition rỗng) đều bị bắt.
 ![Log validate_bookings](../images/edai-1/airflow-validate-bronze-log.png)
 
 <a id="edai-1-24"></a>
-## Ingest stage · Pipeline to ingest data from bronze zone into silver and gol
+## Giai đoạn Ingest · Pipeline DP2 (Bronze → Silver → Gold)
 
 DAG `dp2_bronze_to_gold` đợi DP1 cùng ngày bằng `ExternalTaskSensor`, rồi chạy lần lượt:
 
@@ -56,7 +55,7 @@ dòng huỷ ngay trong ngày), `dim_hotel` 50.000 dòng, `dim_customer` 370.969 
 ![Graph DP2](../images/edai-1/airflow-dp2-graph.png)
 
 <a id="edai-1-25"></a>
-## Validate stage · Pipeline to ingest data from bronze zone into silver and gol
+## Giai đoạn Validate · Pipeline DP2 (Bronze → Silver → Gold)
 
 `validate_gold` gồm 5 kiểm tra SQL (`dags/gold_checks.py`); `tests/test_gold_sql.py` chạy các kiểm tra
 này trên Postgres thật. Mỗi kiểm tra đẩy một `AssertionRunEvent` lên DataHub. Gold dùng SQL thay cho Great Expectations
@@ -70,7 +69,7 @@ Cả 5 kiểm tra đều đạt.
 ![Validation của fact_bookings trên DataHub](../images/edai-1/datahub-validation-gold.png)
 
 <a id="edai-1-26"></a>
-## Ingest stage · Pipeline to compute offline feature table (DP3)
+## Giai đoạn Ingest · Pipeline DP3 (Tính Offline Features)
 
 DAG `dp3_offline_features` chạy `sql/dp3_features.sql`, upsert `feat_customer_booking_stats` và
 `feat_hotel_demand` trực tiếp trên Gold trong một transaction. `event_timestamp` là cuối ngày `ds` chứ không phải giờ
@@ -85,7 +84,7 @@ dòng `feat_customer_booking_stats` và 46.655 dòng `feat_hotel_demand` (các k
 ![Graph DP3](../images/edai-1/airflow-dp3-graph.png)
 
 <a id="edai-1-27"></a>
-## Validate stage · Pipeline to compute offline feature table (DP3)
+## Giai đoạn Validate · Pipeline DP3 (Tính Offline Features)
 
 `validate_features` kiểm ba điều: có dòng cho ngày `ds`, tỉ lệ nằm trong [0, 1], và
 `event_timestamp` ≤ `created` (`dags/gold_checks.py`; `tests/test_gold_sql.py` chạy trên Postgres thật).

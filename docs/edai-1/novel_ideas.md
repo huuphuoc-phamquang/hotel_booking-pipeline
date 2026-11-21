@@ -14,7 +14,7 @@ trước bước gán watermark, nên event có `event_time` sai không kịp k�
 replay. Số event trên `booking_events_dlq` theo từng `reason` (price, hotel_id, event_time) khớp đúng số bản lỗi
 generator đã cài. `tests/test_stream_gen.py` cho thấy contract bắt được mọi bản lỗi và không chặn event hợp lệ.
 
-Trên GKE (2026-11-17/18), cùng job Flink đẩy event vi phạm vào topic `booking_events_dlq`; mỗi message giữ nguyên event
+Trên GKE, cùng job Flink đẩy event vi phạm vào topic `booking_events_dlq`; mỗi message giữ nguyên event
 gốc kèm `reason` là trường vi phạm (ảnh dưới đọc bằng `kafka-console-consumer`).
 
 ![DLQ trên GKE](../images/edai-1/flink-dlq.png)
@@ -26,7 +26,7 @@ Generator biết chính xác mọi event, nên với mỗi phút, `sum(gold.stre
 1 phút) cộng `count(gold.stream_late_bookings)` (side output) phải bằng số booking hợp lệ, đã khử trùng theo
 `idempotency_key`, có `event_time` trong phút đó. `tests/test_stream_e2e.py` chạy replayer → Kafka → Flink (image
 `k8s/flink.Dockerfile`) → Postgres trên Docker; `tests/test_stream_gen.py` kiểm tính bất biến stream = landing. Trên GKE
-(2026-11-18), phép đối soát chạy theo ngày, so baseline và bản tối ưu với ground truth của generator
+, phép đối soát chạy theo ngày, so baseline và bản tối ưu với ground truth của generator
 (`generator/stream_truth.py`).
 
 Trên Docker, với mọi phút đã đóng (919 phút), `stream_bookings_1m` cộng `stream_late_bookings` khớp đúng

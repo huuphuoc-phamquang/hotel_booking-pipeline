@@ -89,11 +89,11 @@ Dù kỳ vọng có 1,5 booking huỷ, hệ thống chỉ đề xuất bán vư�
 
 Tỉ lệ chi phí quyết định mức thận trọng. Với 100 booking cùng có $p = 0{,}33$ (kỳ vọng 33 booking huỷ), hàm `limit` cho:
 
-| $c_{\text{spoil}} : c_{\text{walk}}$ | Ngưỡng | $K$ |
+| $c_{\text{spoil}}: c_{\text{walk}}$ | Ngưỡng | $K$ |
 |---|---|---|
-| 1 : 1 | 0,50 | 33 |
-| 1 : 3 (mặc định) | 0,25 | 30 |
-| 1 : 10 | 0,09 | 27 |
+| 1: 1 | 0,50 | 33 |
+| 1: 3 (mặc định) | 0,25 | 30 |
+| 1: 10 | 0,09 | 27 |
 
 ### 3.4 Kết quả trả về của `propose_overbooking`
 

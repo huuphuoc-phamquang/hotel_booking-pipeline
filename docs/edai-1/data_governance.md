@@ -2,12 +2,11 @@
 
 Lineage và kết quả kiểm tra dữ liệu của DP1–DP3 được ghi lên DataHub.
 
-Mỗi mục ứng với một dòng của rubric, ghi lại phần đã triển khai và kết quả (số liệu đo được, ảnh chụp trong
-`docs/images/`). Mọi lần chạy dưới đây diễn ra trên GKE ngày 2026-11-18 (Airflow 2.10.5, KubernetesExecutor, image
+Mọi lần chạy dưới đây diễn ra trên GKE (Airflow 2.10.5, KubernetesExecutor, image
 `airflow-booking:b9cf9a8-1`), backfill ngày `ds` = 2025-01-01.
 
 <a id="edai-1-28"></a>
-## Lineage between the pipeline and tables · DP1 linked with related tables
+## Lineage của pipeline DP1 (Landing → Bronze)
 
 `emit_datahub.py` khai báo lineage của DP1 (landing → `raw_bookings`). Schema của 3 zone được ingest lên
 DataHub bằng job `k8s/datahub-ingest.yaml`: 8 bảng Bronze, 2 bảng Silver, 16 bảng Gold.
@@ -17,7 +16,7 @@ Lineage trên DataHub nối các task DP1 với các bảng `lake/bronze/raw_*` 
 ![Lineage trên DataHub](../images/edai-1/datahub-lineage.png)
 
 <a id="edai-1-29"></a>
-## Data validation · DP1 linked with related tables
+## Kiểm tra chất lượng dữ liệu DP1
 
 `emit_validation` khai báo `AssertionInfo` trước rồi gửi `AssertionRunEvent`, đưa kết quả Great
 Expectations của DP1 lên tab Quality của `raw_bookings`.
@@ -27,7 +26,7 @@ Assertion `gx_bronze_bookings` hiện ở tab Quality của `lake/bronze/raw_boo
 ![Validation của raw_bookings](../images/edai-1/datahub-validation-bronze.png)
 
 <a id="edai-1-30"></a>
-## Lineage between the pipeline and tables · DP2 linked with related tables
+## Lineage của pipeline DP2 (Bronze → Silver → Gold)
 
 `PIPELINES` khai báo `dp2_bronze_to_gold` (`silver_bookings`, `stage_gold`, `upsert_gold`), khớp với
 inlets và outlets của DAG.
@@ -38,7 +37,7 @@ bảng staging Gold → `upsert_gold` → `fact_bookings`, kèm nhánh dim (`raw
 ![Lineage trên DataHub](../images/edai-1/datahub-lineage.png)
 
 <a id="edai-1-31"></a>
-## Data validation · DP2 linked with related tables
+## Kiểm tra chất lượng dữ liệu DP2
 
 `validate_gold` gồm 5 kiểm tra SQL:
 
@@ -56,7 +55,7 @@ Tab Quality của `fact_bookings` có 4 assertion, tất cả đều đạt: `fa
 ![Validation của fact_bookings](../images/edai-1/datahub-validation-gold.png)
 
 <a id="edai-1-32"></a>
-## Lineage between the pipeline and tables · DP3 linked with related tables
+## Lineage của pipeline DP3 (Gold → Offline Feature Store)
 
 `PIPELINES` khai báo `dp3_offline_features.build_features` với đầu vào `fact_bookings`, `dim_hotel` và
 đầu ra `feat_customer_booking_stats`, `feat_hotel_demand`.
@@ -67,7 +66,7 @@ Phía phải ảnh lineage thể hiện `fact_bookings` → task `build_features
 ![Lineage trên DataHub](../images/edai-1/datahub-lineage.png)
 
 <a id="edai-1-33"></a>
-## Data validation · DP3 linked with related tables
+## Kiểm tra chất lượng dữ liệu DP3
 
 `validate_features` kiểm có dòng cho ngày `ds`, tỉ lệ nằm trong [0, 1], `event_timestamp` ≤ `created`,
 rồi đẩy kết quả lên DataHub.

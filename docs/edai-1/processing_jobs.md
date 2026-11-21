@@ -2,14 +2,11 @@
 
 Các job đi từ bản baseline tới bản tối ưu; hiệu năng được đo bằng Spark UI và Flink UI.
 
-Mỗi mục ứng với một dòng của rubric, ghi lại phần đã triển khai và kết quả (số liệu đo được, ảnh chụp trong
-`docs/images/`).
-
 <a id="edai-1-11"></a>
-## Baseline · Spark job to handle offline data problems
+## Spark Job (Baseline) · Xử lý dữ liệu offline
 
 Bản baseline của `silver_quotes` (`silver_quotes.py baseline`) tắt AQE và tắt broadcast. Job chạy trên
-GKE ngày 2026-11-18 với các thông số sau:
+GKE với các thông số sau:
 
 - **Input:** toàn bộ quotes trên landing (`s3a://landing/quotes`, 395 ngày, 6.320 file, **104,7 GiB,
   13.328.532.602 dòng**; cùng file Parquet DP1 chép sang Bronze) và `raw_inventory` (99.750.000 dòng).
@@ -46,7 +43,7 @@ nóng nhất (Zipf a = 0,8, khoảng 2,6% lượt xem) dồn **348.457.885 dòng
 mất 1.084 s.
 
 <a id="edai-1-12"></a>
-## Handle skew with explanation
+## Xử lý lệch phân phối (Data Skew) trong Spark
 
 `silver_quotes` có các chế độ sau, chạy trên cùng cluster và input của dòng 11:
 
@@ -99,11 +96,11 @@ chế độ.
 ![Spark UI aqe_tuned: SortMergeJoin](../images/edai-1/spark-aqe-sql-join.png)
 
 <a id="edai-1-13"></a>
-## Handle schema evolution with explanation
+## Xử lý thay đổi lược đồ (Schema Evolution) trong Spark
 
 `read_bookings` trong `silver_bookings.py` đọc Bronze bằng `mergeSchema` và gộp
 `coalesce(room_category, room_type)`. `tests/test_silver_bookings.py` chạy pyspark cục bộ trên Bronze vắt qua mốc
-2025-07-01. Trên dữ liệu thật, `spark_jobs/bookings_quality.py` chạy trên GKE ngày 2026-11-18 (Spark local[6] trong pod
+2025-07-01. Trên dữ liệu thật, `spark_jobs/bookings_quality.py` chạy trên GKE (Spark local[6] trong pod
 `bookings-quality`, 6 phút 10 giây) với toàn bộ `s3a://landing/bookings`: 395 ngày, 6.320 file, 3,5 GiB. Job dùng đúng
 `read_bookings` và `dedup_bookings` của `silver_bookings.py`.
 
@@ -118,7 +115,7 @@ null ở 70.855.735 dòng v1, vì đây là cột mới của v2 mà dữ liệu
 ![Kết quả bookings_quality trên dữ liệu thật](../images/edai-1/spark-bookings-quality.png)
 
 <a id="edai-1-14"></a>
-## Handle other offline data problem with explanation
+## Xử lý các lỗi dữ liệu offline khác (trùng lặp, ép kiểu, giá trị âm)
 
 `dedup_bookings` khử trùng theo `idempotency_key` bằng `row_number` sắp theo `created_at`.
 `tests/test_silver_bookings.py` kiểm tra cục bộ rằng mỗi `idempotency_key` còn một dòng và `status` khớp kết cục do
@@ -135,13 +132,13 @@ Sau khử trùng, số dòng bằng đúng số `idempotency_key` khác nhau: m�
 nhỏ nhất). Ảnh output ở dòng 13.
 
 <a id="edai-1-15"></a>
-## Spark job được tích hợp vào các data pipeline
+## Tích hợp Spark Job vào Airflow Pipeline (DP2)
 
 DAG `dp2_bronze_to_gold` gọi `silver_bookings.py` qua `SparkSubmitOperator` ở chế độ `incr`: job chỉ đọc
 partition `dt=ds` rồi MERGE vào Iceberg, kèm điều kiện `created_at` để Iceberg cắt partition. Sau đó `stage_gold.py`
 đưa Silver sang staging Gold qua JDBC. Image Spark có sẵn Iceberg, s3a và JDBC (`k8s/spark.Dockerfile`).
 `tests/test_silver_bookings.py` chạy MERGE thật trên Iceberg trong image Spark và cho kết quả khớp với cách dựng lại cả
-bảng. Pipeline chạy trên GKE ngày 2026-11-18 (Airflow 2.10.5, KubernetesExecutor, image `airflow-booking:b9cf9a8-1`),
+bảng. Pipeline chạy trên GKE (Airflow 2.10.5, KubernetesExecutor, image `airflow-booking:b9cf9a8-1`),
 backfill ngày `ds` = 2025-01-01.
 
 Task `silver_bookings` của DP2 gọi `spark-submit` lên Kubernetes. Pod driver chạy image
@@ -153,12 +150,12 @@ Task `silver_bookings` của DP2 gọi `spark-submit` lên Kubernetes. Pod drive
 ![Log Spark của task silver_bookings](../images/edai-1/airflow-spark-log.png)
 
 <a id="edai-1-16"></a>
-## Baseline · Flink job to handle streaming data problems
+## Flink Job (Baseline) · Xử lý dữ liệu streaming
 
 Cờ `BASELINE=1` chạy Flink với watermark 0 giây và không khử trùng. Cả baseline và bản tối ưu chạy trên
 GKE với cùng dữ liệu: replay `booking_events` (30 ngày, Kafka 6 partition) từ đầu topic, FlinkDeployment
-`booking-events-window` với parallelism 6. Baseline chạy ngày 2026-11-17 (image `flink-booking:9850a46-2`), bản tối ưu
-chạy ngày 2026-11-18 (image `c93fff3-1`). Trước mỗi lần chạy, 3 bảng stream được xoá rồi job đọc lại từ offset đầu.
+`booking-events-window` với parallelism 6. Baseline chạy (image `flink-booking:9850a46-2`), bản tối ưu
+chạy (image `c93fff3-1`). Trước mỗi lần chạy, 3 bảng stream được xoá rồi job đọc lại từ offset đầu.
 
 Cách đối soát: `got` của một ngày bằng tổng `gold.stream_bookings_1m` cộng số dòng `gold.stream_late_bookings` có
 `event_time` trong ngày. Truth là số booking hợp lệ đã khử trùng, do `generator/stream_truth.py` tính từ event log và
@@ -206,7 +203,7 @@ Mỗi event vào 12 cửa sổ chồng nhau và được xử lý bằng Python,
 - Autoscaler GKE gỡ JobManager khi thu hồi node spot.
 
 <a id="edai-1-17"></a>
-## Handle late arrival with explanation
+## Xử lý dữ liệu đến trễ (Watermark & Side Output) trong Flink
 
 Nhánh đối soát tumbling 1 phút dùng watermark 10 phút, allowed lateness 5 phút và side output ghi vào
 `gold.stream_late_bookings`. Cửa sổ trượt 1 giờ chỉ đẩy event ra side output khi trễ quá 1 giờ 15 phút. Trên PyFlink
@@ -237,7 +234,7 @@ trễ theo từng nguồn.
 ![gold.stream_late_bookings](../images/edai-1/flink-late-bookings.png)
 
 <a id="edai-1-18"></a>
-## Handle other streaming problem with explanation
+## Xử lý lỗi dữ liệu streaming (DLQ) trong Flink
 
 `DedupByEventId` khử trùng theo `idempotency_key`. Hàm giữ một cờ `seen` cho mỗi khoá và đăng ký timer
 xoá cờ khi watermark vượt `event_time` + 5 giờ, nên state không tăng mãi. Data contract chặn event sai trước watermark:
@@ -260,31 +257,31 @@ Checkpoint unaligned EXACTLY_ONCE lên MinIO hoàn tất đều đặn: khoảng
 ![Checkpoints](../images/edai-1/flink-checkpoints.png)
 
 <a id="edai-1-19"></a>
-## Window processing
+## Tổng hợp theo cửa sổ trượt (Sliding Window) trong Flink
 
 Đoạn code window trong `edai1/flink_jobs/booking_events_window.py` (hàm `main`):
 
 ```python
 wm = WatermarkStrategy.for_bounded_out_of_orderness(MAX_OUT_OF_ORDER).with_timestamp_assigner(EventTimeAssigner())
-events = checked.assign_timestamps_and_watermarks(wm)          # event time = event_time, watermark lùi 10 phút
+events = checked.assign_timestamps_and_watermarks(wm) # event time = event_time, watermark lùi 10 phút
 
 created = events.filter(lambda e: e["type"] == "booking_created")
 created = created.key_by(lambda e: e["idempotency_key"], key_type=Types.LONG()) \
-                 .process(DedupByEventId(), EVENT)               # double submit chỉ đếm 1 lần (BASELINE=1 bỏ bước này)
+                 .process(DedupByEventId(), EVENT) # double submit chỉ đếm 1 lần (BASELINE=1 bỏ bước này)
 by_hotel = created.key_by(lambda e: e["hotel_id"], key_type=Types.LONG())
 
 # (1) feature: số booking 1 giờ gần nhất của mỗi khách sạn, cập nhật mỗi 5 phút
 (by_hotel.window(SlidingEventTimeWindows.of(Time.hours(1), Time.minutes(5)))
  .allowed_lateness(ALLOWED_LATENESS_MS)
  .aggregate(CountAgg(), WithWindowEnd(), accumulator_type=Types.LONG(), output_type=FEAT_ROW)
- .add_sink(jdbc_sink(UPSERT_SQL, FEAT_ROW)))                     # -> gold.feat_hotel_realtime
+ .add_sink(jdbc_sink(UPSERT_SQL, FEAT_ROW))) # -> gold.feat_hotel_realtime
 
 # (2) đối soát: số booking từng phút, event trễ quá hạn ra side output thay vì bị bỏ
 minutes = (by_hotel.window(TumblingEventTimeWindows.of(Time.minutes(1)))
            .allowed_lateness(ALLOWED_LATENESS_MS)
            .side_output_late_data(LATE_TAG)
            .aggregate(CountAgg(), WithWindowEnd(), accumulator_type=Types.LONG(), output_type=FEAT_ROW))
-minutes.add_sink(jdbc_sink(MINUTE_SQL, FEAT_ROW))                # -> gold.stream_bookings_1m
+minutes.add_sink(jdbc_sink(MINUTE_SQL, FEAT_ROW)) # -> gold.stream_bookings_1m
 minutes.get_side_output(LATE_TAG).map(late_row, LATE_ROW).add_sink(jdbc_sink(LATE_SQL, LATE_ROW))
 ```
 

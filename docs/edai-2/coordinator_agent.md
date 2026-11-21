@@ -2,11 +2,8 @@
 
 Coordinator điều phối các agent con; tài liệu gồm số replica, autoscale và registry.
 
-Mỗi mục ứng với một dòng của rubric, ghi lại phần đã triển khai và kết quả (số liệu đo được, ảnh chụp trong
-`docs/images/`).
-
 <a id="edai-2-25"></a>
-## Deploy 1 Coordinator Agent với multi-replica và auto-scale sử dụng cái này
+## Triển khai Coordinator Agent với multi-replica và auto-scale
 
 coordinator-agent ([`agents/agents-gke.yaml`](../../edai2/agents/agents-gke.yaml)) có hai tool kiểu `Agent` là
 data-agent và policy-agent. Với câu hỏi gồm số liệu của khách 18766768 tại khách sạn 8528 và xác suất huỷ của booking
@@ -27,7 +24,7 @@ cùng cơ chế (dòng 19: 2 → 4 replica khi vượt ngưỡng, về 2 sau 5 p
 ![KEDA scale data-agent 2 → 4 replica](../images/edai-2/keda-scale.png)
 
 <a id="edai-2-26"></a>
-## Publish Agent ở này lên registry đã deploy để đảm bảo governance.
+## Đăng ký Coordinator Agent lên agentregistry
 
 Script [`ci/publish_agent_card.py`](../../edai2/ci/publish_agent_card.py) đăng agent lên agentregistry (dòng 8):
 lấy agent card A2A từ kagent controller, dựng resource `ar.dev/v1alpha1` gồm `MCPServer` `booking-tools` (route `/mcp`
@@ -37,7 +34,7 @@ controller chứ không qua `/a2a/policy-agent` của gateway, vì route đó ch
 dừng nếu tên trong card không khớp agent. Stage `Deploy agents` của [`ci/Jenkinsfile`](../../edai2/ci/Jenkinsfile)
 gọi script này cho cả 4 agent sau khi rollout.
 
-Ngày 2026-11-19 script được chạy từ máy của nhóm (port-forward tới controller và registry) với tag `f808e37`:
+Script được chạy từ máy của nhóm (port-forward tới controller và registry) với tag `f808e37`:
 `coordinator-agent` cùng hai agent con và `policy-agent-v2` có trên registry kèm MCP server `booking-tools`. Stage Jenkins chưa chạy vì tham số `WITH_AGENTS` còn tắt.
 
 ![agentregistry: catalog 4 agent](../images/edai-2/registry-agents.png)

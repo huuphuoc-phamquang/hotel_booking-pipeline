@@ -2,17 +2,14 @@
 
 Terraform dựng hạ tầng GKE; Ansible cấu hình VM.
 
-Mỗi mục ứng với một dòng của rubric, ghi lại phần đã triển khai và kết quả (số liệu đo được, ảnh chụp trong
-`docs/images/`).
-
 <a id="edai-2-44"></a>
-## Dùng Terraform để setup GKE hoặc các cloud services · edai-2 · IaC
+## Terraform dựng hạ tầng GKE và Cloud Services
 
 `iac/modules/{network,gke,registry,budget}` và `iac/envs/dev` dựng VPC với Cloud NAT, GKE với node
 private, pool CPU spot, pool GPU L4 (tối thiểu 0 node), Artifact Registry và cảnh báo ngân sách. Hạ tầng được dựng bằng
 `terraform apply` trong `iac/envs/dev` (project `hotel-booking-edai`, asia-southeast1).
 
-Chạy lại `terraform apply` ngày 2026-11-18 báo `No changes`: hạ tầng thật khớp code, không có thay đổi tay
+Chạy lại `terraform apply` báo `No changes`: hạ tầng thật khớp code, không có thay đổi tay
 ngoài Terraform. Output gồm cluster `booking-ai` và registry `asia-southeast1-docker.pkg.dev/hotel-booking-edai/booking`.
 State quản lý 13 tài nguyên và 2 data source (4 API, budget, VPC, subnet, router, Cloud NAT, cluster GKE, 2 node pool,
 Artifact Registry).
@@ -26,9 +23,9 @@ cần `terraform import` pool này.
 ![terraform state list](../images/edai-2/terraform-state.png)
 
 <a id="edai-2-45"></a>
-## Dùng Ansible để configure và deploy các service lên VM · edai-2 · IaC
+## Ansible cấu hình VM và triển khai dịch vụ CI/CD
 
-Playbook `iac/ansible/site.yml` (role `common`, `docker`, `vault`, `jenkins`) chạy ngày 2026-11-19 lên VM `cicd-vm`
+Playbook `iac/ansible/site.yml` (role `common`, `docker`, `vault`, `jenkins`) chạy lên VM `cicd-vm`
 (e2-medium spot, Ubuntu 22.04, subnet `booking-gke`; firewall `booking-cicd-allow` chỉ mở cổng 22, 8080, 8200 cho IP
 của nhóm). Ansible chạy trong container `python:3.11-slim` trên laptop (ansible-core 2.18, collection `community.docker`,
 `community.general` theo `requirements.yml`), SSH bằng key riêng nằm ngoài repo.

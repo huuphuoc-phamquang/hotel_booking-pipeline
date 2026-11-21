@@ -2,16 +2,13 @@
 
 Registry lưu agent card và MCP server.
 
-Mỗi mục ứng với một dòng của rubric, ghi lại phần đã triển khai và kết quả (số liệu đo được, ảnh chụp trong
-`docs/images/`).
-
 <a id="edai-2-8"></a>
-## Deploy registry for agent theo tutorial này
+## Triển khai agentregistry
 
 agentregistry v0.4.0 (aregistry.ai) cài bằng Helm chart chính thức
 `oci://ghcr.io/agentregistry-dev/agentregistry/charts/agentregistry` với
 [`k8s/agentregistry-values.yaml`](../../edai2/k8s/agentregistry-values.yaml), namespace `agentregistry`, trên cluster
-thứ hai ngày 2026-11-19. Registry dùng Postgres sẵn có của data platform (database `agentregistry`, extension pgvector)
+thứ hai. Registry dùng Postgres sẵn có của data platform (database `agentregistry`, extension pgvector)
 thay cho Postgres bundled để không thêm pod; chuỗi kết nối nằm trong Secret `agentregistry-db`. Một pod phục vụ cả
 web UI, REST API (`/v0/...`, tài liệu ở `/docs`) và MCP endpoint của registry; UI ra ngoài qua Ingress
 `registry.34.124.198.171.nip.io` có basic auth (dòng 41).

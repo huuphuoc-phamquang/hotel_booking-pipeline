@@ -2,17 +2,14 @@
 
 Các thành phần của data platform được đóng gói thành image và tối ưu kích thước.
 
-Mỗi mục ứng với một dòng của rubric, ghi lại phần đã triển khai và kết quả (số liệu đo được, ảnh chụp trong
-`docs/images/`).
-
 <a id="edai-1-3"></a>
-## Có sử dụng Docker & Docker Compose
+## Đóng gói và chạy dịch vụ bằng Docker & Docker Compose
 
 `edai1/docker/docker-compose.yml` dựng môi trường cục bộ gồm MinIO (có healthcheck), Kafka,
 offline-generator và event-replayer. Spark, Flink, Airflow, Postgres và DataHub không nằm trong compose vì chạy trên GKE
 (Helm hoặc operator). Image Spark, Flink, Airflow build từ `k8s/*.Dockerfile`; Postgres và DataHub dùng image chính thức.
 
-Compose chạy trên máy ngày 2026-11-18. MinIO (healthy) và Kafka chạy nền. Generator chạy qua compose với
+Compose chạy trên máy. MinIO (healthy) và Kafka chạy nền. Generator chạy qua compose với
 1 ngày (`docker compose run --rm offline-generator 0 1`), ghi 340 MiB, 1.866 object vào bucket `landing`, đủ 9 nhánh
 (bảng sự kiện theo `dt=`, các bảng dims, `_manifests`). Bản đầy đủ `0 395` sinh khoảng 111 GB và đã chạy trên GKE
 (mục Store data). Image của generator và replayer build từ `docker/Dockerfile` (mục dưới).
@@ -22,17 +19,17 @@ Compose chạy trên máy ngày 2026-11-18. MinIO (healthy) và Kafka chạy n�
 ![bucket landing trên MinIO](../images/edai-1/docker-compose-minio.png)
 
 <a id="edai-1-4"></a>
-## Optimize Dockerfile
+## Tối ưu kích thước Dockerfile (Multi-stage build)
 
 `docker/Dockerfile` dùng multistage (builder và runtime trên `python:3.12-slim`). `docker/Dockerfile.single`
 là bản một stage để so sánh. Repo có thêm `.dockerignore` và `requirements.txt` ghim version. Hai bản build lại từ cùng
-mã nguồn ngày 2026-11-18 (Docker Desktop 29.6).
+mã nguồn (Docker Desktop 29.6).
 
 | | `Dockerfile.single` | `Dockerfile` (multistage) | Thay đổi |
 |---|---|---|---|
 | Image gốc | `python:3.12` (Debian đầy đủ) | builder và runtime đều `python:3.12-slim` | |
 | Kích thước trên đĩa (`docker images`) | 2,09 GB | 834 MB | −60% |
-| Kích thước nén khi push/pull (`docker image inspect .Size`) | 524 MB | 240 MB | −54% |
+| Kích thước nén khi push/pull (`docker image inspect.Size`) | 524 MB | 240 MB | −54% |
 | Có gcc trong image | có (`/usr/bin/gcc`) | không | |
 | User chạy container | `root` | `appuser` | |
 
@@ -49,8 +46,8 @@ Mức giảm đến từ sáu bước tối ưu:
 Lệnh tái lập (từ thư mục `edai1`):
 
 ```bash
-docker build -f docker/Dockerfile.single -t booking-generator:single .
-docker build -f docker/Dockerfile -t booking-generator:multistage .
+docker build -f docker/Dockerfile.single -t booking-generator:single.
+docker build -f docker/Dockerfile -t booking-generator:multistage.
 docker images booking-generator
 ```
 

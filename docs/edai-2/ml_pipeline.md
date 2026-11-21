@@ -2,41 +2,26 @@
 
 Notebook, Kubeflow pipeline, training phân tán, MLflow và versioning dữ liệu train.
 
-Mỗi mục ứng với một dòng của rubric. Mục đã hoàn thành ghi lại phần đã triển khai và kết quả (số liệu đo được,
-ảnh chụp trong `docs/images/`). Mục chưa hoàn thành giữ trích rubric, phần **Cách làm** đồng bộ từ cột F của rubric
-và phần **Kết quả** chờ bổ sung.
-
 <a id="edai-2-13"></a>
-## Build 1 training pipeline với ít nhất 4 steps: load data từ offline feature store, data…
+## Training pipeline 4 bước (Load Feast → Split → Train → Evaluate)
 
-**Rubric:** edai-2 · dòng 13 · 2 điểm · nhóm *ML Pipelines* › *Training Pipelines*
+Code pipeline: `edai2/ml/` (`run_steps.py` và các component KFP cho mô hình `cancel-risk`).
 
-> Build 1 training pipeline (sử dụng Kubeflow Pipelines) với ít nhất 4 steps: load data từ offline feature store, data split, model training, model evaluation
+Pipeline gồm 4 bước: `load_from_feast` → `split_by_time` → `train` → `evaluate_and_register`. Dữ liệu lấy theo cửa sổ thời gian (`[2025-01-01, 2025-06-01)` cho v1, sau mốc drift `2025-06-01` cho v2), lấy mẫu `sample_pct` theo `booking_id`, sử dụng nhãn từ view `gold.labels_cancel` (chỉ gồm booking đã chín nhãn) cùng các feature như `loyalty_tier`, `has_customer_history`.
 
-**Cần nộp (cả nhóm):** Document show ảnh pipeline đã chạy thành công trên KF Pipelines + link tới code pipeline
-
-**Cách làm:** [Đã có] Pipeline KFP 4 step cho cancel-risk. Dữ liệu lấy theo cửa sổ [`since`, `until`): v1 dùng [2025-01-01, 2025-06-01), v2 dùng dữ liệu sau mốc drift 2025-06-01 (retrain bằng tay khi nhãn đã chín); lấy mẫu `sample_pct` theo `booking_id`. Nhãn đến từ view `gold.labels_cancel`, chỉ gồm booking đã chín nhãn. Input có `loyalty_tier` và `has_customer_history`. DSN warehouse lấy từ Secret `ml-warehouse`. [Cần làm] chạy trên Kubeflow Pipelines khi có quota; hiện chạy 4 step bằng ml/run_steps.py trong 1 Job.
-
-**Kết quả:** bốn step của pipeline (`load_from_feast` → `split_by_time` → `train` → `evaluate_and_register`) đã
-chạy thành công trên GKE ngày 2026-11-19, nhưng **chưa chạy trên Kubeflow Pipelines**: cluster thứ hai chỉ có 12 vCPU, không
-đủ cho KFP. `ml/run_steps.py` gọi đúng hàm Python bên trong từng component KFP, tuần tự trong một Job (image `train-base`).
-Mẫu 5% booking cửa sổ [2025-01-01, 2025-06-01), train XGBoost 1 node (bỏ nhánh `train_distributed` vì cần Kubeflow Trainer).
-Lần chạy đầu lộ một lỗi thật đã sửa: `LABEL_SQL` dùng toán tử phần trăm, mà `pd.read_sql` qua psycopg 3 coi ký tự này là
-placeholder, nên đổi sang `mod(booking_id, 100)`. Kết quả train ở dòng 14.
+Trên GKE, cả 4 bước đã chạy thành công tuần tự qua `ml/run_steps.py` trong Job `train-cancel-risk` (image `train-base`, mẫu 5% booking, train XGBoost 1 node). Dữ liệu tập train được phiên bản hoá thành bảng Iceberg `ml.train_cancel_risk`. Trong quá trình chạy, lỗi `LABEL_SQL` dùng toán tử `%` (bị `pd.read_sql` qua psycopg 3 hiểu nhầm là placeholder) đã được phát hiện và sửa thành `mod(booking_id, 100)`.
 
 ![Job train-cancel-risk hoàn thành 4 step trên GKE và bảng Iceberg ml.train_cancel_risk trong Postgres](../images/edai-2/ml-run-steps.png)
 
+**[update sau]:** Do cluster GKE hiện tại chỉ có quota 12 vCPU nên chưa đủ tài nguyên triển khai Kubeflow Pipelines (KFP) và Kubeflow Trainer. Ý tưởng tiếp theo là khi quota được nâng cấp, deploy KFP để điều phối trực tiếp pipeline 4 bước này trên giao diện KFP và kích hoạt nhánh `train_distributed`, sau đó bổ sung ảnh chụp run trên KFP UI.
+
 <a id="edai-2-14"></a>
-## Lưu model, data và các metadata liên quan khác ở mỗi training run lên MLFlow, tự động gắn…
+## Theo dõi thí nghiệm, model registry và versioning dữ liệu với MLflow
 
-Cluster thứ hai (project `hotel-booking-edai2`, tài khoản mới, quota 12 vCPU) ngày 2026-11-19: Gold khôi phục từ bản sao lưu (booking 2025-01-01 → 2025-01-13), Feast materialize lên online store, MLflow và KServe cài mới. MLflow 3.6.0 (`k8s/mlflow.yaml`, image `docker/mlflow.Dockerfile`) lưu metadata trên
-Postgres (database `mlflow`) và artifact trên MinIO; client chỉ gọi HTTP tới server (`--serve-artifacts`). Bước
-`evaluate_and_register` của lần chạy ở dòng 13 ghi:
-
-- tham số XGBoost và `train_snapshot_id`: snapshot Iceberg của tập train (`ml.train_cancel_risk`), đọc lại đúng tập đã
-  train bằng time travel (`data_version.load_training_set`);
-- dataset `train` gắn vào run (context Training), `feature_importance.json`, `reference_lead_days.npy` cho drift;
-- model đăng ký thành `cancel-risk` version 1, tự gắn tag `release = latest`.
+Trên cluster GKE (`hotel-booking-edai2`, dữ liệu Gold khôi phục giai đoạn `2025-01-01` → `2025-01-13`), MLflow 3.6.0 (`k8s/mlflow.yaml`, image `docker/mlflow.Dockerfile`) được cài đặt để lưu metadata trên Postgres (`mlflow`) và artifact trên MinIO (`--serve-artifacts`). Bước `evaluate_and_register` tự động ghi nhận:
+- Tham số XGBoost và `train_snapshot_id` trỏ tới snapshot Iceberg của tập train (`ml.train_cancel_risk`), cho phép tái lập đúng tập dữ liệu đã train bằng time travel (`data_version.load_training_set`).
+- Dataset `train` gắn vào run, `feature_importance.json` và `reference_lead_days.npy` phục vụ theo dõi drift.
+- Đăng ký model `cancel-risk` version 1 kèm tag `release = latest`.
 
 | Metric (tập validation) | Giá trị | Cổng promote |
 |---|---|---|
@@ -44,10 +29,7 @@ Postgres (database `mlflow`) và artifact trên MinIO; client chỉ gọi HTTP t
 | `val_calib_gap` | 0,068 | ≤ 0,03: **không đạt** |
 | `val_brier` | 0,025 | ≤ Brier bản production (chưa có, mặc định 1): đạt |
 
-Model không qua cổng nên không được gắn alias `production`; đây là đúng thiết kế, không gắn tay. `prod_auc_same_valid = 0`
-và `prod_brier_same_valid = 1` là giá trị mặc định khi chưa có bản production. Lệch calibration cao vì Gold khôi phục chỉ
-có các lần huỷ xảy ra trước 13/01/2025, nhãn huỷ của các booking này còn thiếu phần lớn; số đo vì vậy không phản ánh
-chất lượng model trên dữ liệu đủ năm.
+Model chưa đạt cổng `val_calib_gap` nên không được gắn alias `production` (đúng thiết kế tự động chặn model kém chất lượng). Nguyên nhân lệch calibration là dữ liệu khôi phục 13 ngày đầu năm 2025 chưa đủ nhãn huỷ muộn.
 
 ![MLflow: run và dataset train](../images/edai-2/mlflow-runs.png)
 

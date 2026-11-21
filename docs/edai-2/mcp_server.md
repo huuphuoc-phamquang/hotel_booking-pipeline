@@ -1,28 +1,18 @@
 # MCP server & agent dùng tool
 
-booking-mcp viết bằng FastAPI, xử lý bất đồng bộ, deploy bằng Helm; agent gọi MCP tool, chạy trong sandbox
-và được đăng ký trên registry.
-
-Mỗi mục ứng với một dòng của rubric. Mục đã hoàn thành ghi lại phần đã triển khai và kết quả (số liệu đo được,
-ảnh chụp trong `docs/images/`). Mục chưa hoàn thành giữ trích rubric, phần **Cách làm** đồng bộ từ cột F của rubric
-và phần **Kết quả** chờ bổ sung.
+`booking-mcp` viết bằng FastAPI, xử lý bất đồng bộ, deploy bằng Helm; agent gọi MCP tool và được đăng ký lên registry.
 
 <a id="edai-2-16"></a>
-## Có sử dụng FastAPI + data validation + healthcheck for k8s
+## FastAPI, Data Validation và Healthcheck cho Kubernetes
 
-booking-mcp viết bằng FastAPI; input và output của REST và MCP tool là model pydantic (`BookingFeatures`,
-`RiskRequest`, `CancelRisk`, `BatchRisk`, `OverbookingProposal`). Tool `predict_cancellation` lấy feature theo
-`booking_id` từ Feast online rồi gọi KServe `cancel-risk`; cùng logic mở REST `/v1/cancel-risk` và `/v1/cancel-risk/batch`.
-`/healthz` là liveness probe; `/readyz` là readiness probe và chỉ trả 200 khi đọc được online store. booking-mcp chạy trên GKE ngày 2026-11-18 (namespace `agents`, chart `helm/api`, image `booking-mcp:e6e53e9-2`); các phép kiểm dưới đây chạy bằng `api_checks` trong chính pod, gọi qua tên service.
+`booking-mcp` xây dựng trên FastAPI với pydantic validation cho toàn bộ input/output của REST và MCP tool (`BookingFeatures`, `RiskRequest`, `CancelRisk`, `BatchRisk`, `OverbookingProposal`). Tool `predict_cancellation` đọc feature từ Feast online rồi gọi KServe `cancel-risk`; cùng logic này được mở qua REST `/v1/cancel-risk` và `/v1/cancel-risk/batch`.
 
-`/healthz` và `/readyz` đều trả 200, và Deployment dùng đúng hai đường dẫn này cho liveness và readiness probe. Request
-sai schema bị pydantic chặn với mã 422 trước khi vào logic: `booking_id` âm ("Input should be greater than 0"), chuỗi
-thay cho số ("Input should be a valid integer") và thiếu trường ("Field required").
+Hai probe `/healthz` (liveness) và `/readyz` (readiness — chỉ trả `200` khi đọc được online store) hoạt động đúng trên GKE (namespace `agents`, chart `helm/api`, image `booking-mcp:e6e53e9-2`). Request sai schema (`booking_id` âm, sai kiểu chuỗi, thiếu trường) bị pydantic chặn ngay với mã `422`.
 
 ![Healthcheck, validation và async của booking-mcp](../images/edai-2/booking-mcp-api-checks.png)
 
 <a id="edai-2-17"></a>
-## Sử dụng async cho concurrent processing
+## Xử lý bất đồng bộ (Async) cho truy vấn đồng thời
 
 Mọi tool và endpoint là `async def`; Feast online được đọc bằng `get_online_features_async`, KServe được gọi bằng
 `httpx.AsyncClient`, và warehouse dùng `psycopg.AsyncConnection`. Phép đo gọi 50 lần `get_booking_features` với các cặp
@@ -33,12 +23,12 @@ khách, khách sạn thật, một lần tuần tự và một lần đồng th�
 chế vì cả 50 lời gọi cùng đọc online store qua một pod và một kết nối PostgreSQL; ảnh ở dòng 16.
 
 <a id="edai-2-18"></a>
-## Deploy in the form of MCP tool to k8s with helm + rollingupdate + auto fallback
+## Triển khai MCP Server lên Kubernetes bằng Helm (RollingUpdate & Rollback)
 
 Chart chung `helm/api` (`values-booking-mcp.yaml`) dùng RollingUpdate với `maxSurge: 1`, `maxUnavailable: 0`, và
 readiness probe `/readyz`: pod mới chỉ nhận traffic khi đọc được online store, pod cũ chỉ bị gỡ khi pod mới đã Ready.
 Jenkins deploy bằng `helm upgrade --install --atomic --timeout 5m`, nên nếu pod mới không Ready kịp, Helm tự rollback về
-revision trước. Phép thử chạy trên GKE ngày 2026-11-18: upgrade booking-mcp sang một image tag không tồn tại với
+revision trước. Phép thử chạy trên GKE: upgrade booking-mcp sang một image tag không tồn tại với
 `--atomic --timeout 90s`.
 
 Upgrade thất bại sau 90 giây vì pod mới không kéo được image, và Helm tự rollback: `helm history` ghi revision 3
@@ -48,7 +38,7 @@ Upgrade thất bại sau 90 giây vì pod mới không kéo được image, và 
 ![helm upgrade --atomic tự rollback](../images/edai-2/helm-atomic-rollback.png)
 
 <a id="edai-2-19"></a>
-## Deploy 1 Agent sử dụng MCP tool ở trên với multi-replica và auto-scale sử dụng cái này
+## Triển khai data-agent với multi-replica và auto-scale (KEDA)
 
 data-agent ([`agents/agents-gke.yaml`](../../edai2/agents/agents-gke.yaml)) dùng MCP server booking-mcp qua
 RemoteMCPServer `booking-tools-data` (route `/mcp` của agentgateway, token role `data-agent`) và chỉ được cấp tool
@@ -63,7 +53,7 @@ reconcile nếu Agent có trường này (đã thử: scale tay lên 2 bị kéo
 [`agents/agents-gke.yaml`](../../edai2/agents/agents-gke.yaml) không đặt `replicas` và để KEDA quản lý.
 
 [`tests/keda_load.sh`](../../edai2/tests/keda_load.sh) tạo khoảng 10 request/giây vào route `/a2a/data-agent` (GET
-agent card qua gateway, không gọi LLM) trong 150 s và in trạng thái HPA mỗi 20 s. Lần chạy ngày 2026-11-19 bắt đầu
+agent card qua gateway, không gọi LLM) trong 150 s và in trạng thái HPA mỗi 20 s. Lần chạy bắt đầu
 ở 2/2 replica (metric 0,25); 20 s sau metric 1,57 request/giây mỗi replica vượt ngưỡng, desired lên 4; 20 s tiếp theo
 4/4 replica Ready. Hết tải, HPA giữ 4 replica trong 5 phút (cửa sổ ổn định mặc định) rồi về 2. Ở lần chạy đầu, hai
 pod mới không đủ chỗ nên cluster autoscaler của GKE thêm node thứ ba, kéo image kagent (339 MB) mất 53 s, tổng cộng
@@ -74,16 +64,12 @@ khoảng 2,5 phút tới khi Ready.
 ![KEDA scale data-agent 2 → 4 replica](../images/edai-2/keda-scale.png)
 
 <a id="edai-2-20"></a>
-## Configure Agent chạy trong Sandbox để đảm bảo security
+## Chạy Agent trong Sandbox (Agent Substrate)
 
-**Rubric:** edai-2 · dòng 20 · 1 điểm · nhóm *Web API kéo dữ liệu user (đã lưu thông qua feature pipeline) và chunk (đã được lưu thông qua RAG pipeline)* › *Có sử dụng FastAPI + data validation (với pydantic)*
-
-**Cách làm:** [Thiết kế] `k8s/agent-substrate.yaml`: WorkerPool gVisor, SandboxAgent cho data-agent và NetworkPolicy chỉ cho agent gọi agentgateway và DNS. [Cần làm] nâng kagent lên 1.x (có Agent Substrate) rồi chạy agent trong sandbox; kagent 0.9.12 đang dùng không có Substrate.
-
-**Kết quả:** _Chưa có. Cần số liệu, ảnh chụp hoặc link code sau khi chạy trên cluster._
+**[update sau]:** Đã thiết kế cấu hình trong `k8s/agent-substrate.yaml` gồm `WorkerPool` gVisor, `SandboxAgent` cho `data-agent` và `NetworkPolicy` giới hạn agent chỉ được gọi tới `agentgateway` và DNS. Do `kagent 0.9.12` hiện tại chưa hỗ trợ Agent Substrate, phần triển khai thực tế sẽ thực hiện khi nâng cấp lên `kagent 1.x` và bổ sung ảnh chứng minh sau.
 
 <a id="edai-2-21"></a>
-## Publish Agent ở trên lên registry đã deploy để đảm bảo governance
+## Đăng ký data-agent lên agentregistry
 
 Script [`ci/publish_agent_card.py`](../../edai2/ci/publish_agent_card.py) đăng agent lên agentregistry (dòng 8):
 lấy agent card A2A từ kagent controller, dựng resource `ar.dev/v1alpha1` gồm `MCPServer` `booking-tools` (route `/mcp`
@@ -93,7 +79,7 @@ controller chứ không qua `/a2a/policy-agent` của gateway, vì route đó ch
 dừng nếu tên trong card không khớp agent. Stage `Deploy agents` của [`ci/Jenkinsfile`](../../edai2/ci/Jenkinsfile)
 gọi script này cho cả 4 agent sau khi rollout.
 
-Ngày 2026-11-19 script được chạy từ máy của nhóm (port-forward tới controller và registry) với tag `f808e37`:
+Script được chạy từ máy của nhóm (port-forward tới controller và registry) với tag `f808e37`:
 `data-agent` (tool `get_booking_features`) có trên registry kèm MCP server `booking-tools`. Stage Jenkins chưa chạy vì tham số `WITH_AGENTS` còn tắt.
 
 ![agentregistry: catalog 4 agent](../images/edai-2/registry-agents.png)

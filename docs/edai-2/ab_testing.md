@@ -2,11 +2,8 @@
 
 A/B testing cho agent, LLM và model inference.
 
-Mỗi mục ứng với một dòng của rubric, ghi lại phần đã triển khai và kết quả (số liệu đo được, ảnh chụp trong
-`docs/images/`).
-
 <a id="edai-2-52"></a>
-## Perform A/B test for agents with different model config and monitor them
+## A/B test cho Agent với ModelConfig và Prompt khác nhau
 
 policy-agent có hai bản chạy song song trong [`agents/agents-gke.yaml`](../../edai2/agents/agents-gke.yaml):
 
@@ -24,7 +21,7 @@ agentgateway chia route `/a2a/policy-agent` 50/50 giữa hai bản; `/a2a/policy
 lỗi, latency p50/p95 theo bản, token và thời gian gọi LLM theo model.
 
 [`tests/ab_agent.py`](../../edai2/tests/ab_agent.py) gửi 20 câu hỏi (xác suất huỷ, chính sách, bán vượt) qua
-`/a2a/policy-agent/` ngày 2026-11-19 và ghi bản trả lời theo `kagent_app_name`:
+`/a2a/policy-agent/` và ghi bản trả lời theo `kagent_app_name`:
 
 | Bản | Lượt | p50 | max | completed | tool lỗi | token output TB |
 |---|---|---|---|---|---|---|
@@ -39,11 +36,11 @@ lệ chia thực tế là 13/7, nên kết quả chỉ mang tính định hướ
 
 
 <a id="edai-2-53"></a>
-## Perform A/B test for different LLM versions on the LLM inference platform
+## A/B test giữa các phiên bản LLM trên nền tảng inference
 
 Phiên bản LLM mới được thử theo hai bước, không thay thẳng bản cũ.
 
-**A/B offline** chạy ngày 2026-11-19 trên vLLM 0.9.2 ở laptop GPU. Một vLLM phục vụ cùng lúc Qwen2.5-1.5B gốc và hai
+**A/B offline** chạy trên vLLM 0.9.2 ở laptop GPU. Một vLLM phục vụ cùng lúc Qwen2.5-1.5B gốc và hai
 adapter LoRA: `qwen-booking-v1` (fine-tune với 400 hội thoại tính K + 29 câu chính sách và PII, 2 epoch) và
 `qwen-booking-v1b` (60 hội thoại K, 4 epoch). Cả ba trả lời cùng 6 câu hỏi, temperature 0; đáp án K đối chiếu với
 `overbooking.limit`, chính sách đối chiếu với `policies/*.md`.
@@ -67,7 +64,7 @@ tỉ lệ hay rút bản mới chỉ cần sửa gateway. Prometheus scrape metr
 ([`observability/dashboards/agent-ab.json`](../../edai2/observability/dashboards/agent-ab.json)) so sánh token
 input/output và thời gian gọi LLM p50 theo `gen_ai_request_model`.
 
-Từ khi bật scrape (14:08) tới 15:08 ngày 2026-11-19, route `/v1` có 29 request thành công: 27 tới `qwen-3b` và 2 tới
+Trong 1 giờ đầu sau khi bật scrape, route `/v1` có 29 request thành công: 27 tới `qwen-3b` và 2 tới
 `qwen-booking-v2` (khoảng 93/7, sát trọng số 90/10). Tính cả route `/llm-v2` của policy-agent-v2, `qwen-booking-v2`
 nhận 15 request. Trên dashboard, thời gian gọi LLM p50 của `qwen-booking-v2` cao hơn `qwen-3b` (adapter LoRA thêm
 chi phí trên cùng GPU); số mẫu của bản v2 còn ít nên chưa đủ để quyết định promote.

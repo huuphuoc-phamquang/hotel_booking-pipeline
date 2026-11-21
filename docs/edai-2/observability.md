@@ -1,15 +1,11 @@
 # Observability
 
-Metric của Web API, telemetry hệ thống, log, trace, telemetry cho LLM và agent, kiểm tra drift theo lịch.
-
-Mỗi mục ứng với một dòng của rubric. Mục đã hoàn thành ghi lại phần đã triển khai và kết quả (số liệu đo được,
-ảnh chụp trong `docs/images/`). Mục chưa hoàn thành giữ trích rubric, phần **Cách làm** đồng bộ từ cột F của rubric
-và phần **Kết quả** chờ bổ sung.
+Metric của Web API, telemetry hệ thống, log, trace, telemetry cho LLM và agent.
 
 <a id="edai-2-46"></a>
-## Web API monitoring metrics such as req/s, num of reqs, num of failures, etc.
+## Web API monitoring metrics (Prometheus + Grafana)
 
-booking-mcp chạy trên GKE ngày 2026-11-18 (namespace `agents`, Helm chart `helm/api`, image
+booking-mcp chạy trên GKE (namespace `agents`, Helm chart `helm/api`, image
 `booking-mcp:e6e53e9-2`). Feature được materialize từ Gold lên online store Feast (PostgreSQL, schema `feast_online`).
 Một script tạo traffic chạy trong pod, lấy `booking_id`, khách và khách sạn thật từ `gold.fact_bookings` rồi lặp 400
 vòng; mỗi vòng gọi ba tool MCP (`get_booking_features`, `propose_overbooking`, `predict_cancellation`) và REST
@@ -25,9 +21,9 @@ khoảng 25% (692 trên 2.777 request), đúng bằng phần request REST gọi 
 ![Grafana: Booking APIs](../images/edai-2/grafana-booking-apis.png)
 
 <a id="edai-2-47"></a>
-## Collect và visualize metrics với Prometheus + Grafana · edai-2 · Observability
+## Thu thập và trực quan hoá Metrics (Prometheus + Grafana)
 
-Stack observability được cài trên GKE ngày 2026-11-18 vào namespace `monitoring`: `kube-prometheus-stack` 93.4.0
+Stack observability được cài trên GKE vào namespace `monitoring`: `kube-prometheus-stack` 93.4.0
 (`observability/stack/kube-prometheus-stack.yaml`, PVC Prometheus dùng storage class `standard`), Pushgateway, Jaeger
 (`stack/jaeger.yaml`), Elasticsearch và Kibana 8.5.1, Fluent Bit 0.58.3 (`stack/efk.yaml`). Prometheus thu CPU, RAM, disk, network theo node và pod qua
 node-exporter và kube-state-metrics. Grafana đọc mật khẩu admin từ Secret `grafana-admin` và truy cập qua ingress
@@ -44,7 +40,7 @@ executor Spark khoảng 6 core.
 ![Grafana: một node (Node Exporter)](../images/edai-2/grafana-node.png)
 
 <a id="edai-2-48"></a>
-## Tương tự cho logs · edai-2 · Observability
+## Thu thập và trực quan hoá Logs (Fluent Bit + Elasticsearch + Kibana)
 
 Dùng cùng stack ở dòng 47; log đi theo chuỗi Fluent Bit → Elasticsearch → Kibana
 (`observability/stack/efk.yaml`), Kibana truy cập qua ingress. Fluent Bit chạy dạng DaemonSet (1 pod mỗi node), đọc log
@@ -59,12 +55,12 @@ Airflow DP2 ra đúng log của `silver_bookings`, `stage_gold`, `upsert_gold`.
 ![Kibana lọc log task DP2](../images/edai-2/kibana-filter-airflow.png)
 
 <a id="edai-2-49"></a>
-## Tương tự cho traces · edai-2 · Observability
+## Thu thập và trực quan hoá Traces (Jaeger)
 
 Jaeger ([`observability/stack/jaeger.yaml`](../../edai2/observability/stack/jaeger.yaml)) nhận OTLP gRPC cổng 4317 và mở UI qua ingress (dòng 39). Cả `booking-mcp` (FastAPI, span `feast.online` cho mỗi lần đọc online store và httpx tới KServe khi có biến `OTEL_EXPORTER_OTLP_ENDPOINT`) lẫn `agentgateway` ([`gateway/agentgateway.yaml`](../../edai2/gateway/agentgateway.yaml), bật `config.tracing.otlpEndpoint` và `randomSampling: true`) đều gửi trace về `jaeger-collector.monitoring.svc.cluster.local:4317` và truyền tiếp W3C `traceparent` xuyên suốt các dịch vụ.
 
-- **Chạy đơn lẻ `booking-mcp` (ngày 2026-11-18, trước khi deploy KServe):** trace `POST /v1/cancel-risk` (13,43 ms, 7 span) gồm span FastAPI, hai span `feast.online` (1,78 ms và 2,23 ms) và span `POST` gọi KServe (4,99 ms, đánh dấu lỗi vì KServe chưa deploy).
-- **Trace phân tán liên thông qua gateway → MCP → Feast → KServe (ngày 2026-11-21):** một lượt gọi MCP `predict_cancellation(120152161878)` qua `agentgateway` → `booking-mcp` → Feast online → KServe `cancel-risk` (trả `probability = 0,0643`, `model_version = 1`) tạo thành **1 trace duy nhất** (`1a3bf0b`, 2 service, độ sâu 4, 11 span, tổng **2,33 s**): `agentgateway` (`tools/call` → `tools/call booking-tools_predict_cancellation` 4,45 ms) → `booking-mcp` (`POST /mcp` → hai span `feast.online` 190,26 ms và 126,72 ms → `POST` gọi KServe 1,78 s).
+- **Chạy đơn lẻ `booking-mcp` (trước khi deploy KServe):** trace `POST /v1/cancel-risk` (13,43 ms, 7 span) gồm span FastAPI, hai span `feast.online` (1,78 ms và 2,23 ms) và span `POST` gọi KServe (4,99 ms, đánh dấu lỗi vì KServe chưa deploy).
+- **Trace phân tán liên thông qua gateway → MCP → Feast → KServe:** một lượt gọi MCP `predict_cancellation(120152161878)` qua `agentgateway` → `booking-mcp` → Feast online → KServe `cancel-risk` (trả `probability = 0,0643`, `model_version = 1`) tạo thành **1 trace duy nhất** (`1a3bf0b`, 2 service, độ sâu 4, 11 span, tổng **2,33 s**): `agentgateway` (`tools/call` → `tools/call booking-tools_predict_cancellation` 4,45 ms) → `booking-mcp` (`POST /mcp` → hai span `feast.online` 190,26 ms và 126,72 ms → `POST` gọi KServe 1,78 s).
 
 ![Jaeger: danh sách trace của booking-mcp](../images/edai-2/jaeger-traces.png)
 
@@ -73,20 +69,18 @@ Jaeger ([`observability/stack/jaeger.yaml`](../../edai2/observability/stack/jaeg
 ![Jaeger: trace phân tán agentgateway → booking-mcp → Feast → KServe](../images/edai-2/jaeger-gateway-mcp-kserve.png)
 
 <a id="edai-2-50"></a>
-## Đảm bảo ít nhất các metrics · LLM-related telemetry data
+## Telemetry cho LLM (token, TTFT, PII blocking)
 
-`llm_metrics.py` đo số token vào, ra và tổng, thời gian round-trip, TTFT và số lần chặn PII. Một dãy số
-thẻ chỉ bị coi là PII khi qua kiểm tra Luhn và không đứng sau tiền tố `BK-`.
+`llm_metrics.py` đo số token vào, ra và tổng, thời gian round-trip, TTFT và số lần chặn PII (dãy số thẻ chỉ bị coi là PII khi qua kiểm tra Luhn và không đứng sau tiền tố `BK-`). `edai2/tests/test_llm_metrics.py` (11 test, coverage 100%) chạy cục bộ và đạt.
 
-`edai2/tests/test_llm_metrics.py` (11 test, coverage 100%) chạy cục bộ và đạt ngày 2026-11-16. Test xác
-nhận `BK-<id>` không bị chặn, còn `4111 1111 1111 1111` bị chặn. Phần này chưa có ảnh chụp trên cluster.
+**[update sau]:** Bổ sung ảnh chụp metric `llm_metrics` thực tế trên Grafana của cluster.
 
 <a id="edai-2-51"></a>
-## Đảm bảo ít nhất các metrics · Agent-related telemetry data
+## Telemetry cho Agent và MCP Tools
 
 Cùng lần chạy ở dòng 46, `booking-mcp` đếm số lần gọi từng tool (`mcp_tool_calls_total`) và số lần tool lỗi
 (`mcp_tool_failures_total`), hiển thị trên dashboard [`observability/dashboards/booking-apis.json`](../../edai2/observability/dashboards/booking-apis.json).
-Ngày 2026-11-20 trên GKE, sau khi triển khai đủ `agentgateway` và các agent (`coordinator-agent`, `data-agent`,
+Trên GKE, sau khi triển khai đủ `agentgateway` và các agent (`coordinator-agent`, `data-agent`,
 `policy-agent`), dashboard [`observability/dashboards/llm-agents.json`](../../edai2/observability/dashboards/llm-agents.json)
 ghi nhận số lần gọi và lỗi theo từng agent qua metric `agentgateway_requests_total{route=~".*a2a-.*"}`:
 

@@ -3,9 +3,6 @@
 Generator tái lập được (cùng seed cho cùng dữ liệu), sinh lỗi dữ liệu offline, lỗi streaming, data drift và
 bảng nhãn.
 
-Mỗi mục ứng với một dòng của rubric, ghi lại phần đã triển khai và kết quả (số liệu đo được, ảnh chụp trong
-`docs/images/`).
-
 ## Đặc tính dữ liệu đo được
 
 `python -m generator.profile_data` (chạy trong thư mục `edai1/`) in ra các bảng dưới đây. Mẫu gồm đủ 16 shard của
@@ -60,12 +57,12 @@ Mẫu: ngày [15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345], đủ 16
 | Qua channel manager (trễ 1–4 giờ) | 0.97% |
 
 <a id="edai-1-5"></a>
-## Simulate skew
+## Mô phỏng lệch phân phối (Data Skew)
 
 Lượt xem và booking lệch theo phân phối Zipf của khách sạn (`hotel_zipf_a`); 70% khách sạn tập trung ở
 3 thành phố. Mùa cao điểm tính theo `stay_date` (Tết, 30/4, hè, cả năm 2026), còn sự kiện chỉ tác động từ
 `announce_date`. Độ lệch nặng nhất nằm ở các cặp (`hotel_id`, `stay_date`) nóng. `generator/cardinality.py` đo
-cardinality từng cột: `python -m generator.cardinality 195 <file png>` chạy ngày 2026-11-17 trên dữ liệu ngày 2025-07-15.
+cardinality từng cột: `python -m generator.cardinality 195 <file png>` chạy trên dữ liệu ngày 2025-07-15.
 Quotes lấy shard 0 (2.379.119 dòng); mỗi shard chỉ giữ 1/16 số khách sạn nên `hotel_id` ở đây có 3.125 giá trị.
 Bookings lấy đủ 16 shard trên landing (409.892 dòng).
 
@@ -104,7 +101,7 @@ mỗi giá trị sẽ thành một thư mục nhỏ. Dữ liệu partition theo 
 ![Skew theo khách sạn và theo ô](../images/edai-1/skew-hotel.png)
 
 <a id="edai-1-6"></a>
-## Simulate schema evolution
+## Mô phỏng thay đổi lược đồ (Schema Evolution)
 
 Từ 2025-07-01, bảng `landing/bookings` chuyển sang schema v2 (`anomalies.schema_v2_date`,
 `apply_schema_version` trong `generator/offline_gen.py`): thêm cột `channel`, đổi `room_type` thành `room_category`. Cột
@@ -126,7 +123,7 @@ hoặc tách thành hai cột khác tên cho cùng một ý nghĩa. Silver xử 
 Handle schema evolution ở `processing_jobs.md`).
 
 <a id="edai-1-7"></a>
-## Simulate another offline data problem
+## Mô phỏng các lỗi dữ liệu offline khác (trùng lặp, null, giá trị âm)
 
 2% booking bị gửi hai lần với cùng `idempotency_key`. Mỗi bản thừa có `booking_id` mới và `created_at`
 lệch 1–3 giây, nên khoá chính không trùng dù vẫn là cùng một lần đặt. Ở nhánh stream, khoảng 0,5% bản sao của
@@ -149,7 +146,7 @@ Trên GKE, các event này vào topic `booking_events_dlq` kèm `reason` (mục 
 `processing_jobs.md`).
 
 <a id="edai-1-8"></a>
-## Store data after generating so that we can ingest to Bronze zone later
+## Lưu trữ dữ liệu sinh ra vào Bronze Zone (MinIO)
 
 Generator ghi Parquet nén zstd lên MinIO landing theo `dt=`/`shard=`, kèm manifest sha256, cho các bảng
 append-only: quotes, bookings, cancellations, payments. Xác suất huỷ thật `p_cancel_true` nằm ở bucket riêng
@@ -157,7 +154,7 @@ append-only: quotes, bookings, cancellations, payments. Xác suất huỷ thật
 (`demand.quotes_per_cell`) thay vì tăng số booking. Trên GKE, Indexed Job `offline-generator` (`k8s/generator.yaml`)
 chạy 8 pod song song, mỗi pod một khoảng ngày.
 
-Chạy trên GKE ngày 2026-11-17. Job `offline-generator` hoàn thành 8/8 pod trong 70 phút, trải trên 3 node
+Chạy trên GKE. Job `offline-generator` hoàn thành 8/8 pod trong 70 phút, trải trên 3 node
 `cpu-spot`. Bucket `landing` đạt **111 GiB, 42.830 object**, vượt mốc 100GB của rubric.
 
 Pod số 0 khởi động lại một lần. Nguyên nhân là 8 pod cùng tạo bucket `landing`, pod chậm hơn nhận lỗi
@@ -170,7 +167,7 @@ Pod số 0 khởi động lại một lần. Nguyên nhân là 8 pod cùng tạo
 ![Dung lượng bucket landing](../images/edai-1/generator-landing-size.png)
 
 <a id="edai-1-9"></a>
-## Simulate late arrivals
+## Mô phỏng dữ liệu đến trễ (Late Arrivals)
 
 Generator tạo ba nguồn event trễ:
 
@@ -181,7 +178,7 @@ Generator tạo ba nguồn event trễ:
 Replay chỉ phát event có `ingest_time` trong cửa sổ. Generator lùi 150 ngày để có event huỷ của các booking tạo trước
 cửa sổ; mỗi `idempotency_key` huỷ đúng một lần. Event log gom mỗi ngày ingest thành một file đã sắp theo `ingest_time`,
 nên replay chỉ mở vài file cùng lúc. Lần chạy đầu sinh khoảng 2.900 partition song song bằng `GEN_WORKERS` process, thay
-cho cách sinh tuần tự mất khoảng 3 giờ. Độ trễ đo bằng `python -m generator.stream_profile 195 <file png>` (2026-11-18)
+cho cách sinh tuần tự mất khoảng 3 giờ. Độ trễ đo bằng `python -m generator.stream_profile 195 <file png>`
 trên event của mọi booking tạo ngày 2025-07-15, đủ 16 shard (1.009.407 event).
 
 Độ trễ bằng `ingest_time` − `event_time`, so với watermark 10 phút và allowedLateness 5 phút của Flink:
@@ -201,7 +198,7 @@ cửa sổ (chỉ dedup), nên độ trễ của nó không làm mất event.
 ![Độ trễ event theo nguồn](../images/edai-1/stream-delay.png)
 
 <a id="edai-1-10"></a>
-## Simulate another streaming data problem
+## Mô phỏng lỗi dữ liệu streaming (sai định dạng, thiếu trường)
 
 1,5% callback thanh toán bị gửi lặp (at-least-once). Bản gửi lại giữ nguyên `event_id` như webhook thật
 và tới sau bản gốc 1–30 giây. Tỉ lệ đo bằng `python -m generator.stream_profile 195` trên ngày 2025-07-15, đủ 16 shard.

@@ -2,15 +2,12 @@
 
 Lakehouse dùng Iceberg, data warehouse là tầng Gold trên PostgreSQL.
 
-Mỗi mục ứng với một dòng của rubric, ghi lại phần đã triển khai và kết quả (số liệu đo được, ảnh chụp trong
-`docs/images/`).
-
 <a id="edai-1-20"></a>
-## Lakehouse
+## Lưu trữ Lakehouse (Iceberg)
 
 `storage/optimize.sql` gồm compaction (`rewrite_data_files`), sort order và expire snapshots. Catalog
 `lake` là Iceberg JDBC catalog đặt trên chính PostgreSQL, không cần thêm service. Phần lakehouse của script chạy bằng
-`spark-sql` trên GKE ngày 2026-11-18.
+`spark-sql` trên GKE.
 
 Compaction không có file nhỏ để gom, vì cách ghi của Iceberg đã giữ mỗi partition một file:
 
@@ -37,13 +34,13 @@ theo. `expire_snapshots` dọn các snapshot cũ hơn 7 ngày, với mốc tính
 ![Iceberg trước và sau rewrite_data_files](../images/edai-1/iceberg-zorder.png)
 
 <a id="edai-1-21"></a>
-## Datawarehouse
+## Lưu trữ Data Warehouse (PostgreSQL Gold)
 
 `schema/gold_schema.sql` tạo các index `fact_bookings(customer_key, booking_date)`,
 `(hotel_key, booking_date)`, `(checkin_date)`, `booking_risk(hotel_id, stay_date, scored_date)` và partial unique index
 `dim_hotel(hotel_id) WHERE is_current`. Các bảng `feat_*` dùng khoá chính (entity, `event_timestamp`).
 `storage/optimize.sql` thêm `(hotel_key, checkin_date)` và `dim_hotel(hotel_id, hotel_key)` cho query revenue
-management. Phần data warehouse của script chạy trên GKE ngày 2026-11-18, sau backfill 13 ngày (`gold.fact_bookings`
+management. Phần data warehouse của script chạy trên GKE, sau backfill 13 ngày (`gold.fact_bookings`
 4,66 triệu dòng).
 
 Query đo là query của dashboard revenue management: số đêm và doanh thu của một khách sạn theo khoảng ngày
@@ -51,9 +48,9 @@ nhận phòng (khách sạn 23059, đông nhất; nhận phòng 15/01–15/02).
 
 | | Trước | Sau |
 |---|---|---|
-| Tìm phiên bản khách sạn | Seq Scan `dim_hotel` (bỏ 56.095 dòng), 5,65 ms | Index Only Scan `idx_dim_hotel_id`, 0,09 ms |
-| Lọc `fact_bookings` | Bitmap Index Scan `(hotel_key, booking_date)` lấy 130.067 dòng, lọc `checkin_date` bỏ 45.826 | Bitmap Index Scan `idx_fact_bookings_hotel_checkin` lấy 91.010 dòng, chỉ còn lọc `status` |
-| Thời gian thực thi | 116,3 ms | 68,9 ms (nhanh hơn 1,7 lần) |
+| Tìm phiên bản khách sạn | Seq Scan `dim_hotel` (bỏ 56.095 dòng), 5,65 ms | Index Only Scan `idx_dim_hotel_id`, 0,035 ms |
+| Lọc `fact_bookings` | Bitmap Index Scan `(hotel_key, booking_date)` lấy 130.067 dòng, lọc `checkin_date` bỏ 45.826 | Bitmap Index Scan `idx_fact_bookings_hotel_checkin` lấy 100.361 dòng, chỉ còn lọc `status` (loại 11.384 dòng) |
+| Thời gian thực thi | 116,3 ms | 81,6 ms (nhanh hơn 1,4 lần) |
 
 Index composite đặt cột lọc bằng (`hotel_key`) trước và cột lọc khoảng (`checkin_date`) sau. Nhờ vậy, Postgres lấy
 đúng các dòng trong khoảng ngày nhận phòng thay vì mọi booking của khách sạn. Cả hai lần đo đều đặt

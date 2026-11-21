@@ -1,43 +1,30 @@
 # Routing & gateway (NGINX Ingress)
 
-Service được đặt sau ingress, có basic auth, rate limit, domain và HTTPS.
-
-Mỗi mục ứng với một dòng của rubric. Mục đã hoàn thành ghi lại phần đã triển khai và kết quả (số liệu đo được,
-ảnh chụp trong `docs/images/`). Mục chưa hoàn thành giữ trích rubric, phần **Cách làm** đồng bộ từ cột F của rubric
-và phần **Kết quả** chờ bổ sung.
+Các dịch vụ nội bộ được đưa ra ngoài qua NGINX Ingress với basic auth, rate limit, domain và HTTPS.
 
 <a id="edai-2-37"></a>
-## Service để coi metric · edai-2 · External Routing & Gateway (NGINX Ingress Controll
+## Ingress cho Grafana (Metrics)
 
-NGINX Ingress Controller 4.15.1 (LoadBalancer `34.87.100.157`, `loadBalancerSourceRanges` chỉ mở cho IP của nhóm) và Ingress `observability` trong `k8s/ingress.yaml`, chạy trên GKE ngày 2026-11-18. Host `grafana.booking.local` trỏ vào service `kube-prometheus-stack-grafana:80`; service không mở port ra ngoài mà chỉ đi qua
-ingress.
-
-`curl -H "Host: grafana.booking.local" http://34.87.100.157/` trả 302 (chuyển tới trang đăng nhập).
+NGINX Ingress Controller 4.15.1 (LoadBalancer `34.87.100.157`, giới hạn IP qua `loadBalancerSourceRanges`) và Ingress `observability` trong `k8s/ingress.yaml` đưa `kube-prometheus-stack-grafana:80` qua host `grafana.booking.local` (chỉ truy cập qua ingress, không mở port trực tiếp). Kiểm tra `curl -H "Host: grafana.booking.local" http://34.87.100.157/` trả `302` tới trang đăng nhập.
 
 ![Grafana qua ingress](../images/edai-2/ingress-grafana.png)
 
 <a id="edai-2-38"></a>
-## Service để coi log · edai-2 · External Routing & Gateway (NGINX Ingress Controll
+## Ingress cho Kibana (Logs)
 
-NGINX Ingress Controller 4.15.1 (LoadBalancer `34.87.100.157`, `loadBalancerSourceRanges` chỉ mở cho IP của nhóm) và Ingress `observability` trong `k8s/ingress.yaml`, chạy trên GKE ngày 2026-11-18. Host `kibana.booking.local` trỏ vào service `kibana-kibana:5601`; service không mở port ra ngoài mà chỉ đi qua
-ingress.
-
-`curl -H "Host: kibana.booking.local" http://34.87.100.157/` trả 302 (chuyển tới trang đăng nhập).
+Host `kibana.booking.local` trên cùng Ingress `observability` trỏ vào service `kibana-kibana:5601`. Kiểm tra `curl -H "Host: kibana.booking.local" http://34.87.100.157/` trả `302` tới trang đăng nhập.
 
 ![Kibana qua ingress](../images/edai-2/ingress-kibana.png)
 
 <a id="edai-2-39"></a>
-## Service để coi trace · edai-2 · External Routing & Gateway (NGINX Ingress Controll
+## Ingress cho Jaeger (Traces)
 
-NGINX Ingress Controller 4.15.1 (LoadBalancer `34.87.100.157`, `loadBalancerSourceRanges` chỉ mở cho IP của nhóm) và Ingress `observability` trong `k8s/ingress.yaml`, chạy trên GKE ngày 2026-11-18. Host `jaeger.booking.local` trỏ vào service `jaeger-query:16686`; service không mở port ra ngoài mà chỉ đi qua
-ingress.
-
-`curl -H "Host: jaeger.booking.local" http://34.87.100.157/` trả 200.
+Host `jaeger.booking.local` trên Ingress `observability` trỏ vào service `jaeger-query:16686`. Kiểm tra `curl -H "Host: jaeger.booking.local" http://34.87.100.157/` trả `200`.
 
 ![Jaeger qua ingress](../images/edai-2/ingress-jaeger.png)
 
 <a id="edai-2-40"></a>
-## UI để test agent
+## Giao diện kiểm thử Agent (Agent Workbench & kagent UI)
 
 Agent Workbench ([`ui/index.html`](../../edai2/ui/index.html), [`ui/nginx.conf`](../../edai2/ui/nginx.conf),
 [`k8s/agent-workbench.yaml`](../../edai2/k8s/agent-workbench.yaml)) là trang tĩnh chạy trên nginx trong namespace
@@ -47,7 +34,7 @@ gọi model hay MCP trực tiếp: nginx proxy `/api/` sang kagent controller, t
 Results) từ `history`, câu trả lời từ `artifacts`, token từ `kagent_usage_metadata`; thời gian phản hồi đo ở trình duyệt.
 kagent UI gốc cũng được đặt sau ingress tại `agents.34.124.198.171.nip.io` với cùng lớp xác thực.
 
-Thử trên cluster thứ hai ngày 2026-11-19:
+Thử trên cluster thứ hai:
 
 - coordinator-agent nhận câu hỏi về khách 18766768, khách sạn 8528 và booking 90000919211, giao việc cho data-agent và
   policy-agent rồi tổng hợp đúng số liệu (1 booking 90 ngày, tỉ lệ huỷ 0%; xác suất huỷ 13,14%, model v1).
@@ -62,26 +49,26 @@ Thử trên cluster thứ hai ngày 2026-11-19:
 ![Agent Workbench: Reject, tool trả rejected](../images/edai-2/workbench-hitl-chat.png)
 
 <a id="edai-2-41"></a>
-## UI cho agent registry
+## Giao diện Agent Registry qua Ingress
 
 UI của agentregistry (dòng 8) đứng sau NGINX Ingress `agentregistry` trong
 [`k8s/ingress.yaml`](../../edai2/k8s/ingress.yaml), host `registry.34.124.198.171.nip.io`, cùng lớp bảo vệ với UI test
 agent: basic auth bằng Secret htpasswd `kagent-ui-auth` (bản sao trong namespace `agentregistry`) và `limit-rps` 10.
-Service `agentregistry` chỉ là ClusterIP. Kiểm ngày 2026-11-19: không đăng nhập trả 401, đăng nhập trả 200, API
+Service `agentregistry` chỉ là ClusterIP. Kiểm: không đăng nhập trả 401, đăng nhập trả 200, API
 `/v0/agents` qua ingress trả đủ 4 agent.
 
 ![UI agentregistry qua ingress](../images/edai-2/registry-agents.png)
 
 
 <a id="edai-2-42"></a>
-## Setup authentication cho UI test agent ở trên
+## Xác thực Basic Auth và Rate Limit cho UI
 
 Ingress `agent-workbench` ([`k8s/agent-workbench.yaml`](../../edai2/k8s/agent-workbench.yaml)) và `kagent-ui`
 ([`k8s/ingress.yaml`](../../edai2/k8s/ingress.yaml)) dùng `auth-type: basic` với Secret htpasswd `kagent-ui-auth`
 (user `admin`, mật khẩu ngẫu nhiên lưu ngoài repo) và `limit-rps: "10"`; NGINX sinh `limit_req rate=10r/s burst=50`,
 request vượt ngưỡng nhận 503 (`limit_req_status` mặc định của ingress-nginx).
 
-Tab *Auth & Rate limit* của Agent Workbench gửi request thật qua ingress, kết quả ngày 2026-11-19:
+Tab *Auth & Rate limit* của Agent Workbench gửi request thật qua ingress, kết quả:
 
 - `GET /api/agents` không kèm thông tin đăng nhập hoặc với mật khẩu sai: `401 Unauthorized`, header
   `WWW-Authenticate: Basic realm="Agent test UI"`; với phiên đã đăng nhập: 200.
@@ -92,17 +79,11 @@ Tab *Auth & Rate limit* của Agent Workbench gửi request thật qua ingress, 
 ![Agent Workbench: basic auth 401 và rate limit 503](../images/edai-2/workbench-auth.png)
 
 <a id="edai-2-43"></a>
-## Làm cái này cho Web API kéo dữ liệu · edai-2 · External Routing & Gateway (NGINX Ingress Controll
+## Domain & HTTPS cho Web API (agentgateway)
 
-**Rubric:** edai-2 · dòng 43 · 1 điểm · nhóm *External Routing & Gateway (NGINX Ingress Controller)* › *Setup domain & enable HTTPS*
+[`cert-issuer.yaml`](../../edai2/k8s/cert-issuer.yaml) cấu hình `ClusterIssuer` `letsencrypt-prod` (ACME HTTP-01 qua `nginx`), kết hợp Ingress `feature-api` trong [`ingress.yaml`](../../edai2/k8s/ingress.yaml) gắn domain `api.34-124-198-171.sslip.io` trỏ về `agentgateway:3000` (cổng `/mcp` và `/v1`) với secret TLS `api-booking-tls`.
 
-> Làm cái này cho Web API kéo dữ liệu. Mọi người có thể tham khảo 2 đồ án sau: cái này và cái này
-
-**Cách làm:** [Đã có] [`cert-issuer.yaml`](../../edai2/k8s/cert-issuer.yaml) cấu hình `ClusterIssuer` `letsencrypt-prod` (ACME HTTP-01 qua `nginx`), Ingress `feature-api` trong [`ingress.yaml`](../../edai2/k8s/ingress.yaml) gắn domain `api.34-124-198-171.sslip.io` trỏ về `agentgateway:3000` (cổng `/mcp` và `/v1`) với secret TLS `api-booking-tls`.
-
-**Kết quả:** Ngày 2026-11-21 trên GKE, sau khi mở tạm `loadBalancerSourceRanges` của `ingress-nginx-controller` để máy chủ ACME gọi HTTP-01, `cert-manager` cấp thành công chứng chỉ **Let's Encrypt (`YR2`)** cho `api.34-124-198-171.sslip.io` (`certificate/api-booking-tls` `READY = True`, `order` & `challenge` `valid`, hiệu lực `2026-11-21` → `2027-02-19`).
-
-Kiểm tra trực tiếp bằng Python `ssl` và `curl.exe -sI https://api.34-124-198-171.sslip.io/mcp` (không dùng `-k`, xác thực chuỗi tin cậy mặc định của hệ điều hành): TLS bắt tay thành công với `subject = api.34-124-198-171.sslip.io`, `issuer = Let's Encrypt`, và `agentgateway` trả `401 Unauthorized` (`no bearer token found`) chứng tỏ luồng HTTPS đã thông suốt tới gateway.
+Trên GKE, `cert-manager` cấp thành công chứng chỉ **Let's Encrypt (`YR2`)** cho `api.34-124-198-171.sslip.io` (`certificate/api-booking-tls` `READY = True`, hiệu lực `2026-11-21` → `2027-02-19`). Kiểm tra trực tiếp bằng Python `ssl` và `curl.exe -sI https://api.34-124-198-171.sslip.io/mcp` (không dùng `-k`): TLS bắt tay thành công với chuỗi tin cậy hợp lệ và `agentgateway` trả `401 Unauthorized` (`no bearer token found`), chứng tỏ luồng HTTPS đã thông suốt tới gateway.
 
 ![Chứng chỉ Let's Encrypt thật cho api.34-124-198-171.sslip.io](../images/edai-2/https-cert-cli.png)
 
