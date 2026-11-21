@@ -14,7 +14,9 @@ retrain với since = ngày phát hiện, khi booking sau mốc đã chín nhãn
 from kfp import compiler, dsl, kubernetes
 from kfp.dsl import Dataset, Input, Metrics, Model, Output
 
-BASE_IMAGE = "registry.booking.local/ml/train-base:1.4"   # có sẵn ml/data_version.py + pyiceberg[sql-postgres,s3fs]
+import os
+
+BASE_IMAGE = os.getenv("TRAIN_BASE_IMAGE", "asia-southeast1-docker.pkg.dev/hotel-booking-edai2/booking/ml/train-base:1.4")   # có sẵn ml/data_version.py + pyiceberg[sql-postgres,s3fs]
 MLFLOW_URI = "http://mlflow.mlops.svc.cluster.local:5000"
 MODEL_NAME = "cancel-risk"
 # Cổng promote: AUC >= MIN_AUC (sàn chặn model hỏng), lệch calibration <= MAX_CALIB_GAP (overbooking dùng thẳng
@@ -195,9 +197,17 @@ def training_pipeline(since: str = "2025-01-01", until: str = "2025-06-01", samp
     """Nối 4 step. Lần đầu train trên [since, until) trước mốc drift (booking tới until - 90 ngày); retrain do
     drift_monitor truyền since = ngày phát hiện để train và validation cùng chế độ dữ liệu sau drift."""
     loaded = load_from_feast(features=FEATURES, label_sql=LABEL_SQL, since=since, until=until, sample_pct=sample_pct)
-    # DSN warehouse (user ml_reader), catalog Iceberg, endpoint S3 lấy từ Secret ml-warehouse, không viết trong code
+    # DSN warehouse (user ml_reader), catalog Iceberg, endpoint S3, Feast PG lấy từ Secret ml-warehouse, không viết trong code
     kubernetes.use_secret_as_env(loaded, secret_name="ml-warehouse", secret_key_to_env={
-        "warehouse_dsn": "WAREHOUSE_DSN", "iceberg_catalog_uri": "ICEBERG_CATALOG_URI", "s3_endpoint": "S3_ENDPOINT"})
+        "warehouse_dsn": "WAREHOUSE_DSN",
+        "iceberg_catalog_uri": "ICEBERG_CATALOG_URI",
+        "s3_endpoint": "S3_ENDPOINT",
+        "aws_access_key_id": "AWS_ACCESS_KEY_ID",
+        "aws_secret_access_key": "AWS_SECRET_ACCESS_KEY",
+        "feast_pg_password": "FEAST_PG_PASSWORD",
+    })
+    loaded.set_env_variable(name="FEAST_PG_HOST", value="postgres.data.svc.cluster.local")
+    loaded.set_env_variable(name="FEAST_PG_USER", value="postgres")
     split = split_by_time(data=loaded.outputs["data"])
     with dsl.If(distributed == True):  # noqa: E712 (biểu thức điều kiện của KFP, không phải so sánh Python)
         dist = train_distributed(train=split.outputs["train"], inputs=MODEL_INPUTS, label=LABEL,

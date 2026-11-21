@@ -5,15 +5,15 @@ Notebook, Kubeflow pipeline, training phân tán, MLflow và versioning dữ li�
 <a id="edai-2-13"></a>
 ## Training pipeline 4 bước (Load Feast → Split → Train → Evaluate)
 
-Code pipeline: `edai2/ml/` (`run_steps.py` và các component KFP cho mô hình `cancel-risk`).
+Code pipeline: [`edai2/ml/training_pipeline.py`](../../edai2/ml/training_pipeline.py), [`edai2/ci/kfp_run.py`](../../edai2/ci/kfp_run.py) và [`edai2/ml/run_steps.py`](../../edai2/ml/run_steps.py) cho mô hình `cancel-risk`.
 
 Pipeline gồm 4 bước: `load_from_feast` → `split_by_time` → `train` → `evaluate_and_register`. Dữ liệu lấy theo cửa sổ thời gian (`[2025-01-01, 2025-06-01)` cho v1, sau mốc drift `2025-06-01` cho v2), lấy mẫu `sample_pct` theo `booking_id`, sử dụng nhãn từ view `gold.labels_cancel` (chỉ gồm booking đã chín nhãn) cùng các feature như `loyalty_tier`, `has_customer_history`.
 
-Trên GKE, cả 4 bước đã chạy thành công tuần tự qua `ml/run_steps.py` trong Job `train-cancel-risk` (image `train-base`, mẫu 5% booking, train XGBoost 1 node). Dữ liệu tập train được phiên bản hoá thành bảng Iceberg `ml.train_cancel_risk`. Trong quá trình chạy, lỗi `LABEL_SQL` dùng toán tử `%` (bị `pd.read_sql` qua psycopg 3 hiểu nhầm là placeholder) đã được phát hiện và sửa thành `mod(booking_id, 100)`.
+Sau khi nâng quota CPU lên 32 vCPU và triển khai **Kubeflow Pipelines 2.4.1** vào namespace `kubeflow` trên GKE, pipeline `cancel-risk-training` (run `train-68da7f7-v2`, mẫu 5% booking, `distributed=False`) đã chạy thành công đủ 4 bước (`Succeeded`), lưu phiên bản tập train vào bảng Iceberg `ml.train_cancel_risk` và ghi nhận model/metric lên MLflow. Trước đó, pipeline cũng đã chạy kiểm chứng qua `ml/run_steps.py` (Job `train-cancel-risk`) và xử lý lỗi `LABEL_SQL` dùng `%` (đổi sang `mod(booking_id, 100)` cho psycopg 3).
+
+![Kubeflow Pipelines UI: run train-68da7f7-v2 hoàn thành 4 step](../images/edai-2/kfp-pipeline-run.png)
 
 ![Job train-cancel-risk hoàn thành 4 step trên GKE và bảng Iceberg ml.train_cancel_risk trong Postgres](../images/edai-2/ml-run-steps.png)
-
-**[update sau]:** Do cluster GKE hiện tại chỉ có quota 12 vCPU nên chưa đủ tài nguyên triển khai Kubeflow Pipelines (KFP) và Kubeflow Trainer. Ý tưởng tiếp theo là khi quota được nâng cấp, deploy KFP để điều phối trực tiếp pipeline 4 bước này trên giao diện KFP và kích hoạt nhánh `train_distributed`, sau đó bổ sung ảnh chụp run trên KFP UI.
 
 <a id="edai-2-14"></a>
 ## Theo dõi thí nghiệm, model registry và versioning dữ liệu với MLflow
