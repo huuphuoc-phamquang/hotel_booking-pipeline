@@ -73,7 +73,7 @@ Jaeger ([`observability/stack/jaeger.yaml`](../../edai2/observability/stack/jaeg
 
 `llm_metrics.py` đo số token vào, ra và tổng, thời gian round-trip, TTFT và số lần chặn PII (dãy số thẻ chỉ bị coi là PII khi qua kiểm tra Luhn và không đứng sau tiền tố `BK-`). `edai2/tests/test_llm_metrics.py` (11 test, coverage 100%) chạy cục bộ và đạt.
 
-**[update sau]:** Bổ sung ảnh chụp metric `llm_metrics` thực tế trên Grafana của cluster.
+**[update sau]:** `llm_metrics.py` hiện mới kiểm thử qua unit test, chưa được deploy thành proxy/endpoint để Prometheus scrape trên cluster (nên Prometheus chưa có các metric `llm_tokens_total`, `llm_ttft_seconds`, `llm_pii_blocked_total`; phần token và latency từ `agentgateway` đã được theo dõi trên dashboard `agent-ab` ở [ab_testing.md](ab_testing.md)). Khi tích hợp endpoint `/metrics` này lên cluster sẽ bổ sung ảnh chụp dashboard `LLM + agent` trên Grafana.
 
 <a id="edai-2-51"></a>
 ## Telemetry cho Agent và MCP Tools
