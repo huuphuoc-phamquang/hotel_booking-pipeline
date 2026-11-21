@@ -71,9 +71,13 @@ Jaeger ([`observability/stack/jaeger.yaml`](../../edai2/observability/stack/jaeg
 <a id="edai-2-50"></a>
 ## Telemetry cho LLM (token, TTFT, PII blocking)
 
-`llm_metrics.py` đo số token vào, ra và tổng, thời gian round-trip, TTFT và số lần chặn PII (dãy số thẻ chỉ bị coi là PII khi qua kiểm tra Luhn và không đứng sau tiền tố `BK-`). `edai2/tests/test_llm_metrics.py` (11 test, coverage 100%) chạy cục bộ và đạt.
+[`edai2/observability/llm_metrics.py`](../../edai2/observability/llm_metrics.py) đo số token vào, ra và tổng (`llm_tokens_total`), thời gian round-trip (`llm_request_seconds`), TTFT (`llm_ttft_seconds`) và số lần chặn PII (`llm_pii_blocked_total`; dãy số thẻ chỉ bị coi là PII khi qua kiểm tra Luhn và không đứng sau tiền tố `BK-`). `edai2/tests/test_llm_metrics.py` (11 test, coverage 100%) chạy cục bộ và đạt.
 
-**[update sau]:** `llm_metrics.py` hiện mới kiểm thử qua unit test, chưa được deploy thành proxy/endpoint để Prometheus scrape trên cluster (nên Prometheus chưa có các metric `llm_tokens_total`, `llm_ttft_seconds`, `llm_pii_blocked_total`; phần token và latency từ `agentgateway` đã được theo dõi trên dashboard `agent-ab` ở [ab_testing.md](ab_testing.md)). Khi tích hợp endpoint `/metrics` này lên cluster sẽ bổ sung ảnh chụp dashboard `LLM + agent` trên Grafana.
+Trên GKE (namespace `gateway`), [`edai2/observability/llm_proxy.py`](../../edai2/observability/llm_proxy.py) và [`edai2/k8s/llm-proxy.yaml`](../../edai2/k8s/llm-proxy.yaml) bọc `llm_metrics.py` thành HTTP proxy (`/v1/chat/completions` → `agentgateway` → vLLM) kèm endpoint `/metrics` và `ServiceMonitor` để Prometheus scrape mỗi 15 giây lên dashboard [`observability/dashboards/llm-agents.json`](../../edai2/observability/dashboards/llm-agents.json).
+
+Kiểm thử thực tế trên cluster: các prompt chứa PII (`card`, `cccd`, `phone_vn`) bị chặn ngay với HTTP `400`, còn các request hợp lệ tới `qwen-3b` và `qwen-booking-v2` (bao gồm mã `BK-90000919211`) đi qua thành công (`200 OK`), hiển thị đầy đủ cả 4 panel (*Token/giây theo model*, *TTFT p95*, *Round-trip p95*, *Prompt bị chặn vì PII*) trên Grafana.
+
+![Grafana: Telemetry cho LLM (Token/s, TTFT p95, Round-trip p95, PII blocked)](../images/edai-2/grafana-llm-metrics.png)
 
 <a id="edai-2-51"></a>
 ## Telemetry cho Agent và MCP Tools
