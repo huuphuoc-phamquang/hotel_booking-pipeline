@@ -20,3 +20,16 @@ REST `/v1/cancel-risk` lấy feature từ Feast rồi gọi KServe: 20/20 lời 
 
 ![Jaeger: booking-mcp → Feast → KServe](../images/edai-2/jaeger-trace-kserve.png)
 
+## Kiểm thử Real-time Drift Detection (`drift-api` + `alibi-detect` KSDrift)
+
+[`edai2/drift_api/drift_api.py`](../../edai2/drift_api/drift_api.py) chạy FastAPI nhận batch feature (hoặc CloudEvent từ Knative Eventing), tích lũy đủ `WINDOW` dòng rồi chạy `KSDrift` trên `lead_days` so với tập reference khi train (`gamma(2, 10)`).
+
+Kiểm thử trong container `python:3.12-slim` (`pytest tests/test_drift_api.py -v`: **9/9 test pass**) và mô phỏng phân phối trước/sau mốc drift `2025-06-01` (`WINDOW=500`, `lead_days * 1.5`):
+- **Trước `2025-06-01` (`PRE_2025_06_01`):** `is_drift=False`, `p_val=0.8746`
+- **Sau `2025-06-01` (`POST_2025_06_01`):** `is_drift=True`, `p_val=3.11e-21`
+
+![Unit test drift-api đạt 9/9 test](../images/edai-2/drift-api-tests.jpg)
+
+![Kiểm thử drift-api KSDrift trước/sau mốc 2025-06-01 và CrossHair](../images/edai-2/drift-ksdrift-crosshair.jpg)
+
+

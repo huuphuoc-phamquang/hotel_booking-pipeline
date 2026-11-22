@@ -50,6 +50,10 @@ gọi tool MCP `predict_cancellation` hai lần cho cùng booking. Cả hai ki�
 
 ![Hypothesis: 2 test idempotent](../images/edai-2/hypothesis-idempotent.png)
 
+Ngoài ra, kiểm thử symbolic execution bằng `hypothesis-crosshair` (`@settings(backend="crosshair", max_examples=15)`) cho hàm `limit` trong [`edai2/mcp_server/overbooking.py`](../../edai2/mcp_server/overbooking.py) đạt **15/15 ví dụ, 0 lỗi phản chứng** (`0 <= K <= rooms`).
+
+![Hypothesis với backend CrossHair trên overbooking.limit](../images/edai-2/crosshair-hypothesis.png)
+
 <a id="edai-2-32"></a>
 ## Kiểm thử tải (Load Test) Web API với Locust
 

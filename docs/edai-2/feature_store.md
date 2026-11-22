@@ -38,3 +38,16 @@ Tổng hợp dữ liệu trên `feast_online` sau quá trình materialize:
 ![Log task materialize của feast_materialize_realtime](../images/edai-2/airflow-materialize-realtime-log.png)
 
 ![Dữ liệu hotel_realtime trên cả Offline Store và Online Store](../images/edai-2/feast-realtime-offline-online.png)
+
+## Chọn TTL cho từng FeatureView
+
+Code định nghĩa tại [`edai2/feature_repo/features.py`](../../edai2/feature_repo/features.py). `ttl` là độ cũ tối đa của một dòng feature khi đọc từ online/offline store (khác với cửa sổ tổng hợp `90d` / `7d` / `1h`):
+
+| FeatureView | Entity | TTL | Lý do chọn |
+|---|---|---|---|
+| `booking_attributes` | `booking_id` | `365 ngày` | Thuộc tính tĩnh của booking (`lead_days`, `nights`, `free_cancel`, `loyalty_tier`); cần đọc để chấm điểm rủi ro huỷ cho tới ngày nhận phòng (lead time tối đa dưới 1 năm). |
+| `customer_booking_stats` | `customer_id` | `90 ngày` | Khách chỉ đặt 1–2 lần/năm, dòng feature chỉ ghi khi có hoạt động; quá 90 ngày không đặt mới thì `bookings_90d` đã về `0` nên không cần giữ bản cũ. |
+| `hotel_demand` | `hotel_id` | `2 ngày` | Khách sạn có snapshot nhu cầu hằng ngày (`bookings_7d`, `cancel_rate_30d`); giữ 2 ngày để dự phòng trễ 1 nhịp batch ngày mà vẫn tránh dùng số liệu cũ. |
+| `hotel_realtime` | `hotel_id` | `2 giờ` | Feature streaming (`bookings_1h`) từ Flink đẩy mỗi 5 phút; nhu cầu phòng cũ hơn 2 giờ không còn phản ánh áp lực đặt phòng hiện tại. |
+| `policy_chunks` | `chunk_id` | `365 ngày` | Vector embedding tài liệu chính sách huỷ/hoàn tiền dùng cho RAG; nội dung ít thay đổi, chỉ cập nhật khi pipeline RAG ingest lại tài liệu. |
+
