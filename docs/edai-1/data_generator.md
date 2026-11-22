@@ -56,6 +56,58 @@ Mẫu: ngày [15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345], đủ 16
 | Trễ > 75 phút (side output nhánh trượt 1 giờ) | 0.88% |
 | Qua channel manager (trễ 1–4 giờ) | 0.97% |
 
+![Cấu hình skew trong generator/config.yaml](../images/edai-1/generator-config-skew.png)
+
+![Cấu hình concept drift và covariate drift trong generator/config.yaml](../images/edai-1/generator-config-drift.png)
+
+### Kết quả kiểm chứng drift trực tiếp từ `generator/profile_data.py`
+
+> Kết quả dưới đây lấy trực tiếp từ output lệnh `python -m generator.profile_data 15,200` (so sánh ngày `15` trước drift và ngày `200` sau mốc drift `2025-06-01`, đủ 16 shard; số cả năm = mẫu × 182, `config_sha256 94e5c466f09d`, xem [ảnh chụp terminal](../images/edai-1/generator-profile-drift.jpg)).
+
+| Bảng | Dòng / ngày | Byte / dòng (Parquet zstd) | Dòng / năm | Dung lượng / năm |
+|---|---|---|---|---|
+| quotes | 42,225,380 | 8.4 | 15.41 tỉ | 129.8 GB |
+| bookings | 409,825 | 24.4 | 0.15 tỉ | 3.6 GB |
+| cancellations | 159,708 | 15.4 | 0.06 tỉ | 0.9 GB |
+| **tổng** | | | | **134.3 GB** |
+
+| Phễu và lỗi dữ liệu | Giá trị |
+|---|---|
+| Đặt / lượt xem (look-to-book) | 0.95% |
+| Lượt xem gặp hết phòng | 6.07% |
+| Double submit (dòng thừa / booking) | 2.02% |
+| Tỉ lệ huỷ trước drift | 32.8% |
+| Lead time trung bình trước drift (covariate drift) | 17.9 ngày |
+| Tỉ lệ huỷ sau drift | 47.0% |
+| Lead time trung bình sau drift (covariate drift) | 27.3 ngày |
+| Booking schema v1 / v2 trong mẫu | 416,240 / 403,410 |
+
+| Skew theo khách sạn (mỗi ngày, trung bình mẫu) | Lượt xem | Booking |
+|---|---|---|
+| Top 1 khách sạn | 2.6% | 2.7% |
+| Top 10 khách sạn | 9.1% | 9.1% |
+| Top 1% khách sạn | 33.0% | 33.1% |
+| Khách sạn trung vị (dòng / ngày) | 328 | 3.5 |
+
+| Khách (1 năm) | Giá trị |
+|---|---|
+| Booking / khách (trung bình) | 4.9 |
+| Khách không đặt trong năm | 20% |
+| Khách có đặt: trung vị / p99 | 3 / 44 |
+
+| Trần AUC (điểm = công thức nhãn thật) | Trước drift | Sau drift |
+|---|---|---|
+| oracle (biết propensity ẩn) | 0.734 | 0.745 |
+| lead + policy + loyalty (input của cancel-risk, chưa tính lịch sử khách) | 0.681 | 0.698 |
+| lead + policy (bỏ loyalty) | 0.647 | 0.669 |
+
+| Event trễ (booking_created, 1 shard) | Tỉ lệ |
+|---|---|
+| Trễ 10–15 phút (vào lại qua allowed lateness) | 6.02% |
+| Trễ > 15 phút (side output nhánh tumbling 1 phút) | 6.87% |
+| Trễ > 75 phút (side output nhánh trượt 1 giờ) | 0.92% |
+| Qua channel manager (trễ 1–4 giờ) | 1.01% |
+
 <a id="edai-1-5"></a>
 ## Mô phỏng lệch phân phối (Data Skew)
 
