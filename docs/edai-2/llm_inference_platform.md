@@ -15,6 +15,8 @@ Trong namespace `llm`, hệ thống triển khai `Deployment/vllm-booking` và `
 
 Pod chiếm 10.326 MiB / 12.288 MiB VRAM cho trọng số và KV Cache. Endpoint `/v1/models` đăng ký thành công model gốc `qwen-booking` và adapter `qwen-booking-v1`. Lời gọi thử nghiệm `/v1/chat/completions` xử lý hội thoại chính sách đặt phòng trả lời hoàn tất (HTTP 200, tốc độ sinh ~78 token/giây), đồng thời phục vụ trực tiếp cho các agent trên **Agent Workbench** qua `agentgateway` (8,9 giây, `completed`, 934/132 tokens). Manifest chuẩn KServe mẫu được lưu trữ tại [`edai2/llm_platform/llm-inference.yaml`](../../edai2/llm_platform/llm-inference.yaml).
 
+![Pod vllm-booking Ready trên K3s GPU node (ALLOCATABLE_GPU=1)](../images/edai-2/vllm-pod-ready.png)
+
 ![Agent Workbench gọi inference trực tiếp qua agentgateway tới vLLM trên RTX 3060](../images/edai-2/vllm-workbench-rtx3060.jpg)
 
 <a id="edai-2-4"></a>

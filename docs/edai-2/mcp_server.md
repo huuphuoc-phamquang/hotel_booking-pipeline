@@ -66,7 +66,13 @@ khoảng 2,5 phút tới khi Ready.
 <a id="edai-2-20"></a>
 ## Chạy Agent trong Sandbox (Agent Substrate)
 
-**[update sau]:** Đã thiết kế cấu hình trong `k8s/agent-substrate.yaml` gồm `WorkerPool` gVisor, `SandboxAgent` cho `data-agent` và `NetworkPolicy` giới hạn agent chỉ được gọi tới `agentgateway` và DNS. Do `kagent 0.9.12` hiện tại chưa hỗ trợ Agent Substrate, phần triển khai thực tế sẽ thực hiện khi nâng cấp lên `kagent 1.x` và bổ sung ảnh chứng minh sau.
+Hệ thống đã triển khai **Agent Substrate 1.0.1** kết hợp **kagent 1.0.1** trong [agent-substrate-v1.yaml](../../edai2/k8s/agent-substrate-v1.yaml) để cô lập toàn bộ agent ở hai lớp runtime và mạng:
+
+- **Runtime Sandbox gVisor:** `SandboxConfig/gvisor-default` (`class: gvisor`, `v7`) gắn trên `WorkerPool/agents-warm` (`ateworker-gvisor:v1.0.1`), cô lập tiến trình agent bằng user-space kernel gVisor thay vì chạy trực tiếp trên host kernel.
+- **L7 Egress Allowlist (`EgressPolicy/agents-gateway-only`):** gắn qua `egressPolicyRefs` cho cả 4 agent (`coordinator-agent`, `data-agent`, `policy-agent`, `policy-agent-v2`, đạt `EgressPoliciesApplied=True`). Toàn bộ HTTP/HTTPS từ sandbox được định tuyến qua proxy mTLS/CONNECT `atenet-egress` và chỉ được phép gọi tới `http://vllm-booking.llm.svc.cluster.local:8000` (kèm secret injection `OPENAI_API_KEY` qua `k8s-credential-provider`) và `http://agentgateway.gateway.svc.cluster.local:3000`.
+- **mTLS Ingress (`atenet-router`) & L4 `NetworkPolicy`:** `atenet-router` chỉ chấp nhận kết nối mTLS có SPIFFE ID `spiffe://cluster.local/ns/kagent/sa/kagent-controller`; ở tầng L4, `NetworkPolicy/agents-egress-only-gateway` và `NetworkPolicy/substrate-agents-warm` (áp trên `ate.dev/worker-pool=agents-warm`) thực thi qua `kube-router` iptables chỉ mở `ate-system`, `llm:8000`, `gateway:3000`, `kube-dns:53` và từ chối mọi egress khác bằng `REJECT --reject-with icmp-port-unreachable` (đã xác minh live probe: `vllm-booking:8000` trả `HTTP 200`, còn `1.1.1.1` và `kagent-ui:8080` bị chặn `HTTP 000`).
+
+![Agent Substrate gVisor Sandbox và Egress isolation](../images/edai-2/substrate-sandbox.jpg)
 
 <a id="edai-2-21"></a>
 ## Đăng ký data-agent lên agentregistry
@@ -79,7 +85,6 @@ controller chứ không qua `/a2a/policy-agent` của gateway, vì route đó ch
 dừng nếu tên trong card không khớp agent. Stage `Deploy agents` của [`ci/Jenkinsfile`](../../edai2/ci/Jenkinsfile)
 gọi script này cho cả 4 agent sau khi rollout.
 
-Script được chạy từ máy của nhóm (port-forward tới controller và registry) với tag `f808e37`:
-`data-agent` (tool `get_booking_features`) có trên registry kèm MCP server `booking-tools`. Stage Jenkins chưa chạy vì tham số `WITH_AGENTS` còn tắt.
+Script đã được chạy cả thủ công (tag `f808e37`) và tự động trong Jenkins `booking-mcp` Build #19 (`WITH_AGENTS=true`, tag `762fa7b`): `data-agent` (tool `get_booking_features`) có trên registry kèm MCP server `booking-tools`.
 
 ![agentregistry: catalog 4 agent](../images/edai-2/registry-agents.png)

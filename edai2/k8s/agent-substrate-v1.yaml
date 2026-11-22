@@ -1,0 +1,124 @@
+# Agent Substrate (kagent 1.0.1 / api.kagent.dev/v1alpha3) cho Sandbox & Warm-up (rubric edai-2 dòng 20, 22, 27):
+# - 4 Agent (data-agent, policy-agent, policy-agent-v2, coordinator-agent) chạy qua Harness kagent-default
+# - Chia sẻ chung 1 WorkerPool warm `agents-warm` (2 replica gVisor `gvisor-default`, RustFS actor snapshot)
+# - EgressPolicy `agents-gateway-only` giới hạn kết nối ra ngoài của sandbox qua atenet-egress + NetworkPolicy
+apiVersion: api.kagent.dev/v1alpha3
+kind: ModelConfig
+metadata:
+  name: vllm-booking-config
+  namespace: kagent
+spec:
+  provider: OpenAI
+  model: qwen-booking
+  apiKeySecret: kagent-openai
+  apiKeySecretKey: OPENAI_API_KEY
+  openAI:
+    baseUrl: http://vllm-booking.llm.svc.cluster.local:8000/v1
+  stream: false
+---
+apiVersion: api.kagent.dev/v1alpha3
+kind: EgressPolicy
+metadata:
+  name: agents-gateway-only
+  namespace: kagent
+spec:
+  destinations:
+    - origin: http://vllm-booking.llm.svc.cluster.local:8000
+    - origin: http://agentgateway.gateway.svc.cluster.local:3000
+---
+apiVersion: api.kagent.dev/v1alpha3
+kind: Agent
+metadata:
+  name: data-agent
+  namespace: kagent
+spec:
+  harnessRef:
+    name: kagent-default
+  egressPolicyRefs:
+    - name: agents-gateway-only
+  template:
+    inline:
+      description: Trả lời dữ liệu lịch sử đặt/huỷ của khách và nhu cầu hiện tại của khách sạn trong sandbox gVisor
+      modelConfig:
+        name: vllm-booking-config
+      systemPrompt: |
+        Bạn là trợ lý dữ liệu đặt phòng khách sạn. Hãy trả lời ngắn gọn, chính xác bằng tiếng Việt dựa trên thông tin được cung cấp.
+---
+apiVersion: api.kagent.dev/v1alpha3
+kind: Agent
+metadata:
+  name: policy-agent
+  namespace: kagent
+spec:
+  harnessRef:
+    name: kagent-default
+  egressPolicyRefs:
+    - name: agents-gateway-only
+  template:
+    inline:
+      description: Ước lượng rủi ro huỷ phòng, đề xuất overbooking K và giải thích chính sách trong sandbox gVisor (bản v1)
+      modelConfig:
+        name: vllm-booking-config
+      systemPrompt: |
+        Bạn là trợ lý chính sách huỷ phòng và overbooking khách sạn (phiên bản v1). Trả lời ngắn gọn bằng tiếng Việt.
+---
+apiVersion: api.kagent.dev/v1alpha3
+kind: Agent
+metadata:
+  name: policy-agent-v2
+  namespace: kagent
+spec:
+  harnessRef:
+    name: kagent-default
+  egressPolicyRefs:
+    - name: agents-gateway-only
+  template:
+    inline:
+      description: Ước lượng rủi ro huỷ phòng, đề xuất overbooking K và giải thích chính sách trong sandbox gVisor (bản v2)
+      modelConfig:
+        name: vllm-booking-config
+      systemPrompt: |
+        Bạn là trợ lý chính sách huỷ phòng và overbooking khách sạn (phiên bản v2). Nêu rõ giới hạn K và lý do ngắn gọn bằng tiếng Việt.
+---
+apiVersion: api.kagent.dev/v1alpha3
+kind: Agent
+metadata:
+  name: coordinator-agent
+  namespace: kagent
+spec:
+  harnessRef:
+    name: kagent-default
+  egressPolicyRefs:
+    - name: agents-gateway-only
+  template:
+    inline:
+      description: Coordinator điều phối data-agent và policy-agent trong sandbox gVisor
+      modelConfig:
+        name: vllm-booking-config
+      systemPrompt: |
+        Bạn là Coordinator điều phối câu hỏi của nhân viên khách sạn giữa data-agent và policy-agent, tổng hợp kết quả gọn bằng tiếng Việt.
+---
+# Bổ sung NetworkPolicy ở lớp L4 cho WorkerPool agents-warm (chỉ cho phép gọi atenet-egress/ate-system, vLLM và DNS)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: agents-egress-only-gateway
+  namespace: kagent
+spec:
+  podSelector:
+    matchLabels:
+      ate.dev/worker-pool: agents-warm
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: ate-system } }
+    - to:
+        - namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: gateway } }
+      ports: [{ port: 3000, protocol: TCP }]
+    - to:
+        - namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: llm } }
+      ports: [{ port: 8000, protocol: TCP }]
+    - to:
+        - namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: kube-system } }
+          podSelector: { matchLabels: { k8s-app: kube-dns } }
+      ports: [{ port: 53, protocol: UDP }, { port: 53, protocol: TCP }]
