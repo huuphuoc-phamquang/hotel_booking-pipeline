@@ -61,10 +61,9 @@ Mẫu: ngày [15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345], đủ 16
 
 Lượt xem và booking lệch theo phân phối Zipf của khách sạn (`hotel_zipf_a`); 70% khách sạn tập trung ở
 3 thành phố. Mùa cao điểm tính theo `stay_date` (Tết, 30/4, hè, cả năm 2026), còn sự kiện chỉ tác động từ
-`announce_date`. Độ lệch nặng nhất nằm ở các cặp (`hotel_id`, `stay_date`) nóng. `generator/cardinality.py` đo
-cardinality từng cột: `python -m generator.cardinality 195 <file png>` chạy trên dữ liệu ngày 2025-07-15.
-Quotes lấy shard 0 (2.379.119 dòng); mỗi shard chỉ giữ 1/16 số khách sạn nên `hotel_id` ở đây có 3.125 giá trị.
-Bookings lấy đủ 16 shard trên landing (409.892 dòng).
+`announce_date`, khiến độ lệch nặng nhất dồn vào các cặp (`hotel_id`, `stay_date`) nóng.
+
+Để kiểm chứng độ phân tán sau khi sinh dữ liệu, [cardinality.py](../../edai1/generator/cardinality.py) thống kê cardinality trên mẫu ngày 2025-07-15: quotes lấy shard 0 (2.379.119 dòng; mỗi shard giữ 1/16 số khách sạn nên `hotel_id` có 3.125 giá trị), còn bookings lấy đủ 16 shard trên landing (409.892 dòng).
 
 Cardinality bằng số giá trị khác nhau chia số dòng; mức high từ 50% trở lên, low dưới 1%.
 
