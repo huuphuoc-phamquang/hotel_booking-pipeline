@@ -9,9 +9,17 @@ Code pipeline: [`edai2/ml/training_pipeline.py`](../../edai2/ml/training_pipelin
 
 Pipeline gồm 4 bước: `load_from_feast` → `split_by_time` → `train` → `evaluate_and_register`. Dữ liệu lấy theo cửa sổ thời gian (`[2025-01-01, 2025-06-01)` cho v1, sau mốc drift `2025-06-01` cho v2), lấy mẫu `sample_pct` theo `booking_id`, sử dụng nhãn từ view `gold.labels_cancel` (chỉ gồm booking đã chín nhãn) cùng các feature như `loyalty_tier`, `has_customer_history`.
 
-Sau khi nâng quota CPU lên 32 vCPU và triển khai **Kubeflow Pipelines 2.4.1** vào namespace `kubeflow` trên GKE, pipeline `cancel-risk-training` (run `train-68da7f7-v2`, mẫu 5% booking, `distributed=False`) đã chạy thành công đủ 4 bước (`Succeeded`), lưu phiên bản tập train vào bảng Iceberg `ml.train_cancel_risk` và ghi nhận model/metric lên MLflow. Trước đó, pipeline cũng đã chạy kiểm chứng qua `ml/run_steps.py` (Job `train-cancel-risk`) và xử lý lỗi `LABEL_SQL` dùng `%` (đổi sang `mod(booking_id, 100)` cho psycopg 3).
+Sau khi nâng quota CPU lên 32 vCPU và triển khai **Kubeflow Pipelines 2.4.1** vào namespace `kubeflow` trên GKE, cả hai nhánh thực thi của pipeline `cancel-risk-training` đều đã chạy thành công (`Succeeded`), lưu phiên bản tập train vào bảng Iceberg `ml.train_cancel_risk` và ghi nhận model/metric lên MLflow:
+- **Nhánh 1 node (`distributed=False`, run `train-68da7f7-v2`):** chạy đủ 4 step (`load_from_feast` → `split_by_time` → `train` → `evaluate_and_register`).
+- **Nhánh phân tán (`distributed=True`, run `train-dist-v10`):** cài đặt **Kubeflow Trainer `v2.1.0`** + **JobSet** + runtime `xgboost-distributed` (`kubeflow-system`), step `train_distributed` tạo `TrainJob` `cancel-risk-ad05ea73` khởi chạy 2 worker pod XGBoost (`cancel-risk-ad05ea73-node-0-0-xhqln` và `cancel-risk-ad05ea73-node-0-1-q6pps`, đều `Completed`) đồng bộ qua `RabitTracker`, sau đó chuyển sang `evaluate_and_register` (`Succeeded`).
+
+Trước đó, pipeline cũng đã chạy kiểm chứng qua `ml/run_steps.py` (Job `train-cancel-risk`) và xử lý lỗi `LABEL_SQL` dùng `%` (đổi sang `mod(booking_id, 100)` cho psycopg 3).
 
 ![Kubeflow Pipelines UI: run train-68da7f7-v2 hoàn thành 4 step](../images/edai-2/kfp-pipeline-run.png)
+
+![Kubeflow Pipelines UI: nhánh distributed=True (train-distributed → evaluate-and-register)](../images/edai-2/kfp-distributed-run.png)
+
+![Kubeflow Trainer: TrainJob cancel-risk-ad05ea73 Complete với 2 worker pod Completed](../images/edai-2/kubeflow-trainer-dist.png)
 
 ![Job train-cancel-risk hoàn thành 4 step trên GKE và bảng Iceberg ml.train_cancel_risk trong Postgres](../images/edai-2/ml-run-steps.png)
 

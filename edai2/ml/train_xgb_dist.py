@@ -18,22 +18,37 @@ from xgboost import collective
 
 
 def tracker_args_from_env() -> dict:
-    return {"dmlc_tracker_uri": os.environ["DMLC_TRACKER_URI"], "dmlc_tracker_port": int(os.environ["DMLC_TRACKER_PORT"]),
-            "dmlc_task_id": os.environ.get("DMLC_TASK_ID", os.environ.get("JOB_COMPLETION_INDEX", "0"))}
+    if "DMLC_TRACKER_URI" in os.environ:
+        return {"dmlc_tracker_uri": os.environ["DMLC_TRACKER_URI"], "dmlc_tracker_port": int(os.environ["DMLC_TRACKER_PORT"]),
+                "dmlc_task_id": os.environ.get("DMLC_TASK_ID", os.environ.get("JOB_COMPLETION_INDEX", "0"))}
+    jobset = os.environ["JOBSET_NAME"]
+    rank = os.environ.get("JOB_COMPLETION_INDEX", "0")
+    return {"dmlc_tracker_uri": f"{jobset}-node-0-0.{jobset}", "dmlc_tracker_port": 9999, "dmlc_task_id": rank}
 
 
 def train_worker(tracker_args: dict, train_path: str, model_path: str, inputs: list[str], label: str,
                  n_estimators: int = 300, max_depth: int = 6) -> None:
-    with collective.CommunicatorContext(**tracker_args):
-        rank, world = collective.get_rank(), collective.get_world_size()
-        df = pd.read_parquet(train_path, columns=[*inputs, label]).iloc[rank::world]
-        params = {"objective": "binary:logistic", "tree_method": "hist", "max_depth": max_depth, "eval_metric": "auc"}
-        booster = xgb.train(params, xgb.DMatrix(df[inputs], label=df[label]), num_boost_round=n_estimators)
-        if rank == 0:
-            clf = xgb.XGBClassifier(n_estimators=n_estimators, max_depth=max_depth)
-            clf.load_model(booster.save_raw("json"))
-            with fsspec.open(model_path, "wb") as f:              # s3://... trên cluster, đường dẫn file khi test
-                joblib.dump(clf, f)
+    tracker = None
+    if tracker_args.get("dmlc_task_id") == "0" and "DMLC_TRACKER_URI" not in os.environ:
+        tracker = xgb.tracker.RabitTracker(host_ip="0.0.0.0", n_workers=int(os.environ.get("NUM_NODES", "2")),
+                                           port=tracker_args["dmlc_tracker_port"])
+        tracker.start()
+    try:
+        with collective.CommunicatorContext(**tracker_args):
+            rank, world = collective.get_rank(), collective.get_world_size()
+            df = pd.read_parquet(train_path, columns=[*inputs, label]).iloc[rank::world]
+            params = {"objective": "binary:logistic", "tree_method": "hist", "max_depth": max_depth, "eval_metric": "auc"}
+            booster = xgb.train(params, xgb.DMatrix(df[inputs], label=df[label]), num_boost_round=n_estimators)
+            if rank == 0:
+                clf = xgb.XGBClassifier(n_estimators=n_estimators, max_depth=max_depth)
+                clf.load_model(booster.save_raw("json"))
+                with fsspec.open(model_path, "wb") as f:          # s3://... trên cluster, đường dẫn file khi test
+                    joblib.dump(clf, f)
+    finally:
+        if tracker is not None:
+            tracker.wait_for(60)
+            if hasattr(tracker, "free"):
+                tracker.free()
 
 
 if __name__ == "__main__":

@@ -113,33 +113,56 @@ def train(train: Input[Dataset], model: Output[Model], inputs: list, label: str,
 
 @dsl.component(base_image=BASE_IMAGE)
 def train_distributed(train: Input[Dataset], model: Output[Model], inputs: list, label: str,
-                      n_estimators: int = 300, max_depth: int = 6, num_nodes: int = 2):
+                      n_estimators: int = 300, max_depth: int = 6, num_nodes: int = 2,
+                      trainer_image: str = "asia-southeast1-docker.pkg.dev/hotel-booking-edai2/booking/ml/train-base:1.4"):
     """Tạo TrainJob (Kubeflow Trainer, runtime xgboost-distributed) đọc tập train trên S3, đợi xong, chép model về."""
+    import os
+    import socket
     import time
     import uuid
 
     import fsspec
     from kubernetes import client, config
+    from xgboost.tracker import RabitTracker
     config.load_incluster_config()
     name = f"cancel-risk-{uuid.uuid4().hex[:8]}"
+    train_uri = train.uri.replace("minio://", "s3://", 1)
     out = f"s3://mlpipeline/trainjobs/{name}/model.joblib"
+    s3_endpoint = os.environ.get("AWS_ENDPOINT_URL", "http://minio-service.kubeflow.svc.cluster.local:9000")
+    pod_ip = socket.gethostbyname(socket.gethostname())
+    tracker = RabitTracker(host_ip="0.0.0.0", n_workers=num_nodes, port=29999)
+    tracker.start()
+    worker_env = [
+        {"name": "DMLC_TRACKER_URI", "value": pod_ip},
+        {"name": "DMLC_TRACKER_PORT", "value": "29999"},
+        {"name": "AWS_ENDPOINT_URL", "value": s3_endpoint},
+        {"name": "AWS_S3_ADDRESSING_STYLE", "value": "path"},
+        {"name": "AWS_ACCESS_KEY_ID", "valueFrom": {"secretKeyRef": {"name": "mlpipeline-minio-artifact", "key": "accesskey"}}},
+        {"name": "AWS_SECRET_ACCESS_KEY", "valueFrom": {"secretKeyRef": {"name": "mlpipeline-minio-artifact", "key": "secretkey"}}},
+    ]
     body = {"apiVersion": "trainer.kubeflow.org/v1alpha1", "kind": "TrainJob", "metadata": {"name": name},
             "spec": {"runtimeRef": {"name": "xgboost-distributed"},
-                     "trainer": {"image": "registry.booking.local/ml/train-base:1.4", "numNodes": num_nodes,
-                                 "command": ["python", "/app/ml/train_xgb_dist.py", train.uri, out, ",".join(inputs),
+                     "trainer": {"image": trainer_image, "numNodes": num_nodes,
+                                 "env": worker_env,
+                                 "command": ["python", "/app/ml/train_xgb_dist.py", train_uri, out, ",".join(inputs),
                                              label, str(n_estimators), str(max_depth)],
-                                 "resourcesPerNode": {"requests": {"cpu": "2", "memory": "4Gi"}}}}}
+                                 "resourcesPerNode": {"requests": {"cpu": "1", "memory": "2Gi"}}}}}
     api = client.CustomObjectsApi()
-    api.create_namespaced_custom_object("trainer.kubeflow.org", "v1alpha1", "kubeflow", "trainjobs", body)
-    while True:
-        conds = api.get_namespaced_custom_object("trainer.kubeflow.org", "v1alpha1", "kubeflow", "trainjobs", name)                    .get("status", {}).get("conditions", [])
-        done = {c["type"] for c in conds if c["status"] == "True"}
-        if "Failed" in done:
-            raise RuntimeError(f"TrainJob {name} failed: {conds}")
-        if "Complete" in done:
-            break
-        time.sleep(15)
-    with fsspec.open(out, "rb") as src, open(model.path, "wb") as dst:
+    try:
+        api.create_namespaced_custom_object("trainer.kubeflow.org", "v1alpha1", "kubeflow", "trainjobs", body)
+        while True:
+            conds = api.get_namespaced_custom_object("trainer.kubeflow.org", "v1alpha1", "kubeflow", "trainjobs", name).get("status", {}).get("conditions", [])
+            done = {c["type"] for c in conds if c["status"] == "True"}
+            if "Failed" in done:
+                raise RuntimeError(f"TrainJob {name} failed: {conds}")
+            if "Complete" in done:
+                break
+            time.sleep(15)
+        tracker.wait_for(60)
+    finally:
+        if hasattr(tracker, "free"):
+            tracker.free()
+    with fsspec.open(out, "rb", client_kwargs={"endpoint_url": s3_endpoint}) as src, open(model.path, "wb") as dst:
         dst.write(src.read())
 
 
@@ -211,14 +234,21 @@ def training_pipeline(since: str = "2025-01-01", until: str = "2025-06-01", samp
     split = split_by_time(data=loaded.outputs["data"])
     with dsl.If(distributed == True):  # noqa: E712 (biểu thức điều kiện của KFP, không phải so sánh Python)
         dist = train_distributed(train=split.outputs["train"], inputs=MODEL_INPUTS, label=LABEL,
-                                 n_estimators=n_estimators, max_depth=max_depth)
+                                 n_estimators=n_estimators, max_depth=max_depth, trainer_image=BASE_IMAGE)
+        kubernetes.use_secret_as_env(dist, secret_name="mlpipeline-minio-artifact", secret_key_to_env={
+            "accesskey": "AWS_ACCESS_KEY_ID", "secretkey": "AWS_SECRET_ACCESS_KEY"})
+        dist.set_env_variable(name="AWS_ENDPOINT_URL", value="http://minio-service.kubeflow.svc.cluster.local:9000")
+        evaluate_and_register(model=dist.outputs["model"], valid=split.outputs["valid"],
+                              train_data=split.outputs["train"], inputs=MODEL_INPUTS, label=LABEL,
+                              mlflow_uri=MLFLOW_URI, model_name=MODEL_NAME, min_auc=MIN_AUC, max_calib_gap=MAX_CALIB_GAP,
+                              train_snapshot_id=loaded.outputs["Output"])
     with dsl.Else():
         single = train(train=split.outputs["train"], inputs=MODEL_INPUTS, label=LABEL,
                        n_estimators=n_estimators, max_depth=max_depth)
-    evaluate_and_register(model=dsl.OneOf(dist.outputs["model"], single.outputs["model"]), valid=split.outputs["valid"],
-                          train_data=split.outputs["train"], inputs=MODEL_INPUTS, label=LABEL,
-                          mlflow_uri=MLFLOW_URI, model_name=MODEL_NAME, min_auc=MIN_AUC, max_calib_gap=MAX_CALIB_GAP,
-                          train_snapshot_id=loaded.outputs["Output"])
+        evaluate_and_register(model=single.outputs["model"], valid=split.outputs["valid"],
+                              train_data=split.outputs["train"], inputs=MODEL_INPUTS, label=LABEL,
+                              mlflow_uri=MLFLOW_URI, model_name=MODEL_NAME, min_auc=MIN_AUC, max_calib_gap=MAX_CALIB_GAP,
+                              train_snapshot_id=loaded.outputs["Output"])
 
 
 if __name__ == "__main__":
