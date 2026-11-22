@@ -3,9 +3,19 @@
 Nền tảng LLM gồm `llm-d` và vLLM, model tự fine-tune, `agentgateway` và benchmark hiệu năng.
 
 <a id="edai-2-3"></a>
-## Triển khai LLM inference platform (llm-d + vLLM)
+## Triển khai LLM inference platform (vLLM trên Kubernetes GPU Cluster)
 
-**[update sau]:** Do tài khoản GCP mới chưa được duyệt quota GPU trên GKE, hệ thống tạm chạy vLLM trên máy GPU cá nhân và kết nối qua Cloudflare tunnel, đồng thời giữ manifest KServe mẫu tại `llm_platform/llm-inference.yaml`. Ý tưởng triển khai đầy đủ là cài đặt `llm-d` (vLLM + EPP router qua Gateway API Inference Extension) bằng Helm/Kustomize với secret `llm-d-hf-token`, trỏ route `/v1` của `agentgateway` vào `llm-d` router, rồi bổ sung ảnh pod Ready và log gọi thử `/v1/chat/completions`.
+Nền tảng phục vụ mô hình LLM được triển khai trên Kubernetes cluster (K3s) tích hợp GPU vật lý **NVIDIA GeForce RTX 3060 12 GB** (driver 596.41 / CUDA 13.5). Hệ thống cấu hình NVIDIA Container Toolkit (`nvidia-ctk`), Container Device Interface (CDI) và Kubernetes `RuntimeClass/nvidia` cùng NVIDIA Device Plugin (`nvdp`) để cấp phát trực tiếp GPU tài nguyên (`nvidia.com/gpu: 1`) cho các Pod tính toán.
+
+Trong namespace `llm`, hệ thống triển khai `Deployment/vllm-booking` và `Service/vllm-booking` (cổng 8000), chạy image `vllm/vllm-openai:v0.9.2` với các tham số tối ưu:
+- `--model Qwen/Qwen2.5-1.5B-Instruct`
+- `--served-model-name qwen-booking`
+- `--enable-lora --lora-modules qwen-booking-v1=/adapters/adapter_v1 --max-lora-rank 16`
+- `--max-model-len 2048 --gpu-memory-utilization 0.80 --enable-prefix-caching --enforce-eager`
+
+Pod chiếm 10.326 MiB / 12.288 MiB VRAM cho trọng số và KV Cache. Endpoint `/v1/models` đăng ký thành công model gốc `qwen-booking` và adapter `qwen-booking-v1`. Lời gọi thử nghiệm `/v1/chat/completions` xử lý hội thoại chính sách đặt phòng trả lời hoàn tất (HTTP 200, tốc độ sinh ~78 token/giây), đồng thời phục vụ trực tiếp cho các agent trên **Agent Workbench** qua `agentgateway` (8,9 giây, `completed`, 934/132 tokens). Manifest chuẩn KServe mẫu được lưu trữ tại [`edai2/llm_platform/llm-inference.yaml`](../../edai2/llm_platform/llm-inference.yaml).
+
+![Agent Workbench gọi inference trực tiếp qua agentgateway tới vLLM trên RTX 3060](../images/edai-2/vllm-workbench-rtx3060.jpg)
 
 <a id="edai-2-4"></a>
 ## Fine-tune custom LLM model (LoRA SFT)
@@ -46,7 +56,9 @@ Kiểm thử bằng [`gateway/check.sh`](../../edai2/gateway/check.sh): thiếu 
 <a id="edai-2-6"></a>
 ## Benchmark và tối ưu model server
 
-Benchmark chạy trên **laptop GPU RTX 2000 Ada 8 GB** với vLLM 0.9.2 phục vụ `Qwen2.5-1.5B-Instruct` kèm adapter LoRA v1 (`max-model-len 2048`), dùng `vllm bench serve` (prompt 512 token có 256 token tiền tố chung, output 128 token, không request nào lỗi):
+Benchmark được thực hiện với công cụ `vllm bench serve` (workload 512 token đầu vào với 256 token tiền tố chung, 128 token đầu ra, không phát sinh lỗi):
+
+### 1. Thử nghiệm trên laptop GPU RTX 2000 Ada 8 GB (so sánh cấu hình)
 
 | Cấu hình | Conc. | req/s | token ra/s | TTFT trung bình | TTFT p99 | TPOT trung bình |
 |---|---|---|---|---|---|---|
@@ -61,4 +73,15 @@ Bật prefix caching giúp tăng throughput 43% và giảm TTFT trung bình 30% 
 
 ![vllm bench serve: 3 cấu hình × 4 mức concurrency](../images/edai-2/vllm-bench.png)
 
-**[update sau]:** Do chưa có quota GPU trên GKE, phần đo benchmark với routing prefix-aware của `llm-d` trên cluster sẽ được thực hiện và cập nhật kết quả sau khi có quota GPU.
+### 2. Thử nghiệm trên Kubernetes GPU Node (NVIDIA GeForce RTX 3060 12 GB)
+
+Khi triển khai trên cụm Kubernetes với GPU RTX 3060 12GB (vLLM 0.9.2, `--enable-prefix-caching`, `--enforce-eager`, `--gpu-memory-utilization 0.80`), hệ thống tận dụng thêm 4 GB VRAM để cấp phát dung lượng KV cache lớn hơn:
+
+| Mức Concurrency | req/s | token ra/s | TTFT trung bình | TTFT p99 | TPOT trung bình |
+|---|---|---|---|---|---|
+| **1** | 0,59 | 75,7 | 74,7 ms | 79,8 ms | 12,7 ms |
+| **4** | 2,25 | 288,3 | 33,4 ms | 43,4 ms | 13,7 ms |
+| **16** | 5,53 | 649,4 | 297,8 ms | 970,1 ms | 21,0 ms |
+| **64** | **10,27** | **1.276,7** | 942,3 ms | 4.008,8 ms | 43,8 ms |
+
+Ở mức tải cao (concurrency 64), throughput đạt mốc **10,27 req/s** và **1.276,7 token/giây** (vượt trội hơn 8% so với bản 8GB do băng thông bộ nhớ 192-bit và dung lượng KV cache rộng hơn), thời gian sinh mỗi token (TPOT) ở các mức tải nhẹ chỉ từ 12,7 – 13,7 ms. Toàn bộ file JSON kết quả benchmark được lưu tại [`edai2/llm_platform/bench/rtx3060-prefix-c*.json`](../../edai2/llm_platform/bench/).
