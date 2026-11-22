@@ -78,6 +78,21 @@ binds:
                     - name: booking-tools
                       mcp: { host: http://booking-mcp.agents.svc.cluster.local/mcp/ }   # Service mở cổng 80 (targetPort 8000)
 
+          - name: mcp-a2a
+            matches:
+              - path: { pathPrefix: /mcp-a2a }
+            policies:
+              jwtAuth: *jwt
+              urlRewrite: { path: { prefix: /mcp } }
+              mcpAuthorization:
+                rules:
+                  - 'mcp.tool.name in ["delegate_data_agent", "delegate_policy_agent"] && jwt.role == "coordinator-agent"'
+            backends:
+              - mcp:
+                  targets:
+                    - name: coordinator-a2a
+                      mcp: { host: http://a2a-bridge.agents.svc.cluster.local/mcp/ }
+
           # ---------- A2A Gateway: /a2a/<agent>/ -> pod agent (kagent phục vụ A2A ở /) ----------
           - name: a2a-data-agent
             matches:

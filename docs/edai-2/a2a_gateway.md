@@ -11,4 +11,6 @@ Kiểm thử bằng [`gateway/check.sh`](../../edai2/gateway/check.sh): agent ca
 
 ![Kiểm security & policy của agentgateway](../images/edai-2/agentgateway-check.png)
 
-**[update sau]:** Hiện tại luồng gọi từ bên ngoài vào các agent đã đi qua `agentgateway`, nhưng lời gọi nội bộ từ `coordinator-agent` tới các agent con vẫn đi thẳng trong cluster do `kagent v1alpha2` chỉ tham chiếu agent con theo tên Kubernetes. Hướng tiếp theo là cấu hình để lời gọi A2A giữa các agent cũng định tuyến qua `agentgateway` nhằm tập trung telemetry và kiểm soát quyền.
+Để lời gọi nội bộ từ `coordinator-agent` tới `data-agent` và `policy-agent` cũng đi qua `agentgateway` (thay vì gọi thẳng trong cluster do `kagent v1alpha2` chỉ tham chiếu agent con theo tên Kubernetes), hệ thống triển khai MCP server [`a2a-bridge`](../../edai2/gateway/a2a_bridge.py) (cung cấp 2 tool `delegate_data_agent` và `delegate_policy_agent`) đứng sau route `/mcp-a2a` trên `agentgateway` (xác thực JWT và kiểm tra quyền `jwt.role == "coordinator-agent"` qua CEL). Khi `coordinator-agent` cần điều phối, yêu cầu đi theo chuỗi `coordinator-agent` → `agentgateway (/mcp-a2a)` → `a2a-bridge` → `agentgateway (/a2a/data-agent/` hoặc `/a2a/policy-agent/)` → sub-agent đích, giữ nguyên ngữ cảnh trace phân tán (OTel `trace.id` xuyên suốt trên Jaeger) và tổng hợp kết quả thành công (`HTTP 200`).
+
+![Luồng điều phối A2A từ coordinator-agent qua agentgateway trên Jaeger](../images/edai-2/a2a-coordinator-via-gateway.png)

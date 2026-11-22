@@ -1,0 +1,72 @@
+# MCP bridge cho coordinator-agent gọi agent con qua A2A Gateway (/a2a/<agent>/).
+# Code nạp từ ConfigMap a2a-bridge-code (gateway/a2a_bridge.py); token lấy từ Secret mcp-token-coordinator.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: a2a-bridge
+  namespace: agents
+  labels:
+    app: a2a-bridge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: a2a-bridge
+  template:
+    metadata:
+      labels:
+        app: a2a-bridge
+    spec:
+      containers:
+        - name: a2a-bridge
+          image: asia-southeast1-docker.pkg.dev/hotel-booking-edai2/booking/agents/booking-mcp:762fa7b
+          command: ["uvicorn", "a2a_bridge:app", "--host", "0.0.0.0", "--port", "8000"]
+          env:
+            - name: PYTHONPATH
+              value: /bridge
+            - name: GATEWAY_BASE
+              value: http://agentgateway.gateway.svc.cluster.local:3000
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://jaeger-collector.monitoring.svc.cluster.local:4317
+            - name: COORDINATOR_AUTH
+              valueFrom:
+                secretKeyRef:
+                  name: mcp-token-coordinator
+                  key: Authorization
+          ports:
+            - name: http
+              containerPort: 8000
+          readinessProbe:
+            httpGet: { path: /healthz, port: http }
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { cpu: 300m, memory: 256Mi }
+          volumeMounts:
+            - name: code
+              mountPath: /bridge
+              readOnly: true
+      volumes:
+        - name: code
+          configMap:
+            name: a2a-bridge-code
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: a2a-bridge
+  namespace: agents
+  labels:
+    app: a2a-bridge
+spec:
+  selector:
+    app: a2a-bridge
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

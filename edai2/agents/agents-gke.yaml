@@ -139,23 +139,39 @@ spec:
           requireApproval: [apply_overbooking]      # HITL: UI kagent dừng chờ người duyệt trước khi ghi K
 ---
 apiVersion: kagent.dev/v1alpha2
+kind: RemoteMCPServer
+metadata:
+  name: booking-tools-coordinator
+  namespace: kagent
+spec:
+  description: Tool A2A delegate tới data-agent và policy-agent qua agentgateway (token role=coordinator-agent)
+  protocol: STREAMABLE_HTTP
+  url: http://agentgateway.gateway.svc.cluster.local:3000/mcp-a2a
+  timeout: 90s
+  headersFrom:
+    - name: Authorization
+      valueFrom: { type: Secret, name: mcp-token-coordinator, key: Authorization }
+---
+apiVersion: kagent.dev/v1alpha2
 kind: Agent
 metadata:
   name: coordinator-agent
   namespace: kagent
 spec:
-  description: Nhận câu hỏi của nhân viên khách sạn, chuyển cho data-agent hoặc policy-agent rồi tổng hợp
+  description: Nhận câu hỏi của nhân viên khách sạn, chuyển cho data-agent hoặc policy-agent qua A2A Gateway rồi tổng hợp
   type: Declarative
   declarative:
     modelConfig: default-model-config
     systemMessage: |
-      Bạn là coordinator-agent. Không tự trả lời số liệu, luôn giao việc cho agent phù hợp rồi tổng hợp ngắn gọn bằng tiếng Việt:
-      - Lịch sử đặt/huỷ của khách, nhu cầu hiện tại của khách sạn (cần mã khách và mã khách sạn): giao data-agent.
-      - Xác suất huỷ của booking, chính sách huỷ/hoàn tiền, đề xuất hoặc áp dụng bán vượt: giao policy-agent.
-      Câu hỏi gồm cả hai loại thì gọi lần lượt cả hai agent. Mỗi agent con chỉ nhận đúng phần câu hỏi của nó, giữ nguyên mã số
-      và ngày, không thêm yêu cầu người dùng không hỏi. Câu tổng hợp chỉ dùng thông tin agent con trả về.
+      Bạn là coordinator-agent. Không tự trả lời số liệu, luôn giao việc cho agent phù hợp qua tool rồi tổng hợp ngắn gọn bằng tiếng Việt:
+      - Lịch sử đặt/huỷ của khách, nhu cầu hiện tại của khách sạn (cần mã khách và mã khách sạn): gọi delegate_data_agent.
+      - Xác suất huỷ của booking, chính sách huỷ/hoàn tiền, đề xuất hoặc áp dụng bán vượt: gọi delegate_policy_agent.
+      Câu hỏi gồm cả hai loại thì gọi lần lượt cả hai tool. Mỗi tool chỉ nhận đúng phần câu hỏi của nó, giữ nguyên mã số
+      và ngày, không thêm yêu cầu người dùng không hỏi. Câu tổng hợp chỉ dùng thông tin tool trả về.
     tools:
-      - type: Agent
-        agent: { name: data-agent }
-      - type: Agent
-        agent: { name: policy-agent }
+      - type: McpServer
+        mcpServer:
+          apiGroup: kagent.dev
+          kind: RemoteMCPServer
+          name: booking-tools-coordinator
+          toolNames: [delegate_data_agent, delegate_policy_agent]
