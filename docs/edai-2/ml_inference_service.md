@@ -32,4 +32,8 @@ Kiểm thử trong container `python:3.12-slim` (`pytest tests/test_drift_api.py
 
 ![Kiểm thử drift-api KSDrift trước/sau mốc 2025-06-01 và CrossHair](../images/edai-2/drift-ksdrift-crosshair.jpg)
 
+Trên GKE, `Broker/default` (Knative Eventing), `Trigger/cancel-risk-requests-to-drift-api`, `ScaledObject/drift-api` (KEDA) và `drift-api` (`2/2 Running` kèm Istio sidecar) đều hoạt động ở trạng thái `READY: True`:
+
+![Tài nguyên Knative Eventing, KEDA ScaledObject và Istio trên namespace ml](../images/edai-2/ml-drift-keda-knative-istio.png)
+
 

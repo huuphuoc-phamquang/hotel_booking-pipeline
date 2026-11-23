@@ -107,3 +107,13 @@ nhau, vì ba tool được gọi cùng nhịp và `predict_cancellation` lỗi �
 
 ![Grafana: số lần gọi và lỗi theo tool MCP](../images/edai-2/grafana-mcp-tools.png)
 
+## Giám sát Drift và Cancel-Risk API (`cancel-risk-ml`)
+
+Dashboard [`cancel-risk-ml.json`](../../edai2/observability/dashboards/cancel-risk-ml.json) hiển thị p-value KS của `drift-api`, `PSI` và `calib_gap` từ `drift_monitor` (PushGateway), cùng request/s, latency p95, lỗi 5xx và lượng CloudEvent qua Knative Broker:
+
+![Grafana: dashboard cancel-risk-ml](../images/edai-2/grafana-cancel-risk-ml.png)
+
+![Airflow: DAG drift_monitor chạy trên dữ liệu 2025-01-13](../images/edai-2/airflow-drift-monitor.png)
+
+![Kubeflow Pipelines: run retrain-v10-drift-trigger hoàn thành](../images/edai-2/kfp-retrain-drift-trigger.jpg)
+

@@ -29,3 +29,9 @@ một key share chưa có HA hay auto-unseal (cần Raft + GCP KMS khi dùng th�
 ![booking-mcp có vault-agent, Kubernetes Secret cũ không còn](../images/edai-2/vault-cli-4.png)
 
 ![Vault UI: secret/agents/booking-mcp](../images/edai-2/vault-ui.png)
+
+## Service-to-service mTLS & AuthorizationPolicy (Istio)
+
+Namespace `ml` bật `istio-injection=enabled`, áp dụng [`edai2/k8s/istio-authz.yaml`](../../edai2/k8s/istio-authz.yaml) (`PeerAuthentication` chế độ `STRICT` và `AuthorizationPolicy` chỉ cho `knative-eventing` gọi `drift-api`, chỉ `agents/sa/booking-mcp` gọi `cancel-risk`). Khi gọi thử từ pod không được cấp quyền trong `ml`, Envoy trả **`HTTP/1.1 403 Forbidden`** (`RBAC: access denied`):
+
+![Istio AuthorizationPolicy trả 403 RBAC: access denied](../images/edai-2/istio-authz-403.png)
