@@ -20,7 +20,7 @@ Trước drift, xác suất dự báo lệch xác suất thật dưới `0,05` �
 2. **Đối chiếu trực tiếp trên `gold.booking_risk` của cluster GKE:**
    Chấm **22.865 booking** (shard 0 của ngày `2025-01-12`) qua `booking-mcp` (`/v1/cancel-risk/batch`) → Feast online → KServe `cancel-risk` v1, ghi vào `gold.booking_risk` (`scored_date = 2025-01-13`, không thiếu dòng nào), rồi join với `p_cancel_true`:
    - `Mean p_model = 0,0900` vs `Mean p_true = 0,3288` → **lệch calibration = `0,2388`**, **Brier vs $p$ thật = `0,0913`**.
-   - Qua 10 decile, `p_model` (`0,0047 → 0,2962`) và `p_true` (`0,2792 → 0,3949`) tăng đơn điệu đúng thứ tự rủi ro, nhưng v1 dự báo thấp toàn cục vì dữ liệu train khôi phục 13 ngày thiếu nhãn huỷ muộn.
+   - Qua 10 decile, `p_model` (`0,0047 → 0,2962`) và `p_true` (`0,2792 → 0,3949`) tăng đơn điệu đúng thứ tự rủi ro, nhưng v1 dự báo thấp toàn cục vì dữ liệu train chỉ có 13 ngày thiếu nhãn huỷ muộn.
    - Trên **446 ô** `(hotel_id, stay_date)` có ≥ 5 booking: `K thật TB = 2,747` vs `K model TB = 0,404` → **`|K model − K thật| TB = 2,343` phòng** (chỉ 4,7% ô khớp chính xác K). Phép đo chứng minh Idea 1 phát hiện ngay độ lệch calibration và tác động tới quyết định bán vượt chỉ sau 1 ngày chấm điểm.
 
 ![Bảng gold.booking_risk đã chấm trên cluster GKE](../images/edai-2/idea1-cluster-tables.png)
@@ -38,7 +38,7 @@ Tool này chỉ đề xuất. Việc ghi K bằng `apply_overbooking` nằm tron
 ([`agents/agents-gke.yaml`](../../edai2/agents/agents-gke.yaml)), nên kagent dừng lời gọi cho tới khi người
 duyệt bấm Approve hoặc Reject.
 
-Thử trên cluster thứ hai: policy-agent đề xuất K cho khách sạn 8528 đêm 2025-01-29, người dùng đồng ý
+Thử trên GKE: policy-agent đề xuất K cho khách sạn 8528 đêm 2025-01-29, người dùng đồng ý
 K = 1, lời gọi `apply_overbooking(8528, 2025-01-29, 1)` chuyển sang trạng thái *Approval required*. Chỉ sau khi bấm
 Approve, `gold.overbooking_limits` mới có dòng `8528 | 2025-01-29 | 1`. Qua A2A, cùng lời gọi đó trả task ở trạng thái
 `input-required`. Logic K được kiểm bằng `tests/test_overbooking.py` (chạy trong build #7 của Jenkins): giá trị biên

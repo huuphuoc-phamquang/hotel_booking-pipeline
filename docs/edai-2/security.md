@@ -17,7 +17,7 @@ secret được ghi ra `/vault/secrets/env` và nạp lúc container khởi đ�
 lấy secret từ Vault.
 
 Phạm vi hiện mới là booking-mcp. Các service khác (MLflow, Job train, Postgres) vẫn dùng Kubernetes Secret; Jenkins lấy
-secret qua `withVault` và token gateway đồng bộ bằng ExternalSecret chưa dựng lại trên cluster thứ hai. Bản standalone
+secret qua `withVault` và token gateway đồng bộ bằng ExternalSecret chưa dựng. Bản standalone
 một key share chưa có HA hay auto-unseal (cần Raft + GCP KMS khi dùng thật).
 
 ![Vault: pod và trạng thái unseal](../images/edai-2/vault-cli-1.png)

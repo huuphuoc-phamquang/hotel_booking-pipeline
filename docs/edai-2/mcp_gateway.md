@@ -21,7 +21,7 @@ Security và policy trên route:
   được. Lý do: nguyên tắc quyền tối thiểu, và tool ghi dữ liệu (`apply_overbooking`) chỉ lộ ra với đúng agent có bước
   duyệt HITL.
 
-Kiểm bằng [`gateway/check.sh`](../../edai2/gateway/check.sh) trên cluster thứ hai: `/mcp` không token
+Kiểm bằng [`gateway/check.sh`](../../edai2/gateway/check.sh): `/mcp` không token
 trả 401; `tools/list` với token data-agent chỉ có `get_booking_features`, với token policy-agent có bốn tool còn lại;
 data-agent gọi thẳng `predict_cancellation` bị gateway từ chối (`Unknown tool: predict_cancellation`). Qua kagent, data-agent
 và policy-agent vẫn gọi tool bình thường qua gateway, log ghi `mcp.method.name=tools/call` kèm `jwt.sub` của từng agent.

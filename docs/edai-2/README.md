@@ -1,8 +1,16 @@
 # AI / agent platform (edai-2)
 
+Môi trường chạy minh chứng:
+
+- **GKE**: data platform, Feast, Kubeflow, MLflow, KServe, booking-mcp, kagent, agentgateway, registry, KEDA, Vault,
+  observability, fine-tune LoRA (GPU L4).
+- **K3s, GPU RTX 3060 12GB**: vLLM, Agent Substrate (sandbox gVisor, warm-up).
+- **Laptop, GPU RTX 2000 Ada 8GB**: benchmark so sánh cấu hình vLLM, A/B offline giữa các bản LLM, vLLM cho agent trên GKE
+  (qua Cloudflare tunnel).
+
 | Tài liệu | Nội dung |
 |---|---|
-| [llm_inference_platform.md](llm_inference_platform.md) | Nền tảng LLM gồm llm-d và vLLM, model tự fine-tune, agentgateway và benchmark. |
+| [llm_inference_platform.md](llm_inference_platform.md) | Nền tảng LLM chạy vLLM, model tự fine-tune, agentgateway và benchmark. |
 | [global_model_config.md](global_model_config.md) | Một ModelConfig dùng chung cho mọi agent. |
 | [agent_registry.md](agent_registry.md) | Registry lưu agent card và MCP server. |
 | [rag_pipeline.md](rag_pipeline.md) | Tài liệu chính sách được chia chunk, embed rồi lưu vào Feast, có lineage và kiểm tra dữ liệu. |
@@ -22,5 +30,5 @@
 | [observability.md](observability.md) | Metric của Web API, telemetry hệ thống, log, trace, telemetry cho LLM và agent, kiểm tra drift theo lịch. |
 | [ab_testing.md](ab_testing.md) | A/B testing cho agent, LLM và model inference. |
 | [security.md](security.md) | Vault quản lý secret; Istio bảo vệ giao tiếp giữa các service. |
-| [ml_design.md](ml_design.md) | README và tài liệu, các design pattern đã dùng và 5 class chính của hệ thống ML. |
+| [ml_design.md](ml_design.md) | README, sơ đồ kiến trúc tổng thể và các design pattern trong mã nguồn. |
 | [novel_ideas.md](novel_ideas.md) | Mỗi ý tưởng gồm vấn đề, cách làm và minh chứng đã chạy. |

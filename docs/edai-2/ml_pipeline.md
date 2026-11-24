@@ -26,7 +26,7 @@ Trước đó, pipeline cũng đã chạy kiểm chứng qua `ml/run_steps.py` (
 <a id="edai-2-14"></a>
 ## Theo dõi thí nghiệm, model registry và versioning dữ liệu với MLflow
 
-Trên cluster GKE (`hotel-booking-edai2`, dữ liệu Gold khôi phục giai đoạn `2025-01-01` → `2025-01-13`), MLflow 3.6.0 (`k8s/mlflow.yaml`, image `docker/mlflow.Dockerfile`) được cài đặt để lưu metadata trên Postgres (`mlflow`) và artifact trên MinIO (`--serve-artifacts`). Bước `evaluate_and_register` tự động ghi nhận:
+Trên cluster GKE (dữ liệu Gold giai đoạn `2025-01-01` → `2025-01-13`), MLflow 3.6.0 (`k8s/mlflow.yaml`, image `docker/mlflow.Dockerfile`) được cài đặt để lưu metadata trên Postgres (`mlflow`) và artifact trên MinIO (`--serve-artifacts`). Bước `evaluate_and_register` tự động ghi nhận:
 - Tham số XGBoost và `train_snapshot_id` trỏ tới snapshot Iceberg của tập train (`ml.train_cancel_risk`), cho phép tái lập đúng tập dữ liệu đã train bằng time travel (`data_version.load_training_set`).
 - Dataset `train` gắn vào run, `feature_importance.json` và `reference_lead_days.npy` phục vụ theo dõi drift.
 - Đăng ký model `cancel-risk` version 1 kèm tag `release = latest`.
@@ -37,7 +37,7 @@ Trên cluster GKE (`hotel-booking-edai2`, dữ liệu Gold khôi phục giai đo
 | `val_calib_gap` | 0,068 | ≤ 0,03: **không đạt** |
 | `val_brier` | 0,025 | ≤ Brier bản production (chưa có, mặc định 1): đạt |
 
-Model chưa đạt cổng `val_calib_gap` nên không được gắn alias `production` (đúng thiết kế tự động chặn model kém chất lượng). Nguyên nhân lệch calibration là dữ liệu khôi phục 13 ngày đầu năm 2025 chưa đủ nhãn huỷ muộn.
+Model chưa đạt cổng `val_calib_gap` nên không được gắn alias `production` (đúng thiết kế tự động chặn model kém chất lượng). Nguyên nhân lệch calibration là dữ liệu 13 ngày đầu năm 2025 gần như chưa có nhãn huỷ, nên `val_brier` thấp bất thường (0,025).
 
 ![MLflow: run và dataset train](../images/edai-2/mlflow-runs.png)
 

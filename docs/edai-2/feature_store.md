@@ -9,9 +9,9 @@ Code pipeline: [`feast_materialize_incremental`](../../edai2/dags/rag_pipeline.p
 
 Pipeline chạy tự động theo sự kiện Airflow Dataset (`FEAT_BATCH`) ngay sau khi DAG DP3 hoàn thành bước validate, thực hiện materialize tăng dần theo đúng cửa sổ ngày logic với `max_active_runs=1`, rồi phát Dataset `feast://online/batch` để kích hoạt `score_bookings`.
 
-Trên Airflow 2.10.5 (GKE namespace `data`), DAG `dp3_offline_features` cho ngày logic `2025-01-13` đã phát Dataset `FEAT_BATCH`, tự động kích hoạt `feast_materialize_incremental`. Để tránh lỗi `OOMKilled` của pod worker 2Gi mặc định khi Feast nạp toàn bộ cửa sổ ngày vào pandas, task `materialize` được cấu hình chạy trên `MATERIALIZE_POD` (request 2Gi / limit 8Gi), hoàn tất trong khoảng 20 phút (~3,8 GB RAM) và ghi 1,27 triệu dòng feature lên PostgreSQL online store (`feast_online.booking_customer_booking_stats` với 1.205.346 dòng của 401.782 khách hàng, cùng `booking_attributes` và `hotel_demand`).
+Trên Airflow 2.10.5 (GKE namespace `data`), DAG `dp3_offline_features` cho ngày logic `2025-01-13` đã phát Dataset `FEAT_BATCH`, tự động kích hoạt `feast_materialize_incremental`. Để tránh lỗi `OOMKilled` của pod worker 2Gi mặc định khi Feast nạp toàn bộ cửa sổ ngày vào pandas, task `materialize` được cấu hình chạy trên `MATERIALIZE_POD` (request 2Gi / limit 8Gi), hoàn tất trong khoảng 20 phút (~3,8 GB RAM) và ghi 1,27 triệu dòng feature lên PostgreSQL online store (`feast_online.booking_customer_booking_stats` với 1.205.346 dòng, tức 401.782 khách × 3 feature, cùng `booking_attributes` và `hotel_demand`).
 
-Tổng hợp dữ liệu trên `feast_online` sau quá trình materialize:
+Số entity trên `feast_online`, tích luỹ qua các lần materialize:
 - `booking_attributes`: 1.584.578 booking
 - `customer_booking_stats`: 1.973.203 khách hàng
 - `hotel_demand`: 50.000 khách sạn
@@ -46,7 +46,7 @@ Code định nghĩa tại [`edai2/feature_repo/features.py`](../../edai2/feature
 | FeatureView | Entity | TTL | Lý do chọn |
 |---|---|---|---|
 | `booking_attributes` | `booking_id` | `365 ngày` | Thuộc tính tĩnh của booking (`lead_days`, `nights`, `free_cancel`, `loyalty_tier`); cần đọc để chấm điểm rủi ro huỷ cho tới ngày nhận phòng (lead time tối đa dưới 1 năm). |
-| `customer_booking_stats` | `customer_id` | `90 ngày` | Khách chỉ đặt 1–2 lần/năm, dòng feature chỉ ghi khi có hoạt động; quá 90 ngày không đặt mới thì `bookings_90d` đã về `0` nên không cần giữ bản cũ. |
+| `customer_booking_stats` | `customer_id` | `90 ngày` | Khách đặt trung bình 4,6 lần/năm, dòng feature chỉ ghi khi có hoạt động; quá 90 ngày không đặt mới thì `bookings_90d` đã về `0` nên không cần giữ bản cũ. |
 | `hotel_demand` | `hotel_id` | `2 ngày` | Khách sạn có snapshot nhu cầu hằng ngày (`bookings_7d`, `cancel_rate_30d`); giữ 2 ngày để dự phòng trễ 1 nhịp batch ngày mà vẫn tránh dùng số liệu cũ. |
 | `hotel_realtime` | `hotel_id` | `2 giờ` | Feature streaming (`bookings_1h`) từ Flink đẩy mỗi 5 phút; nhu cầu phòng cũ hơn 2 giờ không còn phản ánh áp lực đặt phòng hiện tại. |
 | `policy_chunks` | `chunk_id` | `365 ngày` | Vector embedding tài liệu chính sách huỷ/hoàn tiền dùng cho RAG; nội dung ít thay đổi, chỉ cập nhật khi pipeline RAG ingest lại tài liệu. |

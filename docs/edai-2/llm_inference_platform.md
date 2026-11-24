@@ -1,6 +1,6 @@
 # LLM inference platform
 
-Nền tảng LLM gồm `llm-d` và vLLM, model tự fine-tune, `agentgateway` và benchmark hiệu năng.
+Nền tảng LLM chạy vLLM trên Kubernetes có GPU, kèm model tự fine-tune, `agentgateway` và kết quả benchmark.
 
 <a id="edai-2-3"></a>
 ## Triển khai LLM inference platform (vLLM trên Kubernetes GPU Cluster)
@@ -32,6 +32,8 @@ Trên GKE (1 GPU L4 spot, 2 epoch, 407 mẫu train / 22 mẫu eval), job đã fi
 | v2 Qwen2.5-3B | 12 phút | 1,86 → 0,41 | 0,397 | 0,845 | `s3://models/qwen2.5-3b-booking-sft/` (12 file) |
 
 Loss eval tiệm cận loss train cho thấy mô hình không bị overfit; bản 3B chỉ nhỉnh hơn 1.5B rất ít trên tập dữ liệu này.
+vLLM nạp adapter LoRA (`adapter_v1`, `adapter_v2`) từ notebook `kaggle_finetune.ipynb` (cùng dữ liệu và tham số); bản
+gộp trên MinIO dành cho InferenceService.
 
 ![Log fine-tune v1 (Qwen2.5-1.5B)](../images/edai-2/finetune-v1-log.png)
 

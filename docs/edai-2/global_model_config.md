@@ -5,7 +5,7 @@ Một `ModelConfig` dùng chung cho mọi agent.
 <a id="edai-2-7"></a>
 ## Global ModelConfig dùng chung cho các agent
 
-kagent 0.9.12 cài bằng Helm với [`k8s/kagent-values.yaml`](../../edai2/k8s/kagent-values.yaml) trên cluster thứ hai.
+kagent 0.9.12 cài bằng Helm với [`k8s/kagent-values.yaml`](../../edai2/k8s/kagent-values.yaml).
 Provider `openAI` của chart sinh ModelConfig `default-model-config`:
 
 - `model: qwen-3b`: Qwen2.5-3B-Instruct phục vụ bằng vLLM, parser tool `hermes`.

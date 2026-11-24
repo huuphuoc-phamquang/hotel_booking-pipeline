@@ -58,6 +58,6 @@ Trong cùng **Build #19** (`WITH_AGENTS=true`, commit `762fa7b`), sau khi `booki
 - **Build & push image Flink (Job 1):** Build [`edai1/k8s/flink.Dockerfile`](../../edai1/k8s/flink.Dockerfile) và push `data/flink-booking:d48433b` lên Artifact Registry.
 - **E2E stream (3 min 33 s):** Chạy [`edai1/tests/test_stream_e2e.py`](../../edai1/tests/test_stream_e2e.py) bằng 2 image vừa build (`booking-generator` → Kafka → Flink → PostgreSQL): **3 passed trong 210,25 s** (`test_minute_reconciliation`, `test_dlq_matches_injected_violations`, `test_realtime_feature_written`).
 - **Deploy Job 2 (Online Store):** DAG `feast_materialize_realtime` được đóng gói và deploy tự động qua `helm upgrade airflow --atomic` lên **revision 6**.
-- **Deploy Flink Job 1 (Offline Store):** Stage `Deploy Flink Job 1` để `WITH_FLINK_DEPLOY=false` trên cluster thứ 2 (không cài Flink Operator); khi bật trên cluster có Flink Operator sẽ apply [`edai1/k8s/flink.yaml`](../../edai1/k8s/flink.yaml) và chờ `lifecycleState=STABLE`.
+- **Deploy Flink Job 1 (Offline Store):** Stage `Deploy Flink Job 1` để `WITH_FLINK_DEPLOY=false` (cluster chưa cài Flink Operator); khi bật trên cluster có Flink Operator sẽ apply [`edai1/k8s/flink.yaml`](../../edai1/k8s/flink.yaml) và chờ `lifecycleState=STABLE`.
 
 ![Jenkins Stage View: data-pipeline build #12–#14](../images/edai-2/jenkins-data-stage-view.png)

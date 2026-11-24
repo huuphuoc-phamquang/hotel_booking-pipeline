@@ -34,7 +34,7 @@ gọi model hay MCP trực tiếp: nginx proxy `/api/` sang kagent controller, t
 Results) từ `history`, câu trả lời từ `artifacts`, token từ `kagent_usage_metadata`; thời gian phản hồi đo ở trình duyệt.
 kagent UI gốc cũng được đặt sau ingress tại `agents.34.124.198.171.nip.io` với cùng lớp xác thực.
 
-Thử trên cluster thứ hai:
+Thử trên GKE:
 
 - coordinator-agent nhận câu hỏi về khách 18766768, khách sạn 8528 và booking 90000919211, giao việc cho data-agent và
   policy-agent rồi tổng hợp đúng số liệu (1 booking 90 ngày, tỉ lệ huỷ 0%; xác suất huỷ 13,14%, model v1).
@@ -51,7 +51,7 @@ Thử trên cluster thứ hai:
 <a id="edai-2-41"></a>
 ## Giao diện Agent Registry qua Ingress
 
-UI của agentregistry (dòng 8) đứng sau NGINX Ingress `agentregistry` trong
+UI của agentregistry đứng sau NGINX Ingress `agentregistry` trong
 [`k8s/ingress.yaml`](../../edai2/k8s/ingress.yaml), host `registry.34.124.198.171.nip.io`, cùng lớp bảo vệ với UI test
 agent: basic auth bằng Secret htpasswd `kagent-ui-auth` (bản sao trong namespace `agentregistry`) và `limit-rps` 10.
 Service `agentregistry` chỉ là ClusterIP. Kiểm: không đăng nhập trả 401, đăng nhập trả 200, API
