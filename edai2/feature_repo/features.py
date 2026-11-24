@@ -7,7 +7,7 @@ Rubric edai-2:
     store.push(..., to=PushMode.ONLINE) khi cần độ tươi tính bằng giây (chưa có job gọi)
   - RAG Data Pipeline › lưu embedding vector qua Feast: feature view policy_chunks có vector_index
 TTL = độ cũ tối đa của 1 dòng feature (KHÁC cửa sổ tính 90d/7d/1h): khách sạn có snapshot hằng ngày -> 2 ngày;
-khách thì phần lớn chỉ đặt 1-2 lần/năm, dòng chỉ ghi khi có hoạt động -> 90 ngày (= cửa sổ tính, quá 90 ngày
+khách đặt thưa (trung vị 3 lần/năm với khách có đặt), dòng chỉ ghi khi có hoạt động -> 90 ngày (= cửa sổ tính, quá 90 ngày
 thì bookings_90d chắc chắn đã về 0); stream -> 2 giờ (nhu cầu phòng cũ hơn thế không còn đúng).
 """
 from datetime import timedelta
