@@ -46,8 +46,8 @@ Mức giảm đến từ sáu bước tối ưu:
 Lệnh tái lập (từ thư mục `edai1`):
 
 ```bash
-docker build -f docker/Dockerfile.single -t booking-generator:single.
-docker build -f docker/Dockerfile -t booking-generator:multistage.
+docker build -f docker/Dockerfile.single -t booking-generator:single .
+docker build -f docker/Dockerfile -t booking-generator:multistage .
 docker images booking-generator
 ```
 

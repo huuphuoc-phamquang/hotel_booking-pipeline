@@ -11,7 +11,8 @@ Mọi lần chạy dưới đây diễn ra trên GKE (Airflow 2.10.5, Kubernetes
 `emit_datahub.py` khai báo lineage của DP1 (landing → `raw_bookings`). Schema của 3 zone được ingest lên
 DataHub bằng job `k8s/datahub-ingest.yaml`: 8 bảng Bronze, 2 bảng Silver, 16 bảng Gold.
 
-Lineage trên DataHub nối các task DP1 với các bảng `lake/bronze/raw_*` và đi tiếp qua DP2, DP3.
+Ảnh dưới là lineage của cả ba pipeline, đọc từ trái sang phải: bên trái là task DP1 → các bảng `lake/bronze/raw_*`,
+ở giữa là DP2 → Silver → staging Gold → `fact_bookings`, bên phải là DP3 → bảng `feat_*`.
 
 ![Lineage trên DataHub](../images/edai-1/datahub-lineage.png)
 
@@ -32,9 +33,8 @@ Assertion `gx_bronze_bookings` hiện ở tab Quality của `lake/bronze/raw_boo
 inlets và outlets của DAG.
 
 Lineage đi đúng chuỗi `raw_bookings` → `silver_bookings` → `stg_bookings` (Iceberg) → `stage_gold` → các
-bảng staging Gold → `upsert_gold` → `fact_bookings`, kèm nhánh dim (`raw_customers`, `raw_hotels`, `raw_hotel_changes`).
-
-![Lineage trên DataHub](../images/edai-1/datahub-lineage.png)
+bảng staging Gold → `upsert_gold` → `fact_bookings`, kèm nhánh dim (`raw_customers`, `raw_hotels`, `raw_hotel_changes`)
+(phần giữa ảnh lineage ở mục DP1).
 
 <a id="edai-1-31"></a>
 ## Kiểm tra chất lượng dữ liệu DP2
@@ -60,10 +60,8 @@ Tab Quality của `fact_bookings` có 4 assertion, tất cả đều đạt: `fa
 `PIPELINES` khai báo `dp3_offline_features.build_features` với đầu vào `fact_bookings`, `dim_hotel` và
 đầu ra `feat_customer_booking_stats`, `feat_hotel_demand`.
 
-Phía phải ảnh lineage thể hiện `fact_bookings` → task `build_features` → `feat_customer_booking_stats`,
+Phía phải ảnh lineage ở mục DP1 thể hiện `fact_bookings` → task `build_features` → `feat_customer_booking_stats`,
 `feat_hotel_demand` (và view `labels_cancel`), cùng Airflow Dataset `postgres:5432/warehouse/gold/feat_hotel_demand`.
-
-![Lineage trên DataHub](../images/edai-1/datahub-lineage.png)
 
 <a id="edai-1-33"></a>
 ## Kiểm tra chất lượng dữ liệu DP3

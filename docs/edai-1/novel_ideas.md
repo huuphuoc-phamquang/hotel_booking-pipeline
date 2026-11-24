@@ -34,7 +34,7 @@ số booking do generator sinh; không phút nào lệch.
 
 Trên GKE, bản tối ưu khớp truth tới 0,011% (ngày 01-01) và 0,005% (ngày 01-02), còn baseline thừa đúng số bản gửi trùng.
 Nhờ có truth, phép đối soát chỉ ra đúng lỗi nào nằm ở đâu: phần thừa của baseline bằng `dup`, còn phần lệch nhỏ của bản
-tối ưu khớp với các lần restart (dòng 18).
+tối ưu khớp với các lần restart.
 
 ![Đối soát baseline, bản tối ưu và truth](../images/edai-1/flink-perday-compare.png)
 

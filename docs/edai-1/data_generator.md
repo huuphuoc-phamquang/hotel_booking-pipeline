@@ -7,10 +7,9 @@ bảng nhãn.
 
 `python -m generator.profile_data` (chạy trong thư mục `edai1/`) in ra các bảng dưới đây. Mẫu gồm đủ 16 shard của
 12 ngày cách nhau 30 ngày, rải đều các mùa trong năm, rồi ngoại suy ra cả năm. Với `quotes_per_cell` 580 và `conversion`
-0,01267, dữ liệu đạt khoảng 108GB, cao hơn mốc 100GB khoảng 8%. Tích hai tham số này được giữ nguyên nên số booking không
-đổi. Khi sửa `config.yaml`, cần chạy lại lệnh và thay các bảng này; số đo không ghi vào config hay comment.
+0,01267, dữ liệu đạt khoảng 108GB. Khi sửa `config.yaml`, cần chạy lại lệnh và thay các bảng này.
 
-Mẫu: ngày [15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345], đủ 16 shard; số cả năm = mẫu × 30. config_sha256 94e5c466f09d
+config_sha256 94e5c466f09d
 
 | Bảng | Dòng / ngày | Byte / dòng (Parquet zstd) | Dòng / năm | Dung lượng / năm |
 |---|---|---|---|---|
@@ -63,13 +62,16 @@ Mẫu: ngày [15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345], đủ 16
 ### Kết quả kiểm chứng drift trực tiếp từ `generator/profile_data.py`
 
 > Kết quả dưới đây lấy trực tiếp từ output lệnh `python -m generator.profile_data 15,200` (so sánh ngày `15` trước drift và ngày `200` sau mốc drift `2025-06-01`, đủ 16 shard; số cả năm = mẫu × 182, `config_sha256 94e5c466f09d`, xem [ảnh chụp terminal](../images/edai-1/generator-profile-drift.jpg)).
+>
+> Lần chạy này dùng để so phân phối trước và sau drift, không dùng để đo dung lượng. Ngày 200 thuộc mùa hè cao điểm, nên
+> cột dung lượng (ngoại suy từ 2 ngày) cao hơn thực tế. Dung lượng cả năm lấy theo bảng đầu mục, vốn dựa trên 12 ngày rải
+> đều các mùa (khoảng 108 GB), và đã được đo thật trên MinIO (111 GiB).
 
 | Bảng | Dòng / ngày | Byte / dòng (Parquet zstd) | Dòng / năm | Dung lượng / năm |
 |---|---|---|---|---|
 | quotes | 42,225,380 | 8.4 | 15.41 tỉ | 129.8 GB |
 | bookings | 409,825 | 24.4 | 0.15 tỉ | 3.6 GB |
 | cancellations | 159,708 | 15.4 | 0.06 tỉ | 0.9 GB |
-| **tổng** | | | | **134.3 GB** |
 
 | Phễu và lỗi dữ liệu | Giá trị |
 |---|---|
@@ -193,8 +195,7 @@ Vi phạm data contract đo bằng `python -m generator.stream_profile 195` trê
 | `price` (giá âm) | 692 | 0,169% |
 | **tổng** | **2.039** | **0,497%** (config 0,5%) |
 
-Trên GKE, các event này vào topic `booking_events_dlq` kèm `reason` (mục Handle other streaming problem ở
-`processing_jobs.md`).
+Trên GKE, các event này vào topic `booking_events_dlq` kèm `reason` (Idea 1 ở `novel_ideas.md`).
 
 <a id="edai-1-8"></a>
 ## Lưu trữ dữ liệu sinh ra vào Bronze Zone (MinIO)

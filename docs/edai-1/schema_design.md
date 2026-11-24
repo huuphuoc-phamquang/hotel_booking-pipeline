@@ -317,7 +317,7 @@ backfill DP1–DP3 và lần chạy Flink.
 
 `information_schema.columns` xác nhận cả ba bảng đều có `event_timestamp` và `created`. Không dòng nào có
 `event_timestamp > created` ở cả ba bảng, tức feature không được ghi trước thời điểm có hiệu lực; đây cũng là điều kiện
-`event_before_created` mà `validate_features` kiểm mỗi ngày (dòng 27).
+`event_before_created` mà `validate_features` kiểm mỗi ngày.
 
 <a id="edai-1-37"></a>
 ## Quan hệ giữa bảng Dimension và Fact
@@ -374,7 +374,7 @@ Quy ước tiền tố theo zone:
 - Gold: `dim_`, `fact_`, `feat_` cho bảng mô hình; `stg_` cho bảng trung chuyển của DP2 (`stg_bookings`,
   `stg_customers`, `stg_hotel_changes`, `stg_hotel_rooms`).
 
-Danh sách bảng theo tag zone trên DataHub (ảnh ở dòng 34) cho thấy mọi bảng Bronze và Silver, cùng các bảng
+Danh sách bảng theo tag zone trên DataHub (ảnh dưới) cho thấy mọi bảng Bronze và Silver, cùng các bảng
 mô hình ở Gold, đều theo quy ước trên. Các bảng vận hành ở Gold (`booking_risk`, `hotel_rooms`, `overbooking_limits`,
 `stream_bookings_1m`, `stream_late_bookings`) và view `labels_cancel` đặt tên theo nghiệp vụ, không mang tiền tố.
 

@@ -45,7 +45,7 @@ mất 1.084 s.
 <a id="edai-1-12"></a>
 ## Xử lý lệch phân phối (Data Skew) trong Spark
 
-`silver_quotes` có các chế độ sau, chạy trên cùng cluster và input của dòng 11:
+`silver_quotes` có các chế độ sau, chạy trên cùng cluster và input với baseline:
 
 - Join `stg_quotes ⋈ raw_inventory` theo (`hotel_id`, `room_type`, `stay_date`): `baseline`; `aqe` (mặc định của
   Spark); `aqe_tuned` (skewJoin factor 2, ngưỡng 64MB); `salt` (salting 200 ô nóng nhất bằng `hot_keys` và hàm
@@ -119,7 +119,7 @@ null ở 70.855.735 dòng v1, vì đây là cột mới của v2 mà dữ liệu
 
 `dedup_bookings` khử trùng theo `idempotency_key` bằng `row_number` sắp theo `created_at`.
 `tests/test_silver_bookings.py` kiểm tra cục bộ rằng mỗi `idempotency_key` còn một dòng và `status` khớp kết cục do
-generator sinh. Trên dữ liệu thật, phép đo dùng cùng lần chạy `spark_jobs/bookings_quality.py` ở dòng 13.
+generator sinh. Trên dữ liệu thật, phép đo dùng cùng lần chạy `spark_jobs/bookings_quality.py` ở mục schema evolution.
 
 | | Số dòng |
 |---|---|
@@ -129,7 +129,7 @@ generator sinh. Trên dữ liệu thật, phép đo dùng cùng lần chạy `sp
 | Bản gửi trùng bị bỏ | 2.998.388 (1,962%; config 2%) |
 
 Sau khử trùng, số dòng bằng đúng số `idempotency_key` khác nhau: mỗi lần đặt còn đúng một dòng (dòng có `created_at`
-nhỏ nhất). Ảnh output ở dòng 13.
+nhỏ nhất). Ảnh output ở mục schema evolution.
 
 <a id="edai-1-15"></a>
 ## Tích hợp Spark Job vào Airflow Pipeline (DP2)
@@ -176,9 +176,9 @@ Các bước tối ưu, mỗi bước xử lý một vấn đề:
 1. **Parallelism bằng số partition Kafka (6).** Timestamp được gán sau source. Nếu một subtask đọc nhiều partition,
    watermark chạy theo partition nhanh nhất và event của partition chậm thành trễ giả (đo với parallelism 2: 2.409
    event trễ giả).
-2. **Watermark lệch 10 phút và allowed lateness 5 phút** (dòng 17): số event bị đẩy ra side output ngày 01-01 giảm từ
+2. **Watermark lệch 10 phút và allowed lateness 5 phút**: số event bị đẩy ra side output ngày 01-01 giảm từ
    8.326 xuống 1.719.
-3. **Khử trùng theo `idempotency_key`** trước cửa sổ (dòng 18): phần đếm thừa giảm từ 7.547 còn 43 (0,011%).
+3. **Khử trùng theo `idempotency_key`** trước cửa sổ: phần đếm thừa giảm từ 7.547 còn 43 (0,011%).
 4. **Kiểm data contract trước watermark:** event sai (`event_time` ở tương lai) vào DLQ trước khi kịp đẩy watermark.
 5. **Đếm tăng dần bằng `AggregateFunction`:** state mỗi cửa sổ là một số nguyên thay vì danh sách event.
 6. **Unaligned checkpoint và chặn autoscaler gỡ pod Flink.** Khi đọc dồn backlog, barrier aligned kẹt sau buffer đầy nên
@@ -209,7 +209,7 @@ Nhánh đối soát tumbling 1 phút dùng watermark 10 phút, allowed lateness 
 `gold.stream_late_bookings`. Cửa sổ trượt 1 giờ chỉ đẩy event ra side output khi trễ quá 1 giờ 15 phút. Trên PyFlink
 1.20, timestamp được gán sau source và không dùng `with_idleness`, vì thực nghiệm cho thấy idleness làm watermark đứng
 yên. Test e2e trên Docker xác nhận số đếm cộng side output bằng tổng thật của từng phút. Số liệu dưới đây lấy từ cùng
-lần chạy ở dòng 16.
+lần chạy với baseline Flink.
 
 Số event bị đẩy ra side output (`late`) theo ngày:
 
@@ -218,8 +218,8 @@ Số event bị đẩy ra side output (`late`) theo ngày:
 | 2026-01-01 | 8.326 | 1.719 | 25.934 |
 | 2026-01-02 | 7.339 | 615 | 25.881 |
 
-Watermark 10 phút cộng allowed lateness 5 phút nhận lại các event trễ tới 15 phút. Mốc này dựa trên bảng độ trễ ở
-dòng 9: phần lớn event mobile trễ 5–20 phút (20,09% trễ quá 10 phút, 10,03% trễ quá 15 phút), còn webhook thanh toán trễ
+Watermark 10 phút cộng allowed lateness 5 phút nhận lại các event trễ tới 15 phút. Mốc này dựa trên bảng độ trễ trong
+`data_generator.md`: phần lớn event mobile trễ 5–20 phút (20,09% trễ quá 10 phút, 10,03% trễ quá 15 phút), còn webhook thanh toán trễ
 tối đa 15 phút. Chờ lâu hơn sẽ làm feature `bookings_1h` chậm thêm tương ứng. Nếu chờ 1–4 giờ cho channel manager (1%
 booking), feature không còn "realtime"; vì vậy các event đó đi vào side output và vẫn được ghi lại để đối soát.
 
@@ -234,11 +234,11 @@ trễ theo từng nguồn.
 ![gold.stream_late_bookings](../images/edai-1/flink-late-bookings.png)
 
 <a id="edai-1-18"></a>
-## Xử lý lỗi dữ liệu streaming (DLQ) trong Flink
+## Xử lý event trùng lặp trong Flink
 
 `DedupByEventId` khử trùng theo `idempotency_key`. Hàm giữ một cờ `seen` cho mỗi khoá và đăng ký timer
 xoá cờ khi watermark vượt `event_time` + 5 giờ, nên state không tăng mãi. Data contract chặn event sai trước watermark:
-event thiếu `event_time` vào topic `booking_events_dlq` kèm `reason`. Số liệu lấy từ cùng lần chạy ở dòng 16.
+event thiếu `event_time` vào topic `booking_events_dlq` kèm `reason`. Số liệu lấy từ cùng lần chạy với baseline Flink.
 
 | Ngày | Bản gửi trùng (truth) | Baseline thừa | Tối ưu thừa |
 |---|---|---|---|
@@ -251,8 +251,6 @@ at-least-once, nên event đã ghi vào `stream_late_bookings` trước restart 
 lại từ checkpoint với watermark khác. Ngày 2025-12-31 là biên đầu của replay (+173).
 
 Checkpoint unaligned EXACTLY_ONCE lên MinIO hoàn tất đều đặn: khoảng 1 phút một lần, 20,2 MB, cả 5 operator đều 6/6.
-
-![DLQ](../images/edai-1/flink-dlq.png)
 
 ![Checkpoints](../images/edai-1/flink-checkpoints.png)
 
