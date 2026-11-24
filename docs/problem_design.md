@@ -4,8 +4,8 @@ Tài liệu này giải thích bài toán mà toàn bộ hệ thống phục v�
 đề xuất số phòng bán vượt (overbooking). Các tài liệu trong `edai-1/` và `edai-2/` mô tả cách triển khai; tài liệu này
 mô tả lý do và logic của bài toán.
 
-Số liệu trong tài liệu lấy từ `generator/profile_data` và `notebooks/cancel_risk.ipynb`, đều chạy cục bộ. Các phép đo
-tương ứng trên cluster chưa được thực hiện.
+Số liệu trong tài liệu lấy từ `generator/profile_data` và `notebooks/cancel_risk.ipynb`, đều chạy cục bộ. Phần đã đo lại trên
+cluster được ghi trong `edai-1/` và `edai-2/`.
 
 ## 1. Bối cảnh nghiệp vụ
 
@@ -215,8 +215,8 @@ Kết quả của `notebooks/cancel_risk.ipynb`, chạy cục bộ trên bộ di
 | v1, sau drift 2025-06-01 | 0,127 | 0,040 | 1,62 |
 | v2 (retrain trên dữ liệu sau drift) | 0,0008 | 0,019 | 0,36 |
 
-Kết quả cho thấy drift làm sai số K của v1 tăng hơn năm lần, và retrain đưa sai số về gần mức ban đầu. Phép đo này
-chưa được lặp lại trên `gold.booking_risk` của cluster.
+Kết quả cho thấy drift làm sai số K của v1 tăng hơn năm lần, và retrain đưa sai số về gần mức ban đầu. Trên `gold.booking_risk`
+của cluster mới đo được v1 với 13 ngày trước drift (`edai-2/novel_ideas.md`); phần trước/sau drift và retrain chưa lặp lại.
 
 ## 8. Vai trò của con người
 
