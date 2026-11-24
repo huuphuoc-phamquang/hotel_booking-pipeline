@@ -24,7 +24,13 @@ pipeline {
         dir('edai2') {
           sh 'pip install -r requirements-dev.txt'
           sh 'PYTHONPATH="mcp_server:dags:observability" pytest tests/ --ignore=tests/test_drift_api.py --cov=mcp_server --cov=observability --cov-fail-under=90 --junitxml=report.xml -o asyncio_mode=auto'
-          sh 'pip install -r drift_api/requirements.txt && PYTHONPATH=drift_api pytest tests/test_drift_api.py --cov=drift_api --cov-fail-under=90'
+          // venv riêng: drift-api ghim numpy 1.26 (alibi-detect), cài chung sẽ hạ numpy dưới Feast (cần >= 2) và làm hỏng
+          // mutmut + các stage python phía sau
+          sh '''
+            python -m venv /tmp/drift-venv
+            /tmp/drift-venv/bin/pip install -r drift_api/requirements.txt httpx==0.28.1 pytest==9.2.0 pytest-cov==7.1.0
+            PYTHONPATH=drift_api /tmp/drift-venv/bin/python -m pytest tests/test_drift_api.py --cov=drift_api --cov-fail-under=90
+          '''
           sh '''
             # so với commit build thành công gần nhất (lần đầu: commit trước); git lỗi thì dừng, không âm thầm bỏ mutmut
             BASE=${GIT_PREVIOUS_SUCCESSFUL_COMMIT:-HEAD~1}
@@ -43,7 +49,7 @@ pipeline {
           '''
         }
       }
-      post { always { junit 'edai2/report.xml' } }
+      post { always { junit allowEmptyResults: true, testResults: 'edai2/report.xml' } }   // pip lỗi thì không che lỗi gốc
     }
     stage('Reference cho drift-api') {
       when { expression { params.WITH_DRIFT_API } }
