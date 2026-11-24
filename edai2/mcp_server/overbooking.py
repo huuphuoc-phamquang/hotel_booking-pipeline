@@ -5,6 +5,8 @@ N = số booking huỷ ~ Poisson-binomial(p_1..p_n) (giả định huỷ độc 
 """
 import numpy as np
 
+EPS = 1e-12   # cumsum float có thể lệch ~1e-16 quanh ratio; EPS giữ K ở biên P(N < K) == ratio không bị hụt 1
+
 
 def cancel_distribution(probs: list[float]) -> np.ndarray:
     """P(N = n), n = 0..len(probs), bằng quy hoạch động O(n²) (chính xác, không xấp xỉ chuẩn)."""
@@ -24,4 +26,4 @@ def limit(probs: list[float], c_spoil: float, c_walk: float) -> int:
         raise ValueError("xác suất phải nằm trong [0, 1]")
     below = np.concatenate([[0.0], np.cumsum(cancel_distribution(probs))])   # below[k] = P(N < k)
     ratio = c_spoil / (c_spoil + c_walk)
-    return int(np.flatnonzero(below[:len(probs) + 1] <= ratio + 1e-12).max())
+    return int(np.flatnonzero(below[:len(probs) + 1] <= ratio + EPS).max())
