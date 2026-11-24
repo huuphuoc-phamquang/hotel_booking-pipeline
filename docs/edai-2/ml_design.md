@@ -7,7 +7,7 @@ README, tài liệu kỹ thuật và sơ đồ kiến trúc tổng thể của h
 
 [`README.md`](../../README.md) ở gốc repo trình bày bài toán nghiệp vụ (dự báo cancellation để tối ưu overbooking có người duyệt), cấu trúc repository, luồng dữ liệu theo ngày và liên kết tới các tài liệu chi tiết trong thư mục `docs/`. Toàn bộ file mã nguồn đều có docstring mô tả ở đầu file.
 
-Sơ đồ kiến trúc tổng thể [`booking-overbooking.drawio`](../architecture/booking-overbooking.drawio) được thiết kế theo chuẩn mỗi thành phần chính là một deployable unit, phân biệt rõ luồng dữ liệu và luồng người dùng/MLOps bằng màu sắc và đánh số thứ tự `1→n`.
+Sơ đồ kiến trúc tổng thể [`booking-overbooking.drawio`](../architecture/booking-overbooking.drawio) được thiết kế theo chuẩn mỗi thành phần chính là một deployable unit, phân biệt rõ luồng dữ liệu và luồng người dùng/MLOps bằng màu sắc, đánh số riêng cho từng luồng (revenue manager 1→12, dữ liệu 1→11, MLOps 1→9).
 
 ![Sơ đồ kiến trúc tổng thể booking-overbooking](../architecture/booking-overbooking.png)
 

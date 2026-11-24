@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net">
   <diagram id="booking-overbooking" name="Booking overbooking">
-    <mxGraphModel dx="997" dy="574" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2760" pageHeight="1320" background="#f8fafc" math="0" shadow="0">
+    <mxGraphModel dx="2114" dy="1217" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2760" pageHeight="1320" background="#f8fafc" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -19,7 +19,7 @@
         <mxCell id="rm_body" parent="rm" style="shape=delay;direction=north;html=1;fillColor=#def8fc;strokeColor=#0891b2;strokeWidth=1.5;" value="" vertex="1">
           <mxGeometry height="27" width="52" y="29" as="geometry" />
         </mxCell>
-        <mxCell id="flows" parent="z_users" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=13;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;fontColor=#0f172a;" value="&lt;b&gt;Luồng&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#2563eb&quot;&gt;━ Revenue mgr 1→12&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#475569&quot;&gt;━ Dữ liệu 1→12&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#d97706&quot;&gt;━ Dev / ML 1→8&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#7c3aed&quot;&gt;┅ lineage, metrics&lt;/font&gt;" vertex="1">
+        <mxCell id="flows" parent="z_users" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=13;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;fontColor=#0f172a;" value="&lt;b&gt;Luồng&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#2563eb&quot;&gt;━ Revenue mgr 1→12&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#475569&quot;&gt;━ Dữ liệu 1→11&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#d97706&quot;&gt;━ Dev / ML 1→9&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#7c3aed&quot;&gt;┅ lineage, metrics&lt;/font&gt;" vertex="1">
           <mxGeometry height="145" width="160" x="8" y="387" as="geometry" />
         </mxCell>
         <mxCell id="z_edge" parent="1" style="rounded=1;arcSize=3;container=1;collapsible=0;html=1;fillColor=#fff1f2;strokeColor=#fda4af;verticalAlign=top;align=left;spacingLeft=10;spacingTop=2;fontStyle=1;fontSize=15;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;fontColor=#be123c;" value="Edge · NGINX" vertex="1">
@@ -64,10 +64,10 @@
         <mxCell id="gw" parent="z_gw" style="shape=hexagon;perimeter=hexagonPerimeter2;size=0.18;whiteSpace=wrap;html=1;fillColor=#feeaed;strokeColor=#e11d48;strokeWidth=1.5;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;fontSize=15;fontColor=#0f172a;" value="&lt;b&gt;agentgateway&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:12px;color:#64748b&quot;&gt;LLM · MCP · A2A&lt;/span&gt;" vertex="1">
           <mxGeometry height="100" width="170" x="10" y="195" as="geometry" />
         </mxCell>
-        <mxCell id="z_llm" parent="1" style="rounded=1;arcSize=3;container=1;collapsible=0;html=1;fillColor=#eef2ff;strokeColor=#a5b4fc;verticalAlign=top;align=left;spacingLeft=10;spacingTop=2;fontStyle=1;fontSize=15;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;fontColor=#4338ca;" value="LLM · llm-d" vertex="1">
+        <mxCell id="z_llm" parent="1" style="rounded=1;arcSize=3;container=1;collapsible=0;html=1;fillColor=#eef2ff;strokeColor=#a5b4fc;verticalAlign=top;align=left;spacingLeft=10;spacingTop=2;fontStyle=1;fontSize=15;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;fontColor=#4338ca;" value="LLM · vLLM" vertex="1">
           <mxGeometry height="180" width="190" x="990" y="380" as="geometry" />
         </mxCell>
-        <mxCell id="vllm" parent="z_llm" style="shape=cube;size=10;darkOpacity=0.05;whiteSpace=wrap;html=1;spacingTop=28;fillColor=#fef3d8;strokeColor=#d97706;strokeWidth=1.5;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;fontSize=15;fontColor=#0f172a;" value="&lt;b&gt;vLLM&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:12px;color:#64748b&quot;&gt;router EPP · qwen v1/v2&lt;/span&gt;" vertex="1">
+        <mxCell id="vllm" parent="z_llm" style="shape=cube;size=10;darkOpacity=0.05;whiteSpace=wrap;html=1;spacingTop=28;fillColor=#fef3d8;strokeColor=#d97706;strokeWidth=1.5;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;fontSize=15;fontColor=#0f172a;" value="&lt;b&gt;vLLM&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:12px;color:#64748b&quot;&gt;Qwen2.5 · LoRA v1/v2&lt;/span&gt;" vertex="1">
           <mxGeometry height="90" width="170" x="15" y="50" as="geometry" />
         </mxCell>
         <mxCell id="vllm_logo" parent="z_llm" style="shape=image;html=1;imageAspect=1;aspect=fixed;image=data:image/svg+xml,PHN2ZyBmaWxsPSIjMzBBMkZGIiByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+dkxMTTwvdGl0bGU+PHBhdGggZD0ibTIzLjYgMC04LjcyMSA0LjU5TDkuODI5IDI0aDcuNDF6TTkuODMgMjRWNS4xNDJILjRaIi8+PC9zdmc+;" value="" vertex="1">
@@ -285,16 +285,10 @@
         <mxCell id="e23" edge="1" parent="1" source="kafka" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#475569;fontColor=#475569;fontSize=13;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;labelBackgroundColor=#ffffff;exitX=0.5;exitY=0;entryX=0;entryY=0.5;" target="flink" value="7 · event_time">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e24" edge="1" parent="1" source="flink" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#475569;fontColor=#475569;fontSize=13;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;labelBackgroundColor=#ffffff;exitX=1;exitY=0.233;entryX=0;entryY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;" target="feast" value="8 · Job 2 · push online">
-          <mxGeometry relative="1" x="-0.001" as="geometry">
-            <Array as="points">
-              <mxPoint x="1245" y="689.2" />
-              <mxPoint x="1245" y="479" />
-            </Array>
+        <mxCell id="e25" edge="1" parent="1" source="gold" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#475569;fontColor=#475569;fontSize=13;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;labelBackgroundColor=#ffffff;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" target="feast" value="9 · materialize batch +&amp;nbsp;&lt;div&gt;Job 2 realtime · Airflow&lt;/div&gt;">
+          <mxGeometry relative="1" x="0.4611" as="geometry">
+            <mxPoint as="offset" />
           </mxGeometry>
-        </mxCell>
-        <mxCell id="e25" edge="1" parent="1" source="gold" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#475569;fontColor=#475569;fontSize=13;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;labelBackgroundColor=#ffffff;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" target="feast" value="9 · materialize · Airflow">
-          <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="e26" edge="1" parent="1" source="minio" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#475569;fontColor=#475569;fontSize=13;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.039;entryY=0.467;entryDx=0;entryDy=0;entryPerimeter=0;" target="airflow" value="10 · policy docs">
           <mxGeometry relative="1" x="0.2599" as="geometry">
@@ -313,8 +307,8 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="e28" edge="1" parent="1" source="flink" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#475569;fontColor=#475569;fontSize=13;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;labelBackgroundColor=#ffffff;exitX=1;exitY=0.75;entryX=0.2;entryY=0;exitDx=0;exitDy=0;" target="gold" value="12 · Job 1 · JDBC offline">
-          <mxGeometry relative="1" x="-0.1907" as="geometry">
+        <mxCell id="e28" edge="1" parent="1" source="flink" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#475569;fontColor=#475569;fontSize=13;fontFamily=Inter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DInter;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0.2;entryY=0;exitDx=0;exitDy=0;" target="gold" value="8 · Job 1 · JDBC offline">
+          <mxGeometry relative="1" x="-0.2392" as="geometry">
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
