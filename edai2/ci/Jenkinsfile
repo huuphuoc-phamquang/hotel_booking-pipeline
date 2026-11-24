@@ -32,7 +32,12 @@ pipeline {
             CHANGED=$(echo "$FILES" | paste -sd, -)
             echo "mcp_server thay đổi từ $BASE: ${CHANGED:-không có}"
             if [ -n "$CHANGED" ]; then
-              mutmut run --paths-to-mutate "$CHANGED"   # mutmut 2.x (pin <3; bản 3 bỏ cờ này)
+              # runner mặc định của mutmut thiếu PYTHONPATH/asyncio_mode như bước pytest ở trên -> baseline lỗi import
+              export PYTHONPATH="mcp_server:dags:observability"
+              # mutmut 2.x (pin <3; bản 3 bỏ --paths-to-mutate); exit 2/4/8 = còn mutant sống/timeout, để check_mutation_score
+              # quyết định theo ngưỡng; chỉ exit 1 (lỗi thật) làm dừng build
+              mutmut run --paths-to-mutate "$CHANGED" \
+                --runner "python -m pytest -x -q -o asyncio_mode=auto --ignore=tests/test_drift_api.py tests/" || [ $? -ne 1 ]
               python ci/check_mutation_score.py --min 0.8
             fi
           '''
