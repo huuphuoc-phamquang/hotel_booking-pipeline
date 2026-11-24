@@ -42,6 +42,13 @@ test giết 40 và để sống 6, **mutation score đạt 87,0%** (ngưỡng 80
 
 ![mutmut trên overbooking.py: score 87,0%](../images/edai-2/mutmut-overbooking.png)
 
+Trên Jenkins Build #26, stage `Test` chỉ mutate file thay đổi từ build thành công gần nhất (`mcp_server/overbooking.py`):
+41/47 mutant bị diệt, 6 sống, mutation score 87,2%, qua ngưỡng 80%.
+
+![Jenkins: mutmut chỉ chạy trên file thay đổi](../images/edai-2/jenkins-mutmut-start.png)
+
+![Jenkins: mutation score 87,2% trên 47 mutant](../images/edai-2/jenkins-mutmut-score.png)
+
 <a id="edai-2-31"></a>
 ## Kiểm thử tính bất biến (Idempotency) với Hypothesis
 
