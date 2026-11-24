@@ -17,6 +17,12 @@ Chạy kiểm thử trong container (`python:3.12-slim`): `54` test đạt (`15,
 Test tham số hoá theo các lớp tương đương và giá trị biên: xác suất trong `[0, 1]` trả về từ KServe, `booking_id`, và `K` (`p = 0` hoặc `1`, không có booking, chi phí `≤ 0`). `tests/test_overbooking.py` dùng Hypothesis để đối chiếu `K` với định nghĩa trực tiếp.
 
 Các test `edai2/tests/test_overbooking.py` đều đạt trong lần chạy `54/54` ở trên (ảnh kết quả mục `#edai-2-28`) và trên Jenkins Build #19.
+Chạy riêng `pytest tests/test_overbooking.py -v`: 19/19 test đạt, mỗi lớp tương đương và giá trị biên là một case của
+`parametrize` ([`test_overbooking.py`](../../edai2/tests/test_overbooking.py#L26-L48)).
+
+![EP/BVA: các lớp tương đương và giá trị biên trong parametrize](../images/edai-2/ep-bva-parametrize.png)
+
+![EP/BVA: 19 case parametrize của test_overbooking.py](../images/edai-2/ep-bva-pytest.png)
 
 <a id="edai-2-30"></a>
 ## Kiểm thử đột biến (Mutation Testing) với mutmut
@@ -25,7 +31,7 @@ Jenkins chạy mutmut chỉ trên các file thay đổi; `ci/check_mutation_scor
 80%.
 
 Mutmut chạy cục bộ trong container `python:3.12-slim` với `requirements-dev.txt`, chỉ mutate
-`mcp_server/overbooking.py` (file có logic thay đổi gần nhất); bước này chưa chạy trong pipeline Jenkins. Trong 46 mutant,
+`mcp_server/overbooking.py` (file có logic thay đổi gần nhất); đây là lần chạy cục bộ. Trong 46 mutant,
 test giết 40 và để sống 6, **mutation score đạt 87,0%** (ngưỡng 80%). Cả 6 mutant sống sót không làm đổi hành vi của `limit`:
 
 - 2 mutant chỉ đổi chuỗi thông báo của `ValueError`.
@@ -59,7 +65,7 @@ Ngoài ra, kiểm thử symbolic execution bằng `hypothesis-crosshair` (`@sett
 
 `tests/locustfile.py` gửi tải tới `POST /v1/cancel-risk` (5 phần) và `/healthz` (1 phần) của booking-mcp; mỗi
 request đọc feature từ Feast online rồi gọi KServe `cancel-risk`. Biến `BOOKING_IDS` cho locust dùng 5.000 `booking_id`
-thật lấy từ `gold.fact_bookings`, vì cluster thứ hai chỉ có dữ liệu tháng 1/2025. Locust chạy trong một pod trên GKE,
+thật lấy từ `gold.fact_bookings`, vì Gold trên cluster chỉ có dữ liệu tháng 1/2025. Locust chạy trong một pod trên GKE,
 gọi thẳng service: 100 user, tăng 10 user/s, 5 phút, `--html` ra file SLA
 [locust_sla_report.html](locust_sla_report.html). booking-mcp chạy 1 replica.
 
@@ -69,7 +75,7 @@ gọi thẳng service: 100 user, tăng 10 user/s, 5 phút, `--html` ra file SLA
 | `GET /healthz` | 3.548 | 0 | 11,8 | 4 ms | 14 ms | 110 ms | 497 ms |
 | Tổng | 21.059 | 0 | 70,3 | 1.000 ms | 2.400 ms | 3.400 ms | 5.342 ms |
 
-Không có request lỗi. Latency cao do đọc online store: trace Jaeger lúc chịu tải (dòng 15) cho thấy hai lần đọc Feast
+Không có request lỗi. Latency cao do đọc online store: trace Jaeger lúc chịu tải cho thấy hai lần đọc Feast
 chiếm khoảng 98% thời gian một request, còn KServe chỉ khoảng 7,5 ms. Hướng cải thiện: tăng replica booking-mcp, dùng
 connection pool cho online store Feast, thêm index trên bảng online. Trên Grafana, req/s của `/v1/cancel-risk` lên tới
 khoảng 80 req/s ở đỉnh và không có lỗi 5xx. Panel p95 đứng ở 1 s vì histogram mặc định của
