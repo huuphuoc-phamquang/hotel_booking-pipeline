@@ -24,3 +24,5 @@ vLLM chạy trên máy GPU cá nhân (8 GB, `--max-model-len 4096`) và được
 đổi mỗi lần khởi động lại, khi đó chỉ cần chạy lại `gateway/deploy.sh`.
 
 ![Log agentgateway: request LLM có JWT, chia 90/10 theo model](../images/edai-2/agentgateway-llm-log.png)
+
+*Chú thích: Log route `llm` của `agentgateway`: ghi nhận 13 request hợp lệ có `jwt.sub=kagent` chia đúng tỷ lệ ~90/10 (`12` tới `qwen-3b`, `1` tới `qwen-booking-v2`) và 6 request sai token trả `401`.*

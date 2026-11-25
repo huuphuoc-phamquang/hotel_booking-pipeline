@@ -14,13 +14,19 @@ Iceberg nên không có ràng buộc khoá; các đường nối ở hai zone n�
 
 ![Bảng theo zone trên DataHub](../images/edai-1/datahub-zones.png)
 
+*Chú thích: Danh sách 26 bảng trên DataHub được gắn tag theo 3 tầng: 8 bảng `bronze` (`raw_*`), 2 bảng `silver` (`stg_*`) và 16 bảng `gold` tuân thủ đúng quy ước đặt tên.*
+
 ![Schema fact_bookings trên DataHub](../images/edai-1/datahub-schema-gold.png)
+
+*Chú thích: Tab Columns của bảng `gold.fact_bookings` trên DataHub hiển thị Primary Key (`booking_id`) và hai Foreign Key thực trỏ tới `dim_hotel` (`hotel_key`) và `dim_customer` (`customer_key`).*
 
 ### Bronze (`s3a://lake/bronze/raw_*`, Parquet)
 
 DP1 chép nguyên dữ liệu từ landing, không biến đổi. Bốn bảng sự kiện chia partition theo `dt=<ngày>`; bốn bảng dim chép một lần.
 
 ![ERD Bronze](../images/edai-1/schema-bronze.png)
+
+*Chú thích: Sơ đồ quan hệ (ERD) 8 bảng tầng Bronze (`raw_*` lưu dạng Parquet trên S3/MinIO) và các mối liên kết logic theo mã định danh.*
 
 <details><summary>Cùng sơ đồ dạng Mermaid</summary>
 
@@ -117,6 +123,8 @@ Dữ liệu đã làm sạch: dedup, hợp nhất schema, gắn trạng thái hu
 
 ![ERD Silver](../images/edai-1/schema-silver.png)
 
+*Chú thích: Sơ đồ ERD 2 bảng tầng Silver trên Apache Iceberg (`stg_quotes` và `stg_bookings`) đã được làm sạch, gộp schema v1/v2 và khử trùng.*
+
 <details><summary>Cùng sơ đồ dạng Mermaid</summary>
 
 ```mermaid
@@ -165,6 +173,8 @@ erDiagram
 ### Gold (`gold.*`, PostgreSQL)
 
 ![ERD Gold](../images/edai-1/schema-gold.png)
+
+*Chú thích: Sơ đồ ERD 16 bảng tầng Gold trên PostgreSQL gồm bảng Dimension (`dim_hotel` SCD2, `dim_customer`), `fact_bookings`, 3 bảng `feat_*` và các bảng vận hành.*
 
 <details><summary>Cùng sơ đồ dạng Mermaid</summary>
 
@@ -307,6 +317,8 @@ ngày trỏ đúng `hotel_key` của phiên bản còn hiệu lực ngày đó:
 
 ![SCD2: 3 phiên bản của một khách sạn](../images/edai-1/scd2-hotel-versions.png)
 
+*Chú thích: Truy vấn SQL kiểm tra khách sạn 123 trong `gold.dim_hotel`: cho thấy rõ 3 phiên bản giá nối tiếp nhau (`valid_to_ts` bản cũ bằng `valid_from_ts` bản mới), chỉ 1 bản `is_current = true` và các booking trỏ đúng `hotel_key` theo ngày đặt.*
+
 <a id="edai-1-36"></a>
 ## Bảng Feature Store với cột event_timestamp và created
 
@@ -329,6 +341,8 @@ Trên DataHub, tab Columns của `fact_bookings` đánh dấu `booking_id` là P
 `customer_key` là Foreign Key trỏ sang `dim_hotel`, `dim_customer`.
 
 ![Schema fact_bookings trên DataHub](../images/edai-1/datahub-schema-gold.png)
+
+*Chú thích: Tab Columns của bảng `gold.fact_bookings` trên DataHub hiển thị Primary Key (`booking_id`) và hai Foreign Key thực trỏ tới `dim_hotel` (`hotel_key`) và `dim_customer` (`customer_key`).*
 
 ```mermaid
 erDiagram
@@ -379,4 +393,6 @@ mô hình ở Gold, đều theo quy ước trên. Các bảng vận hành ở Go
 `stream_bookings_1m`, `stream_late_bookings`) và view `labels_cancel` đặt tên theo nghiệp vụ, không mang tiền tố.
 
 ![Bảng theo zone trên DataHub](../images/edai-1/datahub-zones.png)
+
+*Chú thích: Danh sách 26 bảng trên DataHub được gắn tag theo 3 tầng: 8 bảng `bronze` (`raw_*`), 2 bảng `silver` (`stg_*`) và 16 bảng `gold` tuân thủ đúng quy ước đặt tên.*
 

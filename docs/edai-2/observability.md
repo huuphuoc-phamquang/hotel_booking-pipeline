@@ -15,6 +15,8 @@ latency p95 khoảng 96 ms, không có lỗi 5xx (panel 5xx không có series n�
 
 ![Grafana: Booking APIs](../images/edai-2/grafana-booking-apis.png)
 
+*Chú thích: Dashboard Grafana `Booking APIs` khi chạy Locust (20 user, 5 phút): lưu lượng ~`47 req/s`, latency p95 ~`96 ms` và không có bất kỳ lỗi `5xx` nào.*
+
 <a id="edai-2-47"></a>
 ## Thu thập và trực quan hoá Metrics (Prometheus + Grafana)
 
@@ -30,9 +32,15 @@ executor Spark khoảng 6 core.
 
 ![Grafana: toàn cluster](../images/edai-2/grafana-cluster.png)
 
+*Chú thích: Dashboard Grafana theo dõi tổng quan tài nguyên (CPU, RAM, disk, network) trên toàn bộ cụm Kubernetes GKE.*
+
 ![Grafana: namespace data theo pod](../images/edai-2/grafana-namespace-data.png)
 
+*Chú thích: Dashboard Grafana theo từng pod trong namespace `data` lúc job Spark 105 GiB đang chạy: tiêu thụ ~`38 core` CPU và `128 GiB` RAM.*
+
 ![Grafana: một node (Node Exporter)](../images/edai-2/grafana-node.png)
+
+*Chú thích: Dashboard Node Exporter chi tiết tài nguyên phần cứng (CPU, bộ nhớ, I/O đĩa, mạng) của một node trong cụm GKE.*
 
 <a id="edai-2-48"></a>
 ## Thu thập và trực quan hoá Logs (Fluent Bit + Elasticsearch + Kibana)
@@ -47,7 +55,11 @@ Airflow DP2 ra đúng log của `silver_bookings`, `stage_gold`, `upsert_gold`.
 
 ![Kibana Discover](../images/edai-2/kibana-discover.png)
 
+*Chú thích: Giao diện Kibana Discover (`data view booking-*`) thu thập khoảng `48.000` dòng log trong 15 phút từ Fluent Bit → Elasticsearch.*
+
 ![Kibana lọc log task DP2](../images/edai-2/kibana-filter-airflow.png)
+
+*Chú thích: Kibana dùng truy vấn KQL lọc chính xác log của các pod Airflow thuộc pipeline DP2 (`silver_bookings`, `stage_gold`, `upsert_gold`).*
 
 <a id="edai-2-49"></a>
 ## Thu thập và trực quan hoá Traces (Jaeger)
@@ -59,9 +71,15 @@ Jaeger ([`observability/stack/jaeger.yaml`](../../edai2/observability/stack/jaeg
 
 ![Jaeger: danh sách trace của booking-mcp](../images/edai-2/jaeger-traces.png)
 
+*Chú thích: Danh sách các trace của dịch vụ `booking-mcp` được thu thập tự động qua OpenTelemetry trên giao diện Jaeger.*
+
 ![Jaeger: chi tiết trace POST /v1/cancel-risk](../images/edai-2/jaeger-trace-detail.png)
 
+*Chú thích: Chi tiết 1 trace `POST /v1/cancel-risk` (`13,43 ms`, `7` span): tách rõ từng span FastAPI, hai span `feast.online` (`1,78 ms`, `2,23 ms`) và span gọi KServe (`4,99 ms`).*
+
 ![Jaeger: trace phân tán agentgateway → booking-mcp → Feast → KServe](../images/edai-2/jaeger-gateway-mcp-kserve.png)
+
+*Chú thích: Trace phân tán liên thông dài `2,33 s` (`11` span qua 4 tầng): `agentgateway` (`4,45 ms`) → `booking-mcp` → 2 lần `feast.online` (`190,26 ms`, `126,72 ms`) → KServe (`1,78 s`).*
 
 <a id="edai-2-50"></a>
 ## Telemetry cho LLM (token, TTFT, PII blocking)
@@ -73,6 +91,8 @@ Trên GKE (namespace `gateway`), [`edai2/observability/llm_proxy.py`](../../edai
 Kiểm thử thực tế trên cluster: các prompt chứa PII (`card`, `cccd`, `phone_vn`) bị chặn ngay với HTTP `400`, còn các request hợp lệ tới `qwen-3b` và `qwen-booking-v2` (bao gồm mã `BK-90000919211`) đi qua thành công (`200 OK`), hiển thị đầy đủ cả 4 panel (*Token/giây theo model*, *TTFT p95*, *Round-trip p95*, *Prompt bị chặn vì PII*) trên Grafana.
 
 ![Grafana: Telemetry cho LLM (Token/s, TTFT p95, Round-trip p95, PII blocked)](../images/edai-2/grafana-llm-metrics.png)
+
+*Chú thích: Dashboard Grafana `LLM Telemetry` hiển thị đủ 4 chỉ số: Token/giây theo model, TTFT p95, Round-trip p95 và Prompt bị chặn vì PII (chặn thẻ Luhn/CCCD/SĐT, cho qua mã `BK-*`).*
 
 <a id="edai-2-51"></a>
 ## Telemetry cho Agent và MCP Tools
@@ -95,7 +115,11 @@ Một client MCP gọi thẳng booking-mcp 300 vòng, mỗi vòng 3 tool (`predi
 
 ![Grafana: số lần gọi và lỗi theo từng agent (A2A)](../images/edai-2/grafana-agent-calls.png)
 
+*Chú thích: Panel Grafana thống kê số lần gọi thành công (`200`, 21 lượt/agent) và lỗi xác thực (`401`) cho `coordinator`, `data-agent` và `policy-agent`.*
+
 ![Grafana: số lần gọi và lỗi theo tool MCP](../images/edai-2/grafana-mcp-tools.png)
+
+*Chú thích: Panel Grafana đo số lần gọi (`900` lượt trên 300 vòng) và số lần lỗi (`8` lỗi đều ở `predict_cancellation` với mã không tồn tại) của các tool MCP.*
 
 ## Giám sát Drift và Cancel-Risk API (`cancel-risk-ml`)
 
@@ -103,7 +127,13 @@ Dashboard [`cancel-risk-ml.json`](../../edai2/observability/dashboards/cancel-ri
 
 ![Grafana: dashboard cancel-risk-ml](../images/edai-2/grafana-cancel-risk-ml.png)
 
+*Chú thích: Dashboard Grafana `cancel-risk-ml` hiển thị đồng thời p-value KS (`drift-api`), `PSI`, `calib_gap` (từ `drift_monitor`), RPS, p95 latency và CloudEvent qua Knative Broker.*
+
 ![Airflow: DAG drift_monitor chạy trên dữ liệu 2025-01-13](../images/edai-2/airflow-drift-monitor.png)
 
+*Chú thích: DAG `drift_monitor` chạy thành công trên Airflow cho ngày dữ liệu `2025-01-13` để tính PSI, KS và độ lệch calibration.*
+
 ![Kubeflow Pipelines: run retrain-v10-drift-trigger hoàn thành](../images/edai-2/kfp-retrain-drift-trigger.jpg)
+
+*Chú thích: Giao diện Kubeflow Pipelines hiển thị run `retrain-v10-drift-trigger` đã hoàn thành quá trình retrain tự động sau khi phát hiện drift.*
 

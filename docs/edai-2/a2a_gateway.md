@@ -11,6 +11,10 @@ Kiểm thử bằng [`gateway/check.sh`](../../edai2/gateway/check.sh): agent ca
 
 ![Kiểm security & policy của agentgateway](../images/edai-2/agentgateway-check.png)
 
+*Chú thích: Kết quả chạy `gateway/check.sh`: gọi không token hoặc token giả bị trả `401`; `data-agent` chỉ thấy `get_booking_features` và bị chặn `Unknown tool` khi gọi `predict_cancellation`; route `/a2a` trả `200` khi có JWT.*
+
 Để lời gọi nội bộ từ `coordinator-agent` tới `data-agent` và `policy-agent` cũng đi qua `agentgateway` (thay vì gọi thẳng trong cluster do `kagent v1alpha2` chỉ tham chiếu agent con theo tên Kubernetes), hệ thống triển khai MCP server [`a2a-bridge`](../../edai2/gateway/a2a_bridge.py) (cung cấp 2 tool `delegate_data_agent` và `delegate_policy_agent`) đứng sau route `/mcp-a2a` trên `agentgateway` (xác thực JWT và kiểm tra quyền `jwt.role == "coordinator-agent"` qua CEL). Khi `coordinator-agent` cần điều phối, yêu cầu đi theo chuỗi `coordinator-agent` → `agentgateway (/mcp-a2a)` → `a2a-bridge` → `agentgateway (/a2a/data-agent/` hoặc `/a2a/policy-agent/)` → sub-agent đích, giữ nguyên ngữ cảnh trace phân tán (OTel `trace.id` xuyên suốt trên Jaeger) và tổng hợp kết quả thành công (`HTTP 200`).
 
 ![Luồng điều phối A2A từ coordinator-agent qua agentgateway trên Jaeger](../images/edai-2/a2a-coordinator-via-gateway.png)
+
+*Chú thích: Trace phân tán trên Jaeger chứng minh lời gọi A2A đi vòng đúng qua gateway: `coordinator-agent` → `agentgateway (/mcp-a2a)` → `a2a-bridge` → `agentgateway (/a2a/*)` → sub-agent (`HTTP 200`, giữ nguyên `trace.id`).*

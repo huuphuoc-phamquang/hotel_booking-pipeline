@@ -33,6 +33,8 @@ theo. `expire_snapshots` dọn các snapshot cũ hơn 7 ngày, với mốc tính
 
 ![Iceberg trước và sau rewrite_data_files](../images/edai-1/iceberg-zorder.png)
 
+*Chú thích: So sánh bảng `silver.stg_quotes` trước và sau `rewrite_data_files` với `zorder(hotel_id, stay_date)`: từ 1 file 382,6 MB tách thành 6 file ~60,4 MB, giúp query lọc khách sạn × 2 tuần chỉ đọc 2/6 file và giảm thời gian từ 0,73 s xuống 0,37 s.*
+
 <a id="edai-1-21"></a>
 ## Lưu trữ Data Warehouse (PostgreSQL Gold)
 
@@ -58,3 +60,5 @@ Index composite đặt cột lọc bằng (`hotel_key`) trước và cột lọc
 bảng lớn.
 
 ![EXPLAIN ANALYZE trước và sau index](../images/edai-1/dw-explain-index.png)
+
+*Chú thích: Kết quả `EXPLAIN ANALYZE` trên PostgreSQL cho dashboard doanh thu (`gold.fact_bookings` 4,66 triệu dòng): sau khi thêm composite index `(hotel_key, checkin_date)` và `idx_dim_hotel_id`, thời gian chạy giảm từ 116,3 ms xuống 81,6 ms.*

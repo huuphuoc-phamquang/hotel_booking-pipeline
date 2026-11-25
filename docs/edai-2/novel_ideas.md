@@ -25,9 +25,15 @@ Trước drift, xác suất dự báo lệch xác suất thật dưới `0,05` �
 
 ![Bảng gold.booking_risk đã chấm trên cluster GKE](../images/edai-2/idea1-cluster-tables.png)
 
+*Chú thích: Truy vấn SQL trên PostgreSQL cluster kiểm tra `22.865` booking ngày `2025-01-12` đã được chấm đầy đủ vào `gold.booking_risk` (`scored_date = 2025-01-13`).*
+
 ![Bảng đối chiếu calibration, 10 decile và sai số K trên cluster](../images/edai-2/idea1-cluster-eval.png)
 
+*Chú thích: Bảng đối chiếu 10 decile giữa `p_model` và `p_true` trên cluster: `Mean p_model = 0,0900` vs `Mean p_true = 0,3288` (lệch calibration `0,2388`), kéo theo sai số K trung bình `2,343` phòng trên 446 ô.*
+
 ![Idea 1: Reliability và sai số K trên gold.booking_risk của cluster](../images/edai-2/idea1-cluster-calibration.png)
+
+*Chú thích: Biểu đồ Reliability theo 10 decile và phân bố sai số K trên `gold.booking_risk` của cluster GKE: đường dự báo của v1 tăng đơn điệu nhưng nằm thấp hẳn dưới đường lý tưởng do thiếu nhãn huỷ muộn trong 13 ngày đầu.*
 
 <a id="edai-2-57"></a>
 ## Idea 2 (edai-2): HITL cho bán vượt
@@ -47,4 +53,8 @@ hợp; và tính chất K không giảm khi chi phí chuyển khách giảm.
 
 ![Approval required cho apply_overbooking](../images/edai-2/kagent-hitl-approval.png)
 
+*Chú thích: Giao diện kagent UI khi `policy-agent` gọi `apply_overbooking(8528, 2025-01-29, 1)`: dừng ở trạng thái "Approval required" chờ revenue manager duyệt.*
+
 ![Sau khi Approve, K được ghi](../images/edai-2/kagent-hitl-approved.png)
+
+*Chú thích: Sau khi revenue manager bấm Approve, dòng `8528 | 2025-01-29 | 1` mới được ghi chính thức vào bảng `gold.overbooking_limits`.*

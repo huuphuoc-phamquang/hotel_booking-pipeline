@@ -29,13 +29,23 @@ chỉ bằng 1,15 lần trung vị (305,7 so với 266,6 MiB).
 
 ![Spark UI baseline: jobs](../images/edai-1/spark-baseline-jobs.png)
 
+*Chú thích: Spark History Server của bài **join 3 cột `quotes ⋈ inventory` (`baseline`)**: Job 3 chạy 3 stage (2.618 task) mất `17 min` (~1.049 s) để xử lý xong 104,7 GiB dữ liệu.*
+
 ![Spark UI baseline: stages](../images/edai-1/spark-baseline-stages.png)
+
+*Chú thích: Danh sách Stage của **`quotes ⋈ inventory` (`baseline`)**: Stage 4 đọc `104.7 GiB` (`1.095` task, `8.0 min`, shuffle ghi `392.1 GiB`) và Stage 5 `SortMergeJoin` (`1.500` task, `9.3 min`, shuffle đọc `393.2 GiB`).*
 
 ![Spark UI baseline: scan](../images/edai-1/spark-baseline-sql-scan.png)
 
+*Chú thích: Chi tiết bước `Scan parquet` trên Spark SQL tab của **`quotes ⋈ inventory` (`baseline`)**: đọc `6,320` file quotes (`104.7 GiB`, `13,328,532,602` dòng) và `23` file inventory (`80.3 MiB`, `99,750,000` dòng).*
+
 ![Spark UI baseline: exchange và sort](../images/edai-1/spark-baseline-sql-exchange.png)
 
+*Chú thích: Chi tiết bước `Exchange` & `Sort` của **`quotes ⋈ inventory` (`baseline`)**: shuffle `13,328,532,602` dòng (`1330.7 GiB` chưa nén / `392.1 GiB` đã nén) chia đều qua `1,500` partition.*
+
 ![Spark UI baseline: SortMergeJoin](../images/edai-1/spark-baseline-sql-join.png)
+
+*Chú thích: Chi tiết `SortMergeJoin` của **`quotes ⋈ inventory` (`baseline`)**: cho ra đúng `13,328,532,602` dòng, thời gian task khá đều (`min 9.7 s, med 13.2 s, max 19.0 s`), không có task nào bị nghẽn đơn lẻ.*
 
 Skew thật xuất hiện khi khoá join chỉ là `hotel_id` (`hotel_baseline`: quotes ⋈ hotels, tắt AQE và broadcast). Khách sạn
 nóng nhất (Zipf a = 0,8, khoảng 2,6% lượt xem) dồn **348.457.885 dòng, 9,78 GB vào một partition, gấp 47 lần trung vị**
@@ -85,15 +95,27 @@ chế độ.
 
 ![Spark UI aqe_tuned: timeline](../images/edai-1/spark-aqe-timeline.png)
 
+*Chú thích: Event Timeline trên Spark UI của **`quotes ⋈ inventory` (`aqe_tuned`)**: hiển thị thời gian cấp phát 6 executor và trình tự chạy Job 0–5 trên cụm `spark-spot`.*
+
 ![Spark UI aqe_tuned: jobs](../images/edai-1/spark-aqe-jobs.png)
+
+*Chú thích: Danh sách Jobs của **`quotes ⋈ inventory` (`aqe_tuned`)**: Job 0 liệt kê 395 thư mục mất `5.3 min`, các job đọc dữ liệu chính chạy trong `7.8–7.9 min`.*
 
 ![Spark UI aqe_tuned: summary metrics stage join](../images/edai-1/spark-aqe-stage-join.png)
 
+*Chú thích: Summary Metrics Stage Join của **`quotes ⋈ inventory` (`aqe_tuned`)**: phân phối khá đồng đều (`Median 13 s / Max 17 s`; `Shuffle Read Median 266.6 MiB / Max 305.7 MiB`, gấp 1,15×) nên AQE không cần tách partition.*
+
 ![Spark UI aqe_tuned: scan](../images/edai-1/spark-aqe-sql-scan.png)
+
+*Chú thích: Chi tiết `Scan parquet` của **`quotes ⋈ inventory` (`aqe_tuned`)**: đọc cùng tập `13,328,532,602` dòng quotes (`104.7 GiB`) và `99,750,000` dòng inventory như bản baseline.*
 
 ![Spark UI aqe_tuned: exchange](../images/edai-1/spark-aqe-sql-exchange.png)
 
+*Chú thích: Chi tiết `Exchange` của **`quotes ⋈ inventory` (`aqe_tuned`)**: cho thấy `AdaptiveSparkPlan` giữ `1,500` partition với kích thước shuffle đồng đều tương tự baseline.*
+
 ![Spark UI aqe_tuned: SortMergeJoin](../images/edai-1/spark-aqe-sql-join.png)
+
+*Chú thích: Chi tiết `SortMergeJoin` dưới `AdaptiveSparkPlan` của **`quotes ⋈ inventory` (`aqe_tuned`)**: task chạy trong `9.4 s (min) / 13.3 s (med) / 17.1 s (max)` với `0.0 B` spill.*
 
 <a id="edai-1-13"></a>
 ## Xử lý thay đổi lược đồ (Schema Evolution) trong Spark
@@ -113,6 +135,8 @@ Sau `read_bookings`, `room_category` không null ở dòng nào của cả hai p
 null ở 70.855.735 dòng v1, vì đây là cột mới của v2 mà dữ liệu cũ không có. Test cục bộ cho kết quả tương tự.
 
 ![Kết quả bookings_quality trên dữ liệu thật](../images/edai-1/spark-bookings-quality.png)
+
+*Chú thích: Output pod `bookings-quality` trên toàn bộ `395` ngày `landing/bookings` (`152.837.741` dòng): xác nhận `read_bookings` gộp sạch schema v1/v2 (`room_category` không null) và `dedup_bookings` loại đúng `2.998.388` bản gửi trùng (1,962%).*
 
 <a id="edai-1-14"></a>
 ## Xử lý các lỗi dữ liệu offline khác (trùng lặp, ép kiểu, giá trị âm)
@@ -147,7 +171,11 @@ Task `silver_bookings` của DP2 gọi `spark-submit` lên Kubernetes. Pod drive
 
 ![Graph DP2](../images/edai-1/airflow-dp2-graph.png)
 
+*Chú thích: Graph View của DAG `dp2_bronze_to_gold` gồm 5 bước tuần tự (`wait_dp1 → silver_bookings → stage_gold → upsert_gold → validate_gold`), hoàn thành ngày 2025-01-01 trong ~4 phút.*
+
 ![Log Spark của task silver_bookings](../images/edai-1/airflow-spark-log.png)
+
+*Chú thích: Log Airflow của task `silver_bookings` đọc từ MinIO (`remote logging`): cho thấy `spark-submit` đẩy pod driver `spark-booking:b9cf9a8` lên Kubernetes và kết thúc với `exit code: 0`.*
 
 <a id="edai-1-16"></a>
 ## Flink Job (Baseline) · Xử lý dữ liệu streaming
@@ -162,6 +190,8 @@ Cách đối soát: `got` của một ngày bằng tổng `gold.stream_bookings_
 cắt tại 2026-01-03 01:00.
 
 ![Đối soát baseline, bản tối ưu và truth](../images/edai-1/flink-perday-compare.png)
+
+*Chú thích: Bảng đối soát theo ngày giữa Flink Baseline (`BASELINE=1`), Flink Tối ưu và Ground Truth (`stream_truth.py`): Baseline đếm thừa đúng số bản trùng (`+7.547` ngày 01-01), còn bản tối ưu chỉ lệch `0,011%` và `0,005%`.*
 
 Baseline cho thấy hai vấn đề:
 
@@ -190,9 +220,15 @@ Mỗi event vào 12 cửa sổ chồng nhau và được xử lý bằng Python,
 
 ![Job graph](../images/edai-1/flink-job-graph.png)
 
+*Chú thích: Flink Job Graph của `booking_events_window`: thể hiện rõ luồng đọc Kafka → `ContractCheck` (rẽ nhánh DLQ) → gán watermark → `DedupByEventId` → chia 2 nhánh cửa sổ trượt 1h và tumbling 1m.*
+
 ![BackPressure](../images/edai-1/flink-backpressure.png)
 
+*Chú thích: Ảnh BackPressure trên Flink UI khi job đọc dồn backlog từ đầu topic: `Source` bị backpressure (màu đỏ/cam) còn toán tử cửa sổ Python `SlidingEventTimeWindows` bận `100%` ở cả 6 subtask.*
+
 ![Offset 6 partition của topic booking_events](../images/edai-1/kafka-offsets.png)
+
+*Chú thích: Trạng thái offset của 6 partition trên Kafka topic `booking_events` để đối chiếu tốc độ tiêu thụ đồng đều với 6 subtask Flink.*
 
 Để job chạy được trên Kubernetes, nhóm đã sửa các lỗi sau:
 
@@ -231,7 +267,11 @@ trễ theo từng nguồn.
 
 ![Watermarks của 6 subtask](../images/edai-1/flink-watermarks.png)
 
+*Chú thích: Tab Watermarks của 6 subtask trên Flink UI: cả 6 subtask sau `key_by` có giá trị watermark đồng bộ bằng nhau (lấy theo watermark nhỏ nhất phía trước).*
+
 ![gold.stream_late_bookings](../images/edai-1/flink-late-bookings.png)
+
+*Chú thích: Dữ liệu thực tế trong bảng `gold.stream_late_bookings` trên PostgreSQL: lưu lại các booking trễ quá watermark 10 phút + allowed lateness 5 phút từ side output.*
 
 <a id="edai-1-18"></a>
 ## Xử lý event trùng lặp trong Flink
@@ -253,6 +293,8 @@ lại từ checkpoint với watermark khác. Ngày 2025-12-31 là biên đầu c
 Checkpoint unaligned EXACTLY_ONCE lên MinIO hoàn tất đều đặn: khoảng 1 phút một lần, 20,2 MB, cả 5 operator đều 6/6.
 
 ![Checkpoints](../images/edai-1/flink-checkpoints.png)
+
+*Chú thích: Tab Checkpoints trên Flink UI: checkpoint chế độ `UNALIGNED / EXACTLY_ONCE` hoàn tất đều đặn mỗi ~1 phút (`~20,2 MB`), đủ `6/6` subtask ở cả 5 operator.*
 
 <a id="edai-1-19"></a>
 ## Tổng hợp theo cửa sổ trượt (Sliding Window) trong Flink
@@ -308,4 +350,8 @@ Hai cửa sổ chạy trên GKE và ghi vào Gold: tumbling 1 phút ra `gold.str
 
 ![gold.stream_bookings_1m](../images/edai-1/flink-stream-bookings-1m.png)
 
+*Chú thích: Dữ liệu trong bảng `gold.stream_bookings_1m` (nhánh Tumbling Window 1 phút) dùng để cộng tổng đối soát theo từng phút với Ground Truth.*
+
 ![gold.feat_hotel_realtime](../images/edai-1/flink-feat-hotel-realtime.png)
+
+*Chú thích: Dữ liệu trong bảng `gold.feat_hotel_realtime` (nhánh Sliding Window 1 giờ, bước 5 phút): các mốc `event_timestamp` đều là bội số của 5 phút.*

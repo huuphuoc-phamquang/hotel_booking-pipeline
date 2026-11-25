@@ -17,6 +17,8 @@ Pipeline `data-pipeline` ([`ci/Jenkinsfile.data`](../../ci/Jenkinsfile.data)) tr
 
 ![Jenkins Stage View: data-pipeline build #12–#14](../images/edai-2/jenkins-data-stage-view.png)
 
+*Chú thích: Jenkins Stage View của job `data-pipeline` (Build #12–#14): Build #14 chạy trọn vẹn 5 stage (test song song, build/push, E2E stream 3/3 pass, deploy Airflow revision 6 `SUCCESS`).*
+
 <a id="edai-2-34"></a>
 ## CI/CD cho MCP Server & Agents (tích hợp Langfuse)
 
@@ -30,15 +32,27 @@ Toàn bộ pipeline `booking-mcp` ([`edai2/ci/Jenkinsfile`](../../edai2/ci/Jenki
 
 ![Langfuse Prompts gắn nhãn production cho 4 agent](../images/edai-2/langfuse-prompts.png)
 
+*Chú thích: Giao diện Langfuse quản lý 4 system prompt (`data-agent`, `policy-agent`, `policy-agent-v2`, `coordinator`) đều được gắn nhãn `production` để CI kéo về tự động.*
+
 ![Jenkins Stage View: booking-mcp build #19 (WITH_AGENTS=true)](../images/edai-2/jenkins-agents-stage-view.png)
+
+*Chú thích: Jenkins Stage View của job `booking-mcp` (Build #19, `WITH_AGENTS=true`): toàn bộ chuỗi Test → Build & push → Deploy APIs → Fetch prompt (Langfuse) → Deploy agents xanh 100%.*
 
 ![Stage Logs Deploy agents (booking-mcp build #19)](../images/edai-2/jenkins-agents-console.png)
 
+*Chú thích: Console log stage `Deploy agents` (Build #19): thực thi `kubectl apply`, `rollout status` và gọi `publish_agent_card.py` đăng ký thành công cả 4 agent lên `agentregistry`.*
+
 ![Secret registry lấy từ Vault, không in ra log](../images/edai-2/jenkins-vault-masked.png)
+
+*Chú thích: Log Jenkins chứng minh secret (`REG_KEY` lấy từ HashiCorp Vault qua `withVault`) được che kín bằng dấu `****`, không bị rò rỉ ra log build.*
 
 ![Build image booking-mcp](../images/edai-2/jenkins-console-build.png)
 
+*Chú thích: Console log bước `Build & push images` của `booking-mcp` đẩy image gắn tag commit lên Google Artifact Registry.*
+
 ![helm upgrade revision 9, Finished: SUCCESS](../images/edai-2/jenkins-console-deploy.png)
+
+*Chú thích: Console log bước `helm upgrade --atomic` triển khai `booking-mcp` thành công (`STATUS: deployed`, `Finished: SUCCESS`).*
 
 <a id="edai-2-35"></a>
 ## CI/CD cho Coordinator Agent
@@ -49,7 +63,11 @@ Trong cùng **Build #19** (`WITH_AGENTS=true`, commit `762fa7b`), sau khi `booki
 
 ![Jenkins Stage View: booking-mcp build #19 (WITH_AGENTS=true)](../images/edai-2/jenkins-agents-stage-view.png)
 
+*Chú thích: Jenkins Stage View của job `booking-mcp` (Build #19, `WITH_AGENTS=true`): toàn bộ chuỗi Test → Build & push → Deploy APIs → Fetch prompt (Langfuse) → Deploy agents xanh 100%.*
+
 ![Stage Logs Deploy agents (booking-mcp build #19)](../images/edai-2/jenkins-agents-console.png)
+
+*Chú thích: Console log stage `Deploy agents` (Build #19): thực thi `kubectl apply`, `rollout status` và gọi `publish_agent_card.py` đăng ký thành công cả 4 agent lên `agentregistry`.*
 
 <a id="edai-2-36"></a>
 ## CI/CD cho Stream Feature Jobs
@@ -61,3 +79,5 @@ Trong cùng **Build #19** (`WITH_AGENTS=true`, commit `762fa7b`), sau khi `booki
 - **Deploy Flink Job 1 (Offline Store):** Stage `Deploy Flink Job 1` để `WITH_FLINK_DEPLOY=false` (cluster chưa cài Flink Operator); khi bật trên cluster có Flink Operator sẽ apply [`edai1/k8s/flink.yaml`](../../edai1/k8s/flink.yaml) và chờ `lifecycleState=STABLE`.
 
 ![Jenkins Stage View: data-pipeline build #12–#14](../images/edai-2/jenkins-data-stage-view.png)
+
+*Chú thích: Jenkins Stage View của job `data-pipeline` (Build #12–#14): Build #14 chạy trọn vẹn 5 stage (test song song, build/push, E2E stream 3/3 pass, deploy Airflow revision 6 `SUCCESS`).*

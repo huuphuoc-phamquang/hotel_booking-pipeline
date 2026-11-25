@@ -57,7 +57,11 @@ config_sha256 94e5c466f09d
 
 ![Cấu hình skew trong generator/config.yaml](../images/edai-1/generator-config-skew.png)
 
+*Chú thích: Đoạn cấu hình `skew` trong `generator/config.yaml`: `hotel_zipf_a: 0.8`, `hot_city_share: 0.7` (70% khách sạn ở 3 thành phố lớn) và các mùa cao điểm Tết, 30/4, hè.*
+
 ![Cấu hình concept drift và covariate drift trong generator/config.yaml](../images/edai-1/generator-config-drift.png)
+
+*Chú thích: Đoạn cấu hình `label.drift` và `covariate_drift` trong `generator/config.yaml` tại mốc `2025-06-01`: hệ số `lead_time` tăng từ `0.8` lên `1.4` và `lead_scale: 1.5`.*
 
 ### Kết quả kiểm chứng drift trực tiếp từ `generator/profile_data.py`
 
@@ -153,6 +157,8 @@ mỗi giá trị sẽ thành một thư mục nhỏ. Dữ liệu partition theo 
 
 ![Skew theo khách sạn và theo ô](../images/edai-1/skew-hotel.png)
 
+*Chú thích: Biểu đồ phân phối lệch (Zipf) theo hạng khách sạn trên trục log–log và theo từng ô (`hotel_id, room_type, stay_date`): khách sạn đứng đầu nhận ~10⁶ lượt xem/ngày, ô nóng nhất có 2.723 lượt xem/shard/ngày.*
+
 <a id="edai-1-6"></a>
 ## Mô phỏng thay đổi lược đồ (Schema Evolution)
 
@@ -214,9 +220,15 @@ Pod số 0 khởi động lại một lần. Nguyên nhân là 8 pod cùng tạo
 
 ![8 pod generator chạy song song](../images/edai-1/generator-pods-running.png)
 
+*Chú thích: Trạng thái 8 pod của Indexed Job `offline-generator` chạy song song trên cụm GKE (`cpu-spot`), mỗi pod phụ trách sinh một dải ngày riêng.*
+
 ![Job hoàn thành 8/8](../images/edai-1/generator-job-complete.png)
 
+*Chú thích: Indexed Job `offline-generator` hoàn thành `8/8` (`Complete`) với thời gian chạy 70 phút.*
+
 ![Dung lượng bucket landing](../images/edai-1/generator-landing-size.png)
+
+*Chú thích: Kiểm tra dung lượng bucket `landing` trên MinIO của GKE: đạt tổng cộng 111 GiB với 42.830 object, vượt mốc 100 GB.*
 
 <a id="edai-1-9"></a>
 ## Mô phỏng dữ liệu đến trễ (Late Arrivals)
@@ -248,6 +260,8 @@ Với booking, 10,03% event mobile và toàn bộ event channel manager trễ qu
 cửa sổ (chỉ dedup), nên độ trễ của nó không làm mất event.
 
 ![Độ trễ event theo nguồn](../images/edai-1/stream-delay.png)
+
+*Chú thích: Biểu đồ phân phối độ trễ (`ingest_time - event_time`) đo bằng `stream_profile.py` trên 1.009.407 event: web và huỷ gần như 0 phút, mobile 5–20 phút, webhook 1–15 phút, còn channel manager trễ 1–4 giờ.*
 
 <a id="edai-1-10"></a>
 ## Mô phỏng lỗi dữ liệu streaming (sai định dạng, thiếu trường)

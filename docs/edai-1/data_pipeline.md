@@ -19,9 +19,15 @@ tất cả đều success.
 
 ![Graph DP1](../images/edai-1/airflow-dp1-graph.png)
 
+*Chú thích: Graph View của DAG `dp1_ingest_bronze` trên Airflow UI gồm 12 task (`check_* → ingest_* → validate_*` cho 4 bảng), toàn bộ đều chuyển màu xanh `success`.*
+
 ![Connections](../images/edai-1/airflow-connections.png)
 
+*Chú thích: Danh sách Airflow Connections (`spark_default`, `warehouse`, `minio_landing`, `datahub_rest_default`) được cấu hình tập trung trong Airflow thay vì hard-code.*
+
 ![Variables](../images/edai-1/airflow-variables.png)
+
+*Chú thích: Danh sách Airflow Variables gồm 2 biến `landing_start_date` và `spark_image`, dùng chung cho các DAG thay vì hard-code.*
 
 <a id="edai-1-23"></a>
 ## Giai đoạn Validate · Pipeline DP1 (Raw → Bronze)
@@ -34,6 +40,8 @@ vào (giá âm, `quote_id` trùng, partition rỗng) đều bị bắt.
 `gx_bronze_bookings` lên DataHub. Cả 4 task `validate_*` đều success.
 
 ![Log validate_bookings](../images/edai-1/airflow-validate-bronze-log.png)
+
+*Chú thích: Log task `validate_bookings` chạy Great Expectations 1.x trên từng shard Bronze: cả 34/34 kiểm tra đều đạt và đẩy kết quả `gx_bronze_bookings` lên DataHub.*
 
 <a id="edai-1-24"></a>
 ## Giai đoạn Ingest · Pipeline DP2 (Bronze → Silver → Gold)
@@ -54,6 +62,8 @@ dòng huỷ ngay trong ngày), `dim_hotel` 50.000 dòng, `dim_customer` 370.969 
 
 ![Graph DP2](../images/edai-1/airflow-dp2-graph.png)
 
+*Chú thích: Graph View của DAG `dp2_bronze_to_gold` gồm 5 bước tuần tự (`wait_dp1 → silver_bookings → stage_gold → upsert_gold → validate_gold`), hoàn thành ngày 2025-01-01 trong ~4 phút.*
+
 <a id="edai-1-25"></a>
 ## Giai đoạn Validate · Pipeline DP2 (Bronze → Silver → Gold)
 
@@ -66,7 +76,11 @@ Cả 5 kiểm tra đều đạt.
 
 ![Log validate_gold](../images/edai-1/airflow-validate-gold-log.png)
 
+*Chú thích: Log task `validate_gold` trên Airflow cho thấy 5 câu kiểm tra SQL chạy lần lượt trên PostgreSQL Gold, cả 5 đều trả `True` và gửi `AssertionRunEvent` lên DataHub.*
+
 ![Validation của fact_bookings trên DataHub](../images/edai-1/datahub-validation-gold.png)
+
+*Chú thích: Tab Quality trên DataHub của `gold.fact_bookings` ghi nhận cả 4 assertion SQL (`fact_has_rows_for_ds`, `staging_all_loaded`, `amount_positive`, `cancel_after_create`) đều Passing.*
 
 <a id="edai-1-26"></a>
 ## Giai đoạn Ingest · Pipeline DP3 (Tính Offline Features)
@@ -83,6 +97,8 @@ dòng `feat_customer_booking_stats` và 46.655 dòng `feat_hotel_demand` (các k
 
 ![Graph DP3](../images/edai-1/airflow-dp3-graph.png)
 
+*Chú thích: Graph View của DAG `dp3_offline_features` (`wait_dp2 → build_features → validate_features`) chạy trong 55 giây và phát Airflow Dataset `feat_hotel_demand`.*
+
 <a id="edai-1-27"></a>
 ## Giai đoạn Validate · Pipeline DP3 (Tính Offline Features)
 
@@ -93,3 +109,5 @@ Ba kiểm tra của `feat_hotel_demand` (`hotel_rows_for_ds`, `hotel_rate_in_0_1
 đạt và hiện trên DataHub. `feat_customer_booking_stats` cũng có dấu đạt (ảnh lineage).
 
 ![Validation của feat_hotel_demand trên DataHub](../images/edai-1/datahub-validation-feature.png)
+
+*Chú thích: Tab Quality trên DataHub của `gold.feat_hotel_demand` hiển thị 3/3 assertion (`hotel_rows_for_ds`, `hotel_rate_in_0_1`, `event_before_created`) đều đạt màu xanh.*

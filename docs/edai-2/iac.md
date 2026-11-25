@@ -20,7 +20,11 @@ cần `terraform import` pool này.
 
 ![terraform apply](../images/edai-2/terraform-apply.png)
 
+*Chú thích: Output chạy lại `terraform apply` trong `iac/envs/dev` báo `No changes`: chứng minh hạ tầng GKE thực tế khớp 100% với code Terraform.*
+
 ![terraform state list](../images/edai-2/terraform-state.png)
+
+*Chú thích: Output `terraform state list` liệt kê đủ 13 tài nguyên và 2 data source (VPC, subnet, Cloud NAT, GKE cluster, các node pool, Artifact Registry, budget).*
 
 <a id="edai-2-45"></a>
 ## Ansible cấu hình VM và triển khai dịch vụ CI/CD
@@ -42,7 +46,13 @@ role (unseal key không đi qua Ansible).
 
 ![Ansible lần 1: changed=11](../images/edai-2/ansible-run1.png)
 
+*Chú thích: Kết quả chạy Ansible Playbook lần đầu trên VM mới (`cicd-vm`): `ok=13, changed=11, failed=0` — cài xong firewall `ufw`, Docker, Vault và Jenkins.*
+
 ![Ansible lần 2: changed=0](../images/edai-2/ansible-run2.png)
 
+*Chú thích: Kết quả chạy lại Ansible Playbook lần thứ hai: `ok=12, changed=0, failed=0`, chứng minh playbook có tính idempotent.*
+
 ![Jenkins trên VM](../images/edai-2/jenkins-vm.png)
+
+*Chú thích: Giao diện Jenkins LTS đang hoạt động trên máy ảo `cicd-vm` sau khi được Ansible cấu hình tự động.*
 

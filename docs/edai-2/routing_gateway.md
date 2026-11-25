@@ -9,6 +9,8 @@ NGINX Ingress Controller 4.15.1 (LoadBalancer `34.87.100.157`, giới hạn IP q
 
 ![Grafana qua ingress](../images/edai-2/ingress-grafana.png)
 
+*Chú thích: Truy cập giao diện Grafana an toàn thông qua NGINX Ingress (`grafana.booking.local`), thay vì mở port trực tiếp từ pod.*
+
 <a id="edai-2-38"></a>
 ## Ingress cho Kibana (Logs)
 
@@ -16,12 +18,16 @@ Host `kibana.booking.local` trên cùng Ingress `observability` trỏ vào servi
 
 ![Kibana qua ingress](../images/edai-2/ingress-kibana.png)
 
+*Chú thích: Truy cập giao diện Kibana thông qua NGINX Ingress (`kibana.booking.local`) để tra cứu log tập trung.*
+
 <a id="edai-2-39"></a>
 ## Ingress cho Jaeger (Traces)
 
 Host `jaeger.booking.local` trên Ingress `observability` trỏ vào service `jaeger-query:16686`. Kiểm tra `curl -H "Host: jaeger.booking.local" http://34.87.100.157/` trả `200`.
 
 ![Jaeger qua ingress](../images/edai-2/ingress-jaeger.png)
+
+*Chú thích: Truy cập giao diện Jaeger UI thông qua NGINX Ingress (`jaeger.booking.local`) để xem trace phân tán.*
 
 <a id="edai-2-40"></a>
 ## Giao diện kiểm thử Agent (Agent Workbench & kagent UI)
@@ -44,9 +50,15 @@ Thử trên GKE:
 
 ![Agent Workbench: coordinator-agent giao việc cho data-agent và policy-agent](../images/edai-2/workbench-coordinator.png)
 
+*Chú thích: Agent Workbench cho thấy `coordinator-agent` nhận câu hỏi hỗn hợp, gọi tuần tự `data-agent` và `policy-agent`, hiển thị rõ Arguments, Results và số liệu tổng hợp.*
+
 ![Agent Workbench: HITL chờ duyệt apply_overbooking](../images/edai-2/workbench-hitl.png)
 
+*Chú thích: Hộp thoại duyệt HITL trên Agent Workbench khi `policy-agent` gọi `apply_overbooking`: task tạm dừng ở `input-required`, hiện rõ `hotel_id`, `stay_date`, `k` cùng 2 nút `Approve` / `Reject`.*
+
 ![Agent Workbench: Reject, tool trả rejected](../images/edai-2/workbench-hitl-chat.png)
+
+*Chú thích: Khi bấm `Reject` trên hộp thoại HITL của Agent Workbench, tool trả về `'Tool call was rejected by user'` và bảng `gold.overbooking_limits` không bị ghi dữ liệu mới.*
 
 <a id="edai-2-41"></a>
 ## Giao diện Agent Registry qua Ingress
@@ -58,6 +70,8 @@ Service `agentregistry` chỉ là ClusterIP. Kiểm: không đăng nhập trả 
 `/v0/agents` qua ingress trả đủ 4 agent.
 
 ![UI agentregistry qua ingress](../images/edai-2/registry-agents.png)
+
+*Chú thích: Giao diện web `agentregistry` hiển thị đủ catalog 4 Agent (`coordinator-agent`, `data-agent`, `policy-agent`, `policy-agent-v2`) kèm tag commit git.*
 
 
 <a id="edai-2-42"></a>
@@ -78,6 +92,8 @@ Tab *Auth & Rate limit* của Agent Workbench gửi request thật qua ingress, 
 
 ![Agent Workbench: basic auth 401 và rate limit 503](../images/edai-2/workbench-auth.png)
 
+*Chú thích: Tab "Auth & Rate limit" trên Agent Workbench: gửi request không mật khẩu trả `401 Unauthorized`; bắn 150 request song song trong 0,75 s cho 81 mã `200` và 69 mã `503` (bị rate limit `10 req/s`).*
+
 <a id="edai-2-43"></a>
 ## Domain & HTTPS cho Web API (agentgateway)
 
@@ -87,6 +103,12 @@ Trên GKE, `cert-manager` cấp thành công chứng chỉ **Let's Encrypt (`YR2
 
 ![Chứng chỉ Let's Encrypt thật cho api.34-124-198-171.sslip.io](../images/edai-2/https-cert-cli.png)
 
+*Chú thích: Kiểm tra bằng Python `ssl` và `curl.exe -sI https://api.34-124-198-171.sslip.io/mcp` (không dùng `-k`): bắt tay TLS thành công với chứng chỉ Let's Encrypt thật và gateway trả `401` yêu cầu Bearer token.*
+
 ![Trình duyệt xác nhận Connection is secure và Certificate is valid](../images/edai-2/https-browser.png)
 
+*Chú thích: Trình duyệt xác nhận `Connection is secure` và `Certificate is valid` do Let's Encrypt (`YR2`) cấp cho `api.34-124-198-171.sslip.io`.*
+
 ![Ingress feature-api và Certificate api-booking-tls READY=True](../images/edai-2/https-k8s-cert.png)
+
+*Chú thích: Output `kubectl` cho thấy Ingress `feature-api` và `Certificate/api-booking-tls` ở trạng thái `READY=True` (hiệu lực `2026-11-21` → `2027-02-19`).*

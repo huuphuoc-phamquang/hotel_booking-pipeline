@@ -11,6 +11,8 @@ Sơ đồ kiến trúc tổng thể [`booking-overbooking.drawio`](../architectu
 
 ![Sơ đồ kiến trúc tổng thể booking-overbooking](../architecture/booking-overbooking.png)
 
+*Chú thích: Sơ đồ kiến trúc tổng thể dạng deployable units, tách biệt bằng màu sắc và đánh số 3 luồng: Revenue Manager (1→12), luồng dữ liệu Batch/Stream (1→11) và luồng MLOps (1→9).*
+
 ## Design Patterns trong mã nguồn
 
 | Pattern | Vị trí | Vai trò |
@@ -22,9 +24,17 @@ Sơ đồ kiến trúc tổng thể [`booking-overbooking.drawio`](../architectu
 
 ![Repository: _online và model_rows trong server.py](../images/edai-2/pattern-repository.jpg)
 
+*Chú thích: Ảnh chụp hàm `_online` và `model_rows` trong `edai2/mcp_server/server.py` minh hoạ **Repository Pattern** gom truy vấn Feast về một nơi duy nhất.*
+
 ![Adapter: _predict trong server.py](../images/edai-2/pattern-adapter.png)
+
+*Chú thích: Ảnh chụp hàm `_predict` trong `edai2/mcp_server/server.py` minh hoạ **Adapter Pattern** chuyển đổi JSON chuẩn KServe V1 sang `(probs, model_version)`.*
 
 ![Facade: predict_cancellation trong server.py](../images/edai-2/pattern-facade.png)
 
+*Chú thích: Ảnh chụp tool `predict_cancellation` trong `edai2/mcp_server/server.py` minh hoạ **Facade Pattern** đóng gói toàn bộ luồng Feast → KServe → metric.*
+
 ![Strategy: dsl.If trong training_pipeline.py](../images/edai-2/pattern-strategy.jpg)
+
+*Chú thích: Ảnh chụp nhánh `dsl.If(distributed == True)` trong `edai2/ml/training_pipeline.py` minh hoạ **Strategy Pattern** hoán đổi train đơn và train phân tán.*
 

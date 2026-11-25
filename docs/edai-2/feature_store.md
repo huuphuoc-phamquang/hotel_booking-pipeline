@@ -19,11 +19,19 @@ Số entity trên `feast_online`, tích luỹ qua các lần materialize:
 
 ![DAG feast_materialize_incremental tự kích hoạt qua Dataset trên Airflow](../images/edai-2/airflow-materialize-graph.png)
 
+*Chú thích: Graph View của DAG `feast_materialize_incremental` được tự động kích hoạt ngay khi DP3 phát Airflow Dataset `FEAT_BATCH`.*
+
 ![Log task materialize trên Airflow](../images/edai-2/airflow-materialize-log.png)
+
+*Chú thích: Log task `materialize` chạy trên `MATERIALIZE_POD` (limit 8 GiB RAM, tránh OOMKilled): hoàn tất trong ~20 phút và nạp 1,27 triệu dòng feature lên `feast_online`.*
 
 ![Dữ liệu customer_booking_stats đã materialize lên online store](../images/edai-2/feast-online-customer-stats.png)
 
+*Chú thích: Dữ liệu bảng `feast_online.booking_customer_booking_stats` trong PostgreSQL sau khi materialize, sẵn sàng phục vụ truy vấn online độ trễ thấp.*
+
 ![Schema 5 bảng Feast Online Store (feast_online) xuất từ DBeaver](../images/edai-2/schema-feast-online.png)
+
+*Chú thích: Sơ đồ 5 bảng trong schema `feast_online` (xuất từ DBeaver): `booking_attributes`, `customer_booking_stats`, `hotel_demand`, `hotel_realtime` và `policy_chunks`.*
 
 <a id="edai-2-12"></a>
 ## Streaming feature jobs đẩy dữ liệu vào Offline & Online Store
@@ -33,11 +41,19 @@ Số entity trên `feast_online`, tích luỹ qua các lần materialize:
 
 ![Job 1: Flink job graph đẩy streaming feature vào offline store](../images/edai-1/flink-job-graph.png)
 
+*Chú thích: Flink Job Graph của `booking_events_window`: thể hiện rõ luồng đọc Kafka → `ContractCheck` (rẽ nhánh DLQ) → gán watermark → `DedupByEventId` → chia 2 nhánh cửa sổ trượt 1h và tumbling 1m.*
+
 ![Job 2: DAG feast_materialize_realtime chạy thành công trên Airflow](../images/edai-2/airflow-materialize-realtime-graph.png)
+
+*Chú thích: Graph View của DAG `feast_materialize_realtime` chạy định kỳ mỗi 5 phút (`~27–32 giây` mỗi lượt).*
 
 ![Log task materialize của feast_materialize_realtime](../images/edai-2/airflow-materialize-realtime-log.png)
 
+*Chú thích: Log của `feast_materialize_realtime`: truy vấn `max(event_timestamp)` từ `gold.feat_hotel_realtime` và đẩy cửa sổ 2 giờ gần nhất lên Online Store.*
+
 ![Dữ liệu hotel_realtime trên cả Offline Store và Online Store](../images/edai-2/feast-realtime-offline-online.png)
+
+*Chú thích: Đối chiếu bảng `gold.feat_hotel_realtime` (Offline, `5.083.405` dòng) và `feast_online.booking_hotel_realtime` (Online, `49.596` khách sạn) với mốc dữ liệu mới nhất `2026-01-03 01:15:00+00`.*
 
 ## Chọn TTL cho từng FeatureView
 

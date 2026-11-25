@@ -11,6 +11,8 @@ Hai probe `/healthz` (liveness) và `/readyz` (readiness — chỉ trả `200` k
 
 ![Healthcheck, validation và async của booking-mcp](../images/edai-2/booking-mcp-api-checks.png)
 
+*Chú thích: Kiểm thử `booking-mcp` trên GKE: `/healthz` và `/readyz` trả `200`, dữ liệu sai schema bị Pydantic chặn `422`, và gọi 50 lần đồng thời bằng `asyncio.gather` nhanh hơn 1,4× (`1,19 s` vs `1,66 s`).*
+
 <a id="edai-2-17"></a>
 ## Xử lý bất đồng bộ (Async) cho truy vấn đồng thời
 
@@ -37,6 +39,8 @@ Upgrade thất bại sau 90 giây vì pod mới không kéo được image, và 
 
 ![helm upgrade --atomic tự rollback](../images/edai-2/helm-atomic-rollback.png)
 
+*Chú thích: Output `helm history` chứng minh cơ chế tự phục hồi: revision 3 nâng cấp lên image lỗi bị fail sau 90s và Helm `--atomic` tự tạo revision 4 `Rollback to 2` mà không làm gián đoạn pod cũ.*
+
 <a id="edai-2-19"></a>
 ## Triển khai data-agent với multi-replica và auto-scale (KEDA)
 
@@ -61,7 +65,11 @@ khoảng 2,5 phút tới khi Ready.
 
 ![kagent UI: data-agent gọi get_booking_features](../images/edai-2/kagent-data-agent.png)
 
+*Chú thích: Giao diện kagent UI với `data-agent`: agent tự động gọi đúng MCP tool `get_booking_features(18766768, 8528)` qua gateway và trả lời đúng số liệu từ Feast Online Store.*
+
 ![KEDA scale data-agent 2 → 4 replica](../images/edai-2/keda-scale.png)
+
+*Chú thích: Output theo dõi HPA của `data-agent` khi chạy `keda_load.sh` (10 req/s): từ `2/2` replica tự động tăng lên `4/4` Ready sau ~40 giây nhờ trigger Prometheus RPS của KEDA.*
 
 <a id="edai-2-20"></a>
 ## Chạy Agent trong Sandbox (Agent Substrate)
@@ -73,6 +81,8 @@ Hệ thống đã triển khai **Agent Substrate 1.0.1** kết hợp **kagent 1.
 - **mTLS Ingress (`atenet-router`) & L4 `NetworkPolicy`:** `atenet-router` chỉ chấp nhận kết nối mTLS có SPIFFE ID `spiffe://cluster.local/ns/kagent/sa/kagent-controller`; ở tầng L4, `NetworkPolicy/agents-egress-only-gateway` và `NetworkPolicy/substrate-agents-warm` (áp trên `ate.dev/worker-pool=agents-warm`) thực thi qua `kube-router` iptables chỉ mở `ate-system`, `llm:8000`, `gateway:3000`, `kube-dns:53` và từ chối mọi egress khác bằng `REJECT --reject-with icmp-port-unreachable` (đã xác minh live probe: `vllm-booking:8000` trả `HTTP 200`, còn `1.1.1.1` và `kagent-ui:8080` bị chặn `HTTP 000`).
 
 ![Agent Substrate gVisor Sandbox và Egress isolation](../images/edai-2/substrate-sandbox.jpg)
+
+*Chú thích: Kiểm chứng Agent Substrate gVisor (`v1.0.1`) trên K3s: cả 4 agent đạt `Ready=True` và `EgressPoliciesApplied=True`; probe từ trong sandbox tới `vllm-booking:8000` trả `HTTP 200` còn `1.1.1.1` và `kagent-ui:8080` bị chặn `HTTP 000`.*
 
 <a id="edai-2-21"></a>
 ## Đăng ký data-agent lên agentregistry
@@ -88,3 +98,5 @@ gọi script này cho cả 4 agent sau khi rollout.
 Script đã được chạy cả thủ công (tag `f808e37`) và tự động trong Jenkins `booking-mcp` Build #19 (`WITH_AGENTS=true`, tag `762fa7b`): `data-agent` (tool `get_booking_features`) có trên registry kèm MCP server `booking-tools`.
 
 ![agentregistry: catalog 4 agent](../images/edai-2/registry-agents.png)
+
+*Chú thích: Giao diện web `agentregistry` hiển thị đủ catalog 4 Agent (`coordinator-agent`, `data-agent`, `policy-agent`, `policy-agent-v2`) kèm tag commit git.*

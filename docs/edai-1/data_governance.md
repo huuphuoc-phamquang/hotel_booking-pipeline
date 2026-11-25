@@ -16,6 +16,8 @@ DataHub bằng job `k8s/datahub-ingest.yaml`: 8 bảng Bronze, 2 bảng Silver, 
 
 ![Lineage trên DataHub](../images/edai-1/datahub-lineage.png)
 
+*Chú thích: Bản đồ Data Lineage tổng thể trên DataHub từ trái sang phải: DP1 (`landing` → `raw_*`), DP2 (`raw_*` → `stg_bookings` → `fact_bookings`) và DP3 (`fact_bookings` → `feat_*`).*
+
 <a id="edai-1-29"></a>
 ## Kiểm tra chất lượng dữ liệu DP1
 
@@ -25,6 +27,8 @@ Expectations của DP1 lên tab Quality của `raw_bookings`.
 Assertion `gx_bronze_bookings` hiện ở tab Quality của `lake/bronze/raw_bookings` với trạng thái đạt.
 
 ![Validation của raw_bookings](../images/edai-1/datahub-validation-bronze.png)
+
+*Chú thích: Tab Quality trên DataHub của `lake/bronze/raw_bookings` hiển thị assertion `gx_bronze_bookings` đạt trạng thái xanh (Passing).*
 
 <a id="edai-1-30"></a>
 ## Lineage của pipeline DP2 (Bronze → Silver → Gold)
@@ -54,6 +58,8 @@ Tab Quality của `fact_bookings` có 4 assertion, tất cả đều đạt: `fa
 
 ![Validation của fact_bookings](../images/edai-1/datahub-validation-gold.png)
 
+*Chú thích: Tab Quality trên DataHub của `gold.fact_bookings` ghi nhận cả 4 assertion SQL (`fact_has_rows_for_ds`, `staging_all_loaded`, `amount_positive`, `cancel_after_create`) đều Passing.*
+
 <a id="edai-1-32"></a>
 ## Lineage của pipeline DP3 (Gold → Offline Feature Store)
 
@@ -73,3 +79,5 @@ Tab Quality của `feat_hotel_demand` có 3 assertion, tất cả đều đạt.
 đạt trên ảnh lineage.
 
 ![Validation của feat_hotel_demand](../images/edai-1/datahub-validation-feature.png)
+
+*Chú thích: Tab Quality trên DataHub của `gold.feat_hotel_demand` hiển thị 3/3 assertion (`hotel_rows_for_ds`, `hotel_rate_in_0_1`, `event_before_created`) đều đạt màu xanh.*

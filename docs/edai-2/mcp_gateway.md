@@ -27,3 +27,5 @@ data-agent gọi thẳng `predict_cancellation` bị gateway từ chối (`Unkno
 và policy-agent vẫn gọi tool bình thường qua gateway, log ghi `mcp.method.name=tools/call` kèm `jwt.sub` của từng agent.
 
 ![Kiểm security & policy của agentgateway](../images/edai-2/agentgateway-check.png)
+
+*Chú thích: Kết quả chạy `gateway/check.sh`: gọi không token hoặc token giả bị trả `401`; `data-agent` chỉ thấy `get_booking_features` và bị chặn `Unknown tool` khi gọi `predict_cancellation`; route `/a2a` trả `200` khi có JWT.*

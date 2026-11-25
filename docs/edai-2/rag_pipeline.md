@@ -15,13 +15,23 @@ Khi truy vấn thử câu hỏi *"Khách huỷ phòng trước bao nhiêu ngày 
 
 ![Helm release và pod Airflow trên GKE](../images/edai-2/airflow-helm-pods.png)
 
+*Chú thích: Danh sách Helm release và các pod Airflow 2.10.5 (`scheduler`, `webserver`, `triggerer`) chạy ổn định trong namespace `data` trên GKE.*
+
 ![DAG rag_data_pipeline chạy thành công 4 task trên Airflow](../images/edai-2/airflow-rag-graph.png)
+
+*Chú thích: Graph View của DAG `rag_data_pipeline` trên Airflow: cả 4 task `load_docs → chunk_docs → validate_chunks → embed_and_push` đều đạt `success`.*
 
 ![Log validate_chunks trên Airflow](../images/edai-2/airflow-rag-validate-log.png)
 
+*Chú thích: Log task `validate_chunks` xác nhận 3 file chính sách cho ra 3 chunk và vượt qua đủ 3 kiểm tra (`has_chunks=True`, `chunk_id_unique=True`, `no_empty_chunk=True`).*
+
 ![Dữ liệu gold.feat_policy_chunks và feast_online.booking_policy_chunks](../images/edai-2/feast-online-policy-chunks.png)
 
+*Chú thích: Truy vấn PostgreSQL kiểm tra dữ liệu chunk và vector embedding `BAAI/bge-m3` đã được ghi đồng bộ ở cả `gold.feat_policy_chunks` và `feast_online.booking_policy_chunks`.*
+
 ![RAG pipeline chạy thử trong pod trên GKE](../images/edai-2/rag-pipeline-run.png)
+
+*Chú thích: Kết quả chạy thử truy vấn RAG trong pod trên GKE với câu hỏi về chính sách huỷ phòng: hệ thống tìm đúng chunk `policies/cancellation.md#0` với khoảng cách cosine `0,234`.*
 
 <a id="edai-2-10"></a>
 ## Data Governance cho RAG pipeline
@@ -34,4 +44,8 @@ Trên GKE (namespace `data`, DataHub 1.1.11 + OpenSearch + Kafka), sau khi cấu
 
 ![DataHub Lineage của rag_data_pipeline](../images/edai-2/datahub-rag-lineage.png)
 
+*Chú thích: Lineage trên DataHub của `rag_data_pipeline`: nối liền mạch từ `docs/policies` (S3) qua 4 task Airflow tới `warehouse.gold.feat_policy_chunks` (PostgreSQL).*
+
 ![DataHub Assertions của warehouse.gold.feat_policy_chunks](../images/edai-2/datahub-rag-validation.png)
+
+*Chú thích: Tab Quality trên DataHub của `warehouse.gold.feat_policy_chunks`: hiển thị đủ 3 dấu tích xanh `Passing` cho `has_chunks`, `chunk_id_unique` và `no_empty_chunk`.*

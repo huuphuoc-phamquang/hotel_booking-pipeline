@@ -12,3 +12,5 @@ Hệ thống đã triển khai chế độ Warm-up theo mô hình **Agent Fleet*
 - **Đo đạc thực tế khi gọi A2A (`lf.a2a.v1.A2AService/SendMessage`):** `atelet` khôi phục (restore) actor gVisor từ snapshot chỉ mất **`103.9ms–122.5ms`** (`data-agent`: `103.9ms`, `policy-agent`: `122.5ms`, `policy-agent-v2`: `121.0ms`, `coordinator-agent`: `111.9ms`) và checkpoint sau lượt chạy mất **`76.9ms–88.3ms`**, đạt `grpc-status: 0` khi gọi `vllm-booking` với tổng thời gian phản hồi end-to-end `1.61s–3.12s`.
 
 ![Agent Substrate Warm-up WorkerPool phục vụ 4 agent trên 2 worker gVisor](../images/edai-2/substrate-warmup.jpg)
+
+*Chú thích: Kết quả đo thực tế mô hình Agent Fleet Warm-up trên 2 worker pod gVisor (`agents-warm`): cả 4 agent dùng chung 2 worker, khôi phục actor từ snapshot RustFS chỉ mất `103,9–122,5 ms` và checkpoint `76,9–88,3 ms`.*

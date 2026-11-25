@@ -17,7 +17,11 @@ Pod chiếm 10.326 MiB / 12.288 MiB VRAM cho trọng số và KV Cache. Endpoint
 
 ![Pod vllm-booking Ready trên K3s GPU node (ALLOCATABLE_GPU=1)](../images/edai-2/vllm-pod-ready.png)
 
+*Chú thích: Output `kubectl` trên cụm K3s xác nhận node có `ALLOCATABLE_GPU=1` (RTX 3060 12 GB) và pod `vllm-booking` đang ở trạng thái `Running / Ready`.*
+
 ![Agent Workbench gọi inference trực tiếp qua agentgateway tới vLLM trên RTX 3060](../images/edai-2/vllm-workbench-rtx3060.jpg)
+
+*Chú thích: Agent Workbench gọi thành công tới `vllm-booking` trên RTX 3060 thông qua `agentgateway`: trạng thái `completed` trong `8,9 giây` (`934/132` tokens).*
 
 <a id="edai-2-4"></a>
 ## Fine-tune custom LLM model (LoRA SFT)
@@ -37,7 +41,11 @@ gộp trên MinIO dành cho InferenceService.
 
 ![Log fine-tune v1 (Qwen2.5-1.5B)](../images/edai-2/finetune-v1-log.png)
 
+*Chú thích: Log quá trình fine-tune LoRA v1 (`Qwen2.5-1.5B-Instruct`) trên GKE GPU L4 Spot trong 6 phút 35 giây: train loss giảm từ `1,77` xuống `0,41`, eval loss `0,401`, token accuracy `0,840`.*
+
 ![Log fine-tune v2 (Qwen2.5-3B)](../images/edai-2/finetune-v2-log.png)
+
+*Chú thích: Log fine-tune LoRA v2 (`Qwen2.5-3B-Instruct`) trong 12 phút trên GPU L4 Spot: train loss giảm từ `1,86` xuống `0,41`, eval loss `0,397`, token accuracy `0,845`.*
 
 <a id="edai-2-5"></a>
 ## Thiết lập Agent Gateway, bảo mật và policy
@@ -56,6 +64,8 @@ gộp trên MinIO dành cho InferenceService.
 Kiểm thử bằng [`gateway/check.sh`](../../edai2/gateway/check.sh): thiếu token hoặc token giả bị trả `401`; với token hợp lệ của `data-agent` chỉ thấy `get_booking_features` và bị chặn nếu gọi `predict_cancellation` (`Unknown tool`); `/a2a` trả `200` khi có token.
 
 ![Kiểm security & policy của agentgateway](../images/edai-2/agentgateway-check.png)
+
+*Chú thích: Kết quả chạy `gateway/check.sh`: gọi không token hoặc token giả bị trả `401`; `data-agent` chỉ thấy `get_booking_features` và bị chặn `Unknown tool` khi gọi `predict_cancellation`; route `/a2a` trả `200` khi có JWT.*
 
 <a id="edai-2-6"></a>
 ## Benchmark và tối ưu model server
@@ -76,6 +86,8 @@ Benchmark được thực hiện với công cụ `vllm bench serve` (workload 5
 Bật prefix caching giúp tăng throughput 43% và giảm TTFT trung bình 30% (TTFT p99 giảm 41%) ở concurrency 64. Cấu hình 3 cải thiện thêm TTFT ở concurrency 16 (327 → 251 ms).
 
 ![vllm bench serve: 3 cấu hình × 4 mức concurrency](../images/edai-2/vllm-bench.png)
+
+*Chú thích: Kết quả terminal chạy `vllm bench serve` so sánh 3 cấu hình × 4 mức concurrency (`1, 4, 16, 64`): bật prefix caching giúp tăng throughput +43% và giảm TTFT −30% ở mức tải 64.*
 
 ### 2. Thử nghiệm trên Kubernetes GPU Node (NVIDIA GeForce RTX 3060 12 GB)
 

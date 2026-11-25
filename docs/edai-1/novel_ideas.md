@@ -19,6 +19,8 @@ gốc kèm `reason` là trường vi phạm (ảnh dưới đọc bằng `kafka-
 
 ![DLQ trên GKE](../images/edai-1/flink-dlq.png)
 
+*Chú thích: Output đọc trực tiếp từ Kafka topic `booking_events_dlq` bằng `kafka-console-consumer`: mỗi bản ghi lỗi được giữ nguyên JSON gốc kèm trường `reason` (`price`, `hotel_id`, `event_time`).*
+
 <a id="edai-1-40"></a>
 ## Idea 2 (edai-1): Đối soát batch–stream có ground truth
 
@@ -38,4 +40,8 @@ tối ưu khớp với các lần restart.
 
 ![Đối soát baseline, bản tối ưu và truth](../images/edai-1/flink-perday-compare.png)
 
+*Chú thích: Bảng đối soát theo ngày giữa Flink Baseline (`BASELINE=1`), Flink Tối ưu và Ground Truth (`stream_truth.py`): Baseline đếm thừa đúng số bản trùng (`+7.547` ngày 01-01), còn bản tối ưu chỉ lệch `0,011%` và `0,005%`.*
+
 ![Truy vấn tổng hợp stream_bookings_1m + stream_late_bookings trên PostgreSQL](../images/edai-1/flink-perday-postgres.png)
+
+*Chú thích: Kết quả truy vấn SQL trên PostgreSQL cộng tổng `stream_bookings_1m` và `stream_late_bookings` theo ngày để đối chiếu trực tiếp với Ground Truth.*

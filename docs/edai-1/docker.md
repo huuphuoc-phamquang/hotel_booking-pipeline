@@ -16,7 +16,11 @@ Compose chạy trên máy. MinIO (healthy) và Kafka chạy nền. Generator ch�
 
 ![docker compose ps](../images/edai-1/docker-compose-ps.png)
 
+*Chú thích: Kết quả `docker compose ps` cho thấy MinIO (đã pass healthcheck `healthy`) và Kafka đang chạy nền ổn định, sẵn sàng phục vụ generator và replayer.*
+
 ![bucket landing trên MinIO](../images/edai-1/docker-compose-minio.png)
+
+*Chú thích: Giao diện MinIO Console hiển thị bucket `landing` sau khi chạy thử 1 ngày (`0 1`): đã ghi đủ 340 MiB (1.866 object) cho cả 9 nhánh dữ liệu và `_manifests`.*
 
 <a id="edai-1-4"></a>
 ## Tối ưu kích thước Dockerfile (Multi-stage build)
@@ -52,3 +56,5 @@ docker images booking-generator
 ```
 
 ![docker images: single và multistage](../images/edai-1/docker-image-size.png)
+
+*Chú thích: So sánh trực tiếp `docker images` giữa `Dockerfile.single` (2,09 GB trên đĩa, 524 MB nén) và `Dockerfile` multi-stage (834 MB trên đĩa, 240 MB nén — giảm 60% dung lượng).*

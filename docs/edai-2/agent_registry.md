@@ -18,4 +18,8 @@ model, MCP server dùng, repository kèm commit và thư mục `edai2/agents`, c
 
 ![agentregistry: catalog 4 agent](../images/edai-2/registry-agents.png)
 
+*Chú thích: Giao diện web `agentregistry` hiển thị đủ catalog 4 Agent (`coordinator-agent`, `data-agent`, `policy-agent`, `policy-agent-v2`) kèm tag commit git.*
+
 ![agentregistry: chi tiết policy-agent](../images/edai-2/registry-agent-detail.png)
+
+*Chú thích: Trang chi tiết của `policy-agent` trên `agentregistry`: liệt kê đầy đủ A2A Agent Card, model sử dụng, địa chỉ gateway và MCP server `booking-tools`.*

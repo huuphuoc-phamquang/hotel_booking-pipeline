@@ -11,6 +11,8 @@ Chạy kiểm thử trong container (`python:3.12-slim`): `54` test đạt (`15,
 
 ![Unit test và EP/BVA đạt 54/54 test, coverage 95,26%](../images/edai-2/pytest-coverage.png)
 
+*Chú thích: Kết quả chạy pytest trong container `python:3.12-slim`: `54/54` test đạt trong `15,99 s`, tổng coverage đạt `95,26%` (`overbooking.py` 100%, `server.py` 95%).*
+
 <a id="edai-2-29"></a>
 ## Thiết kế test theo Equivalence Partitioning & Boundary Value Analysis
 
@@ -22,7 +24,11 @@ Chạy riêng `pytest tests/test_overbooking.py -v`: 19/19 test đạt, mỗi l�
 
 ![EP/BVA: các lớp tương đương và giá trị biên trong parametrize](../images/edai-2/ep-bva-parametrize.png)
 
+*Chú thích: Đoạn mã `@pytest.mark.parametrize` trong `tests/test_overbooking.py` thiết kế các ca kiểm thử theo Phân lớp tương đương (EP) và Giá trị biên (BVA).*
+
 ![EP/BVA: 19 case parametrize của test_overbooking.py](../images/edai-2/ep-bva-pytest.png)
+
+*Chú thích: Kết quả chạy `pytest tests/test_overbooking.py -v`: toàn bộ `19/19` test case EP/BVA và oracle đều đạt `PASSED`.*
 
 <a id="edai-2-30"></a>
 ## Kiểm thử đột biến (Mutation Testing) với mutmut
@@ -42,12 +48,18 @@ test giết 40 và để sống 6, **mutation score đạt 87,0%** (ngưỡng 80
 
 ![mutmut trên overbooking.py: score 87,0%](../images/edai-2/mutmut-overbooking.png)
 
+*Chú thích: Kết quả chạy `mutmut` cục bộ trên `mcp_server/overbooking.py`: trong `46` mutant (lỗi giả) được sinh ra, bộ test giết `40` và chỉ để sống `6` — đạt **mutation score 87,0%** (vượt ngưỡng 80%).*
+
 Trên Jenkins Build #26, stage `Test` chỉ mutate file thay đổi từ build thành công gần nhất (`mcp_server/overbooking.py`):
 41/47 mutant bị diệt, 6 sống, mutation score 87,2%, qua ngưỡng 80%.
 
 ![Jenkins: mutmut chỉ chạy trên file thay đổi](../images/edai-2/jenkins-mutmut-start.png)
 
+*Chú thích: Console log Jenkins Build #26 cho thấy stage `Test` tự động phát hiện đúng file thay đổi từ commit trước (`mcp_server/overbooking.py`) để chạy `mutmut` có chọn lọc.*
+
 ![Jenkins: mutation score 87,2% trên 47 mutant](../images/edai-2/jenkins-mutmut-score.png)
+
+*Chú thích: Console log Jenkins Build #26 xác nhận kết quả `mutmut`: `41/47` mutant bị diệt (`6` sống), đạt **mutation score 87,2%** và vượt qua cổng kiểm tra `check_mutation_score.py --min 0.8`.*
 
 <a id="edai-2-31"></a>
 ## Kiểm thử tính bất biến (Idempotency) với Hypothesis
@@ -63,9 +75,13 @@ gọi tool MCP `predict_cancellation` hai lần cho cùng booking. Cả hai ki�
 
 ![Hypothesis: 2 test idempotent](../images/edai-2/hypothesis-idempotent.png)
 
+*Chú thích: Kết quả chạy `pytest tests/ -k idempotent --hypothesis-show-statistics`: cả 2 property test (`test_predict_tool_idempotent`, `test_cancel_risk_idempotent`) vượt qua `50` ví dụ sinh ngẫu nhiên mỗi test, 0 lỗi.*
+
 Ngoài ra, kiểm thử symbolic execution bằng `hypothesis-crosshair` (`@settings(backend="crosshair", max_examples=15)`) cho hàm `limit` trong [`edai2/mcp_server/overbooking.py`](../../edai2/mcp_server/overbooking.py) đạt **15/15 ví dụ, 0 lỗi phản chứng** (`0 <= K <= rooms`).
 
 ![Hypothesis với backend CrossHair trên overbooking.limit](../images/edai-2/crosshair-hypothesis.png)
+
+*Chú thích: Kiểm chứng bằng Symbolic Execution (`hypothesis-crosshair`) trên `overbooking.limit`: vượt qua `15/15` ví dụ với 0 phản chứng cho bất biến `0 <= K <= rooms`.*
 
 <a id="edai-2-32"></a>
 ## Kiểm thử tải (Load Test) Web API với Locust
@@ -90,5 +106,9 @@ khoảng 80 req/s ở đỉnh và không có lỗi 5xx. Panel p95 đứng ở 1 
 
 ![Locust: thống kê request và latency](../images/edai-2/locust-report.png)
 
+*Chú thích: Báo cáo Locust load test (100 user, 5 phút, 1 replica `booking-mcp`): xử lý `21.059` request (`70,3 RPS`) với **0% lỗi** (`POST /v1/cancel-risk` p50 `1.100 ms`, p95 `2.400 ms`).*
+
 ![Grafana: booking-mcp trong lúc load test](../images/edai-2/grafana-locust.png)
+
+*Chú thích: Dashboard Grafana quan sát `booking-mcp` trong lúc chịu tải Locust: lưu lượng đạt đỉnh ~`80 req/s` và panel lỗi `5xx` hoàn toàn trống (không có lỗi).*
 

@@ -34,6 +34,8 @@ lệ chia thực tế là 13/7, nên kết quả chỉ mang tính định hướ
 
 ![Dashboard Grafana A/B agent](../images/edai-2/grafana-agent-ab.png)
 
+*Chú thích: Dashboard Grafana `agent-ab` so sánh song song 2 bản `policy-agent` (v1 vs v2) và 2 bản LLM (`qwen-3b` vs `qwen-booking-v2`) về số request, latency p50/p95 và lượng token.*
+
 
 <a id="edai-2-53"></a>
 ## A/B test giữa các phiên bản LLM trên nền tảng inference
@@ -71,4 +73,8 @@ chi phí trên cùng GPU); số mẫu của bản v2 còn ít nên chưa đủ �
 
 ![A/B offline giữa base, v1 và v1b](../images/edai-2/llm-ab-offline.png)
 
+*Chú thích: Kết quả chạy A/B offline giữa Qwen2.5-1.5B gốc, LoRA `v1` và `v1b`: cho thấy model 1,5B fine-tune kém phần nhớ chính sách/từ chối PII nên phải giao các phần đó cho RAG và proxy.*
+
 ![Dashboard agent-ab: token và thời gian gọi LLM theo model](../images/edai-2/grafana-agent-ab.png)
+
+*Chú thích: Dashboard Grafana `agent-ab` so sánh song song 2 bản `policy-agent` (v1 vs v2) và 2 bản LLM (`qwen-3b` vs `qwen-booking-v2`) về số request, latency p50/p95 và lượng token.*
