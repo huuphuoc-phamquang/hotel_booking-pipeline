@@ -5,7 +5,7 @@ Thiết kế bảng theo zone, dimension SCD2, bảng feature, quan hệ dim–f
 <a id="edai-1-34"></a>
 ## Sơ đồ bảng dữ liệu qua các zone (Bronze, Silver, Gold)
 
-ERD của cả ba zone (Bronze `raw_`, Silver `stg_`, Gold) được xuất bằng DBeaver (tầng Gold đọc trực tiếp từ PostgreSQL trên GKE kèm CloudBeaver `edai1/k8s/cloudbeaver.yaml`; Bronze và Silver dựng từ schema trong `generator/offline_gen.py`, `storage/optimize.sql`); bản Mermaid có cùng bảng và quan hệ nằm trong phần thu gọn bên dưới mỗi ảnh. Mỗi bảng có một dòng mô tả vai trò. Trên DataHub, 3 recipe trong `governance/datahub/` (postgres cho Gold, iceberg cho Silver, s3 cho Bronze) ingest schema, và `emit_datahub.emit_table_docs` gắn mô tả cùng tag zone cho 26 bảng; `tests/test_datahub_recipes.py` kiểm tên dataset khớp với lineage. Phần DataHub chạy trên GKE.
+ERD của ba tầng (Bronze `raw_`, Silver `stg_`, Gold) được xuất bằng DBeaver (kèm bản Mermaid thu gọn bên dưới mỗi ảnh). Trên GKE, DataHub tự động nạp schema qua 3 recipe (`s3`, `iceberg`, `postgres`) và gắn mô tả cùng tag phân tầng cho đủ 26 bảng (`tests/test_datahub_recipes.py` kiểm tra tên bảng khớp với lineage).
 
 Lọc theo tag zone trên DataHub ra đủ 26 bảng: 8 bảng Bronze trên S3, 2 bảng Silver trên Iceberg, 16 bảng
 Gold trên PostgreSQL. Tab Columns của bảng Gold hiện khoá chính và khoá ngoại. Bronze và Silver là file Parquet và bảng
@@ -110,7 +110,7 @@ erDiagram
 |---|---|
 | `raw_quotes` | log lượt xem giá, một dòng mỗi lượt; bảng lớn nhất (mốc 100GB), dùng cho bài skew |
 | `raw_bookings` | sự kiện đặt phòng lúc tạo, chưa có trạng thái huỷ; còn bản trùng do double submit và hai phiên bản schema |
-| `raw_cancellations` | các lần huỷ, chia theo ngày huỷ nên partition `dt=ds` không chứa lần huỷ tương lai |
+| `raw_cancellations` | các lần huỷ, chia theo ngày huỷ nên partition theo ngày không chứa lần huỷ tương lai |
 | `raw_payments` | giao dịch thanh toán của booking |
 | `raw_hotels` | danh mục khách sạn: thành phố, hạng sao, giá gốc |
 | `raw_hotel_changes` | lịch sử đổi giá của khách sạn, nguồn của SCD2 `dim_hotel` |

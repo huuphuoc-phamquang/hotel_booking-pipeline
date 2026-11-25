@@ -44,12 +44,7 @@ Tool này chỉ đề xuất. Việc ghi K bằng `apply_overbooking` nằm tron
 ([`agents/agents-gke.yaml`](../../edai2/agents/agents-gke.yaml)), nên kagent dừng lời gọi cho tới khi người
 duyệt bấm Approve hoặc Reject.
 
-Thử trên GKE: policy-agent đề xuất K cho khách sạn 8528 đêm 2025-01-29, người dùng đồng ý
-K = 1, lời gọi `apply_overbooking(8528, 2025-01-29, 1)` chuyển sang trạng thái *Approval required*. Chỉ sau khi bấm
-Approve, `gold.overbooking_limits` mới có dòng `8528 | 2025-01-29 | 1`. Qua A2A, cùng lời gọi đó trả task ở trạng thái
-`input-required`. Logic K được kiểm bằng `tests/test_overbooking.py` (chạy trong build #7 của Jenkins): giá trị biên
-p = 0 và p = 1, không có booking, chi phí không dương, xác suất ngoài [0, 1]; phân phối so với liệt kê đủ 2^n trường
-hợp; và tính chất K không giảm khi chi phí chuyển khách giảm.
+Kiểm chứng trên GKE: khi gọi `apply_overbooking(8528, 2025-01-29, 1)`, kagent tạm dừng ở trạng thái *Approval required* (`input-required` qua A2A) và chỉ ghi vào `gold.overbooking_limits` sau khi người quản lý bấm **Approve**. Toàn bộ logic tính `K` đã được kiểm thử biên và bất biến trong [`tests/test_overbooking.py`](../../edai2/tests/test_overbooking.py).
 
 ![Approval required cho apply_overbooking](../images/edai-2/kagent-hitl-approval.png)
 

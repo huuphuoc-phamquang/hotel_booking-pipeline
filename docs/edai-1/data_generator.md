@@ -213,7 +213,7 @@ append-only: quotes, bookings, cancellations, payments. Xác suất huỷ thật
 chạy 8 pod song song, mỗi pod một khoảng ngày.
 
 Chạy trên GKE. Job `offline-generator` hoàn thành 8/8 pod trong 70 phút, trải trên 3 node
-`cpu-spot`. Bucket `landing` đạt **111 GiB, 42.830 object**, vượt mốc 100GB của rubric.
+`cpu-spot`. Bucket `landing` đạt **111 GiB, 42.830 object**, vượt mốc 100 GB.
 
 Pod số 0 khởi động lại một lần. Nguyên nhân là 8 pod cùng tạo bucket `landing`, pod chậm hơn nhận lỗi
 `BucketAlreadyOwnedByYou` rồi chạy lại bình thường. Bản sửa trong `generator/offline_gen.py` bỏ qua đúng lỗi này.

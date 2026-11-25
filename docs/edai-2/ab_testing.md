@@ -13,12 +13,7 @@ policy-agent có hai bản chạy song song trong [`agents/agents-gke.yaml`](../
 | Prompt | trả lời ngắn gọn | tối đa 3 câu, câu cuối ghi nguồn (tool, chunk_id) |
 | Tool, HITL | 4 tool, `apply_overbooking` cần duyệt | giống v1 |
 
-agentgateway chia route `/a2a/policy-agent` 50/50 giữa hai bản; `/a2a/policy-agent-v2` gọi thẳng v2
-([`gateway/agentgateway.yaml`](../../edai2/gateway/agentgateway.yaml)). Metric của gateway
-(`agentgateway_requests_total`, `request_duration_seconds`, `gen_ai_client_token_usage`, nhãn `backend` và
-`gen_ai_request_model`) được Prometheus scrape qua ServiceMonitor; dashboard Grafana `agent-ab`
-([`observability/dashboards/agent-ab.json`](../../edai2/observability/dashboards/agent-ab.json)) so sánh số request, tỉ lệ
-lỗi, latency p50/p95 theo bản, token và thời gian gọi LLM theo model.
+`agentgateway` ([`gateway/agentgateway.yaml`](../../edai2/gateway/agentgateway.yaml)) chia route `/a2a/policy-agent` **50/50** giữa hai bản (còn `/a2a/policy-agent-v2` gọi thẳng v2). Metric được Prometheus thu thập và trực quan hóa trên dashboard Grafana [`agent-ab`](../../edai2/observability/dashboards/agent-ab.json) (số request, tỉ lệ lỗi, latency p50/p95 và token theo từng bản/model).
 
 [`tests/ab_agent.py`](../../edai2/tests/ab_agent.py) gửi 20 câu hỏi (xác suất huỷ, chính sách, bán vượt) qua
 `/a2a/policy-agent/` và ghi bản trả lời theo `kagent_app_name`:
@@ -58,13 +53,7 @@ phần từ chối PII: model 1,5B học khuôn câu trả lời chứ không h�
 `propose_overbooking`, chính sách lấy qua RAG (`search_policy`), PII chặn ở lớp ngoài (`llm_metrics.py`); fine-tune chỉ
 nên dùng để dạy cách gọi tool và giọng trả lời.
 
-**A/B online** qua agentgateway trên GKE: route `/v1` trong
-[`gateway/agentgateway.yaml`](../../edai2/gateway/agentgateway.yaml) chia weight 90 tới model gốc `qwen-3b` và weight 10
-tới adapter `qwen-booking-v2`, cùng một vLLM (Qwen2.5-3B); mọi agent dùng ModelConfig chung trỏ vào route này nên đổi
-tỉ lệ hay rút bản mới chỉ cần sửa gateway. Prometheus scrape metric của gateway (ServiceMonitor trong
-[`k8s/agentgateway.yaml`](../../edai2/k8s/agentgateway.yaml)); hai panel cuối của dashboard `agent-ab`
-([`observability/dashboards/agent-ab.json`](../../edai2/observability/dashboards/agent-ab.json)) so sánh token
-input/output và thời gian gọi LLM p50 theo `gen_ai_request_model`.
+**A/B online** qua `agentgateway` trên GKE: route `/v1` ([`gateway/agentgateway.yaml`](../../edai2/gateway/agentgateway.yaml)) chia tỉ lệ **90/10** giữa `qwen-3b` và adapter LoRA `qwen-booking-v2` trên cùng một vLLM; đổi tỉ lệ hay rút bản mới chỉ cần sửa gateway, còn token và latency p50 được so sánh trực tiếp trên dashboard `agent-ab`.
 
 Trong 1 giờ đầu sau khi bật scrape, route `/v1` có 29 request thành công: 27 tới `qwen-3b` và 2 tới
 `qwen-booking-v2` (khoảng 93/7, sát trọng số 90/10). Tính cả route `/llm-v2` của policy-agent-v2, `qwen-booking-v2`

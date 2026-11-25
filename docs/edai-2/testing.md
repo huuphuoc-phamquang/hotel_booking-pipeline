@@ -67,11 +67,7 @@ Trên Jenkins Build #26, stage `Test` chỉ mutate file thay đổi từ build t
 Hypothesis kiểm hai property: `test_predict_tool_idempotent` (tool MCP) và `test_cancel_risk_idempotent`
 (REST). Cùng một booking gọi hai lần phải cho cùng kết quả.
 
-Chạy cục bộ (`pytest tests/ -k idempotent --hypothesis-show-statistics`): 2 test property
-đều đạt, mỗi test 50 ví dụ do Hypothesis sinh (`booking_id` và xác suất KServe giả trả về trong [0, 1]), 0 ví dụ lỗi.
-`test_cancel_risk_idempotent` gọi handler REST `cancel_risk` (`POST /v1/cancel-risk`) hai lần; `test_predict_tool_idempotent`
-gọi tool MCP `predict_cancellation` hai lần cho cùng booking. Cả hai kiểm hai lần gọi cho cùng kết quả; Feast và KServe
-được giả bằng respx.
+Chạy kiểm thử (`pytest tests/ -k idempotent`): cả 2 property test đều vượt qua **50 ví dụ sinh ngẫu nhiên mỗi test** với **0 lỗi** (giả lập Feast và KServe bằng `respx`).
 
 ![Hypothesis: 2 test idempotent](../images/edai-2/hypothesis-idempotent.png)
 
@@ -86,11 +82,7 @@ Ngoài ra, kiểm thử symbolic execution bằng `hypothesis-crosshair` (`@sett
 <a id="edai-2-32"></a>
 ## Kiểm thử tải (Load Test) Web API với Locust
 
-`tests/locustfile.py` gửi tải tới `POST /v1/cancel-risk` (5 phần) và `/healthz` (1 phần) của booking-mcp; mỗi
-request đọc feature từ Feast online rồi gọi KServe `cancel-risk`. Biến `BOOKING_IDS` cho locust dùng 5.000 `booking_id`
-thật lấy từ `gold.fact_bookings`, vì Gold trên cluster chỉ có dữ liệu tháng 1/2025. Locust chạy trong một pod trên GKE,
-gọi thẳng service: 100 user, tăng 10 user/s, 5 phút, `--html` ra file SLA
-[locust_sla_report.html](locust_sla_report.html). booking-mcp chạy 1 replica.
+[`tests/locustfile.py`](../../edai2/tests/locustfile.py) chạy trên GKE (**100 user**, tăng 10 user/s, **5 phút**, 1 replica `booking-mcp`), gửi tải vào `POST /v1/cancel-risk` (đọc Feast online → gọi KServe) và `/healthz`; báo cáo SLA xuất tại [locust_sla_report.html](locust_sla_report.html).
 
 | Endpoint | Request | Lỗi | RPS | p50 | p95 | p99 | Max |
 |---|---|---|---|---|---|---|---|
@@ -98,11 +90,7 @@ gọi thẳng service: 100 user, tăng 10 user/s, 5 phút, `--html` ra file SLA
 | `GET /healthz` | 3.548 | 0 | 11,8 | 4 ms | 14 ms | 110 ms | 497 ms |
 | Tổng | 21.059 | 0 | 70,3 | 1.000 ms | 2.400 ms | 3.400 ms | 5.342 ms |
 
-Không có request lỗi. Latency cao do đọc online store: trace Jaeger lúc chịu tải cho thấy hai lần đọc Feast
-chiếm khoảng 98% thời gian một request, còn KServe chỉ khoảng 7,5 ms. Hướng cải thiện: tăng replica booking-mcp, dùng
-connection pool cho online store Feast, thêm index trên bảng online. Trên Grafana, req/s của `/v1/cancel-risk` lên tới
-khoảng 80 req/s ở đỉnh và không có lỗi 5xx. Panel p95 đứng ở 1 s vì histogram mặc định của
-`prometheus-fastapi-instrumentator` chỉ có bucket tới 1 s, nên p95 thật lấy theo locust.
+Toàn bộ **21.059 request** hoàn tất với **0% lỗi** (đỉnh ~80 req/s trên Grafana, không có lỗi 5xx). Trace Jaeger chỉ ra nút cổ chai nằm ở hai lần đọc Feast online (~98% latency, trong khi KServe chỉ mất ~7,5 ms), định hướng tối ưu bằng tăng replica, connection pool và index bảng online.
 
 ![Locust: thống kê request và latency](../images/edai-2/locust-report.png)
 

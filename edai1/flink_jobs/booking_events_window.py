@@ -165,13 +165,6 @@ def main() -> None:
         env.set_parallelism(int(os.environ["FLINK_PARALLELISM"]))
     env.enable_checkpointing(60_000, CheckpointingMode.EXACTLY_ONCE)
     wm = WatermarkStrategy.for_bounded_out_of_orderness(MAX_OUT_OF_ORDER).with_timestamp_assigner(EventTimeAssigner())
-    # Đo trên PyFlink 1.20.1 (tests/test_stream_e2e.py): WatermarkStrategy đưa vào from_source bỏ qua TimestampAssigner
-    # viết bằng Python (dùng timestamp Kafka = giờ produce) và with_idleness làm watermark đứng yên -> gán timestamp ở
-    # operator Python ngay sau source, không idleness. Watermark khi đó tính trên luồng của cả subtask, nên mỗi subtask
-    # phải đọc đúng 1 partition: parallelism = số partition Kafka (FlinkDeployment 6 = 6 partition). Ít hơn thì
-    # partition đọc nhanh kéo watermark và event của partition chậm thành trễ giả; nhiều hơn thì subtask rỗng giữ
-    # watermark đứng yên. shortcut: đổi số partition phải đổi parallelism theo.
-    # Contract trước watermark: event sai (vd event_time ở tương lai) ra DLQ trước khi kịp đẩy watermark lên.
     checked = (env.from_source(kafka_source("booking_events"), WatermarkStrategy.no_watermarks(), "booking_events")
                .process(ContractCheck(), EVENT))
     checked.get_side_output(DLQ_TAG).sink_to(kafka_sink(DLQ_TOPIC))

@@ -5,20 +5,13 @@ Registry lưu agent card và MCP server.
 <a id="edai-2-8"></a>
 ## Triển khai agentregistry
 
-agentregistry v0.4.0 (aregistry.ai) cài bằng Helm chart chính thức
-`oci://ghcr.io/agentregistry-dev/agentregistry/charts/agentregistry` với
-[`k8s/agentregistry-values.yaml`](../../edai2/k8s/agentregistry-values.yaml), namespace `agentregistry`. Registry dùng Postgres sẵn có của data platform (database `agentregistry`, extension pgvector)
+agentregistry v0.4.0 namespace `agentregistry`. Registry dùng Postgres sẵn có của data platform (database `agentregistry`, extension pgvector)
 thay cho Postgres bundled để không thêm pod; chuỗi kết nối nằm trong Secret `agentregistry-db`. Một pod phục vụ cả
-web UI, REST API (`/v0/...`, tài liệu ở `/docs`) và MCP endpoint của registry; UI ra ngoài qua Ingress
-`registry.34.124.198.171.nip.io` có basic auth.
+web UI, REST API (`/v0/...`, tài liệu ở `/docs`) và MCP endpoint của registry; UI ra ngoài qua Ingress có basic auth.
 
-Catalog hiện có 4 agent (`coordinator-agent`, `data-agent`, `policy-agent`, `policy-agent-v2`) và 1 MCP server
-`booking-tools`, cùng tag `f808e37` là commit đang deploy. Mỗi agent ghi lại tiêu đề và mô tả từ agent card A2A,
-model, MCP server dùng, repository kèm commit và thư mục `edai2/agents`, cùng địa chỉ A2A qua agentgateway.
+Catalog hiện có 4 agent (`coordinator-agent`, `data-agent`, `policy-agent`, `policy-agent-v2`) và 1 MCP server `booking-tools`, gắn tag theo phiên bản commit đang deploy. Mỗi mục lưu đủ thông tin từ A2A agent card: mô tả, model, MCP server, repository và địa chỉ A2A qua `agentgateway`.
 
 ![agentregistry: catalog 4 agent](../images/edai-2/registry-agents.png)
-
-*Chú thích: Giao diện web `agentregistry` hiển thị đủ catalog 4 Agent (`coordinator-agent`, `data-agent`, `policy-agent`, `policy-agent-v2`) kèm tag commit git.*
 
 ![agentregistry: chi tiết policy-agent](../images/edai-2/registry-agent-detail.png)
 

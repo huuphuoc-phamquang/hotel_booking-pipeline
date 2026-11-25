@@ -24,12 +24,7 @@ gốc kèm `reason` là trường vi phạm (ảnh dưới đọc bằng `kafka-
 <a id="edai-1-40"></a>
 ## Idea 2 (edai-1): Đối soát batch–stream có ground truth
 
-Generator biết chính xác mọi event, nên với mỗi phút, `sum(gold.stream_bookings_1m)` (nhánh tumbling
-1 phút) cộng `count(gold.stream_late_bookings)` (side output) phải bằng số booking hợp lệ, đã khử trùng theo
-`idempotency_key`, có `event_time` trong phút đó. `tests/test_stream_e2e.py` chạy replayer → Kafka → Flink (image
-`k8s/flink.Dockerfile`) → Postgres trên Docker; `tests/test_stream_gen.py` kiểm tính bất biến stream = landing. Trên GKE
-, phép đối soát chạy theo ngày, so baseline và bản tối ưu với ground truth của generator
-(`generator/stream_truth.py`).
+Vì generator biết chính xác mọi event đã sinh, tổng mỗi phút của `gold.stream_bookings_1m` (cửa sổ 1 phút) cộng `gold.stream_late_bookings` (event trễ) phải khớp đúng số booking hợp lệ đã khử trùng trong phút đó. Luồng đối soát được kiểm thử end-to-end trên Docker (`tests/test_stream_e2e.py`, `tests/test_stream_gen.py`) và chạy đối soát theo ngày trên GKE giữa bản baseline, bản tối ưu với ground truth (`generator/stream_truth.py`).
 
 Trên Docker, với mọi phút đã đóng (919 phút), `stream_bookings_1m` cộng `stream_late_bookings` khớp đúng
 số booking do generator sinh; không phút nào lệch.
@@ -40,7 +35,7 @@ tối ưu khớp với các lần restart.
 
 ![Đối soát baseline, bản tối ưu và truth](../images/edai-1/flink-perday-compare.png)
 
-*Chú thích: Bảng đối soát theo ngày giữa Flink Baseline (`BASELINE=1`), Flink Tối ưu và Ground Truth (`stream_truth.py`): Baseline đếm thừa đúng số bản trùng (`+7.547` ngày 01-01), còn bản tối ưu chỉ lệch `0,011%` và `0,005%`.*
+*Chú thích: Bảng đối soát theo ngày giữa Flink Baseline, Flink Tối ưu và Ground Truth (`stream_truth.py`): Baseline đếm thừa đúng số bản trùng (`+7.547` ngày 01-01), còn bản tối ưu chỉ lệch `0,011%` và `0,005%`.*
 
 ![Truy vấn tổng hợp stream_bookings_1m + stream_late_bookings trên PostgreSQL](../images/edai-1/flink-perday-postgres.png)
 

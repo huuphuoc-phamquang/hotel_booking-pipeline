@@ -14,9 +14,6 @@ ngoài Terraform. Output gồm cluster `booking-ai` và registry `asia-southeast
 State quản lý 13 tài nguyên và 2 data source (4 API, budget, VPC, subnet, router, Cloud NAT, cluster GKE, 2 node pool,
 Artifact Registry).
 
-Cùng ngày, pool thứ ba `spark-spot` (n2-standard-8 kèm Local SSD cho shuffle của job Spark 105 GiB) được tạo bằng
-`gcloud` vì cần dùng ngay. Pool này đã được khai báo cùng cấu hình trong `modules/gke/main.tf`; lần `terraform apply` sau
-cần `terraform import` pool này.
 
 ![terraform apply](../images/edai-2/terraform-apply.png)
 
@@ -40,9 +37,7 @@ của nhóm). Ansible chạy trong container `python:3.11-slim` trên laptop (an
 | 2 | 12 | 0 | 0 |
 
 Lần 1 cài gói cơ bản, bật firewall `ufw`, cài Docker, chạy container Vault (`hashicorp/vault:1.20`, storage file) và
-Jenkins (`jenkins/jenkins:lts-jdk21`). Lần 2 không còn thay đổi nào, tức playbook idempotent. Jenkins trên VM truy cập
-được qua `http://<IP VM>:8080` sau bước unlock bằng mật khẩu khởi tạo. Vault trên VM để init bằng tay theo thiết kế của
-role (unseal key không đi qua Ansible).
+Jenkins (`jenkins/jenkins:lts-jdk21`). Lần 2 không còn thay đổi nào (`changed=0`), chứng minh playbook có tính idempotent và dịch vụ Jenkins/Vault trên VM sẵn sàng hoạt động.
 
 ![Ansible lần 1: changed=11](../images/edai-2/ansible-run1.png)
 

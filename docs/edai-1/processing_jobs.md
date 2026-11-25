@@ -5,126 +5,42 @@ Các job đi từ bản baseline tới bản tối ưu; hiệu năng được đ
 <a id="edai-1-11"></a>
 ## Spark Job (Baseline) · Xử lý dữ liệu offline
 
-Bản baseline của `silver_quotes` (`silver_quotes.py baseline`) tắt AQE và tắt broadcast. Job chạy trên
-GKE với các thông số sau:
+Bản baseline của `silver_quotes` (`silver_quotes.py hotel_baseline`) join `quotes ⋈ hotels` theo `hotel_id`, tắt AQE và tắt broadcast. Job chạy trên GKE với các thông số sau:
 
-- **Input:** toàn bộ quotes trên landing (`s3a://landing/quotes`, 395 ngày, 6.320 file, **104,7 GiB,
-  13.328.532.602 dòng**; cùng file Parquet DP1 chép sang Bronze) và `raw_inventory` (99.750.000 dòng).
-- **Cluster:** pool `spark-spot` 6 × n2-standard-8 với Local SSD cho shuffle; 6 executor × 6 core × 18 GB;
-  `spark.sql.shuffle.partitions` 1.500; sink `noop` (đo xử lý, không đo ghi).
-- **Đo:** Spark UI xem lại qua Spark History Server (`k8s/spark-history.yaml`) từ event log trên MinIO; số liệu trong
-  bảng lấy từ event log bằng `spark_jobs/event_log_stats.py`.
+- **Dữ liệu đầu vào:**
+  - Bảng `quotes` đầy đủ 395 ngày (**104,7 GiB**, khoảng **13,3 tỷ dòng** trong `6.320` file Parquet), đọc trực tiếp từ `s3a://landing/quotes`.
+  - Bảng danh mục khách sạn `raw_hotels` (**50.000 dòng**).
+- **Hạ tầng chạy (GKE):** 6 máy ảo Spot (`n2-standard-8`, tổng 6 executor × 6 core × 18 GB RAM), gắn Local SSD để chứa dữ liệu tạm khi shuffle.
+- **Cấu hình Spark:** chia thành `1.500` partition khi join (`spark.sql.shuffle.partitions = 1500`) và dùng `sink = noop` (không ghi kết quả ra đĩa để đo thuần tốc độ xử lý join, tránh thời gian ghi lên MinIO làm nhiễu phép so sánh).
+- **Đo:** số liệu trong bảng rút từ event log Spark trên MinIO bằng `spark_jobs/event_log_stats.py`.
 
-Join quotes ⋈ inventory theo (`hotel_id`, `room_type`, `stay_date`):
-
-| Stage | Task | Thời gian | Task max / trung vị | Shuffle | Spill |
-|---|---|---|---|---|---|
-| Đọc 104,7 GiB quotes, ghi shuffle | 1.095 | 480 s | 24,3 / 15,3 s | ghi 392,1 GiB | 5,1 GB |
-| `SortMergeJoin` | 1.500 | 556 s | 19,0 / 13,2 s | đọc 393,2 GiB | 0,2 GB |
-| **Cả ứng dụng** | | **1.049 s** | | | |
-
-Join cho ra đúng 13.328.532.602 dòng (mọi quote đều có inventory). Spark UI cho thấy chi phí nằm ở shuffle 392 GiB
-(1.330 GiB trước nén), không nằm ở một task chậm. Khoá 3 cột băm các ô nóng ra 1.500 partition, nên partition lớn nhất
-chỉ bằng 1,15 lần trung vị (305,7 so với 266,6 MiB).
-
-![Spark UI baseline: jobs](../images/edai-1/spark-baseline-jobs.png)
-
-*Chú thích: Spark History Server của bài **join 3 cột `quotes ⋈ inventory` (`baseline`)**: Job 3 chạy 3 stage (2.618 task) mất `17 min` (~1.049 s) để xử lý xong 104,7 GiB dữ liệu.*
-
-![Spark UI baseline: stages](../images/edai-1/spark-baseline-stages.png)
-
-*Chú thích: Danh sách Stage của **`quotes ⋈ inventory` (`baseline`)**: Stage 4 đọc `104.7 GiB` (`1.095` task, `8.0 min`, shuffle ghi `392.1 GiB`) và Stage 5 `SortMergeJoin` (`1.500` task, `9.3 min`, shuffle đọc `393.2 GiB`).*
-
-![Spark UI baseline: scan](../images/edai-1/spark-baseline-sql-scan.png)
-
-*Chú thích: Chi tiết bước `Scan parquet` trên Spark SQL tab của **`quotes ⋈ inventory` (`baseline`)**: đọc `6,320` file quotes (`104.7 GiB`, `13,328,532,602` dòng) và `23` file inventory (`80.3 MiB`, `99,750,000` dòng).*
-
-![Spark UI baseline: exchange và sort](../images/edai-1/spark-baseline-sql-exchange.png)
-
-*Chú thích: Chi tiết bước `Exchange` & `Sort` của **`quotes ⋈ inventory` (`baseline`)**: shuffle `13,328,532,602` dòng (`1330.7 GiB` chưa nén / `392.1 GiB` đã nén) chia đều qua `1,500` partition.*
-
-![Spark UI baseline: SortMergeJoin](../images/edai-1/spark-baseline-sql-join.png)
-
-*Chú thích: Chi tiết `SortMergeJoin` của **`quotes ⋈ inventory` (`baseline`)**: cho ra đúng `13,328,532,602` dòng, thời gian task khá đều (`min 9.7 s, med 13.2 s, max 19.0 s`), không có task nào bị nghẽn đơn lẻ.*
-
-Skew thật xuất hiện khi khoá join chỉ là `hotel_id` (`hotel_baseline`: quotes ⋈ hotels, tắt AQE và broadcast). Khách sạn
-nóng nhất (Zipf a = 0,8, khoảng 2,6% lượt xem) dồn **348.457.885 dòng, 9,78 GB vào một partition, gấp 47 lần trung vị**
-(6,7 triệu dòng, 212 MB). Task này chạy **357,7 s, trong khi trung vị là 5,5 s**, và gây spill 119,9 GB; cả ứng dụng
-mất 1.084 s.
+Khi join `quotes ⋈ hotels` chỉ theo `hotel_id` (`hotel_baseline`), lệch phân phối (Zipf `a = 0,8`, khách sạn có nhiều lượt xem nhất chiếm khoảng 2,6% lượt xem) dồn **348.457.885 dòng, 9,78 GB vào một partition, gấp 47 lần trung vị** (6,7 triệu dòng, 212 MB). Một task straggler chạy tới **357,7 s** (trong khi trung vị chỉ **5,5 s**), gây spill **119,9 GB**; cả ứng dụng mất **1.084 s**.
 
 <a id="edai-1-12"></a>
 ## Xử lý lệch phân phối (Data Skew) trong Spark
 
-`silver_quotes` có các chế độ sau, chạy trên cùng cluster và input với baseline:
-
-- Join `stg_quotes ⋈ raw_inventory` theo (`hotel_id`, `room_type`, `stay_date`): `baseline`; `aqe` (mặc định của
-  Spark); `aqe_tuned` (skewJoin factor 2, ngưỡng 64MB); `salt` (salting 200 ô nóng nhất bằng `hot_keys` và hàm
-  `salted_join` tổng quát theo khoá).
-- Join quotes ⋈ hotels theo `hotel_id`: `hotel_baseline`, `hotel_aqe`, `hotel_broadcast`.
+Trên cùng cluster và dữ liệu, `silver_quotes` so sánh 3 chế độ join `quotes ⋈ hotels` theo `hotel_id` (`hotel_baseline`, `hotel_aqe`, `hotel_broadcast`).
 
 | Bài | Chế độ | Ứng dụng | Stage join: task | Task max / trung vị | Partition lớn nhất | Spill |
 |---|---|---|---|---|---|---|
-| Khoá 3 cột (⋈ inventory) | baseline | 1.049 s | 1.500 | 19,0 / 13,2 s | 1,15 × trung vị | 5,3 GB |
-| | aqe_tuned | 1.067 s* | 1.500 | 17,4 / 13,3 s | 1,15 × trung vị | 5,3 GB |
-| Khoá `hotel_id` (⋈ hotels) | hotel_baseline | 1.084 s | 1.500 | **357,7 / 5,5 s** | 9,78 GB, 47 × | 119,9 GB |
-| | hotel_aqe | 815 s (−25%) | 1.712 | 41,7 / 5,5 s | 1,02 GB, 5 × | 72,4 GB |
-| | hotel_broadcast | **345 s (−68%)** | không shuffle | — | — | 0 |
+| Khoá `hotel_id` (⋈ hotels) | `hotel_baseline` | 1.084 s | 1.500 | **357,7 / 5,5 s** | 9,78 GB, 47 × | 119,9 GB |
+| | `hotel_aqe` | 815 s | 1.712 | 41,7 / 5,5 s | 1,02 GB, 5 × | 72,4 GB |
+| | `hotel_broadcast` | **345 s** | không shuffle | — | — | 0 |
 
-\* không tính 316 s chờ cấp executor ở stage liệt kê file.
+Các bước phân tích và tối ưu:
 
-Các bước phân tích từ Spark UI:
-
-1. **Đọc baseline.** Với khoá 3 cột, Summary Metrics của stage join khá đều: max chỉ hơn trung vị khoảng 40%, không có
-   straggler. Ngưỡng skew của AQE là partition lớn hơn 5 × trung vị và lớn hơn 256 MB (`aqe_tuned` hạ xuống 2 × và
-   64 MB). Không partition nào chạm ngưỡng, nên `aqe_tuned` không đổi plan và không nhanh hơn. Lý do là skew ở mức ô
-   (ô nóng nhất khoảng 2.700 lượt xem mỗi shard mỗi ngày) đã được dàn đều khi băm vào 1.500 partition. Chi phí thật
-   nằm ở shuffle 392 GiB.
-2. **Tìm skew ở mức partition.** Join theo `hotel_id` dồn khách sạn nóng nhất vào một partition 9,78 GB. Trên Spark UI,
-   một task chạy gần 6 phút trong khi các task khác chỉ vài giây, và stage chỉ xong khi task đó xong.
-3. **AQE skew join** (`hotel_aqe`). AQE phát hiện partition lớn hơn 5 × trung vị, tách nó thành nhiều phần và nhân bản
-   phía hotels tương ứng. Số task tăng từ 1.500 lên 1.712, partition lớn nhất còn 1,02 GB, task chậm nhất giảm từ
-   357,7 s xuống 41,7 s, và cả ứng dụng nhanh hơn 25%.
-4. **Broadcast** (`hotel_broadcast`). Bảng hotels chỉ có 50.000 dòng nên được gửi nguyên bảng tới mọi executor, và
-   quotes không phải shuffle. Không còn partition lệch; ứng dụng nhanh hơn baseline 68%. Đây là cách rẻ nhất khi phía
-   nhỏ đủ nhỏ.
-5. **Salting** (`salt`, `salted_join`) chỉ cần khi phía nhỏ không broadcast được và AQE vẫn để lại task chậm hơn hẳn
-   trung vị. Cả hai bài ở đây đều không rơi vào trường hợp đó, nên salting không chạy trên 105 GiB.
-
-Các chế độ của mỗi bài cho cùng kết quả: `tests/test_silver_quotes.py` chạy pyspark cục bộ và so từng dòng giữa các
-chế độ.
-
-![Spark UI aqe_tuned: timeline](../images/edai-1/spark-aqe-timeline.png)
-
-*Chú thích: Event Timeline trên Spark UI của **`quotes ⋈ inventory` (`aqe_tuned`)**: hiển thị thời gian cấp phát 6 executor và trình tự chạy Job 0–5 trên cụm `spark-spot`.*
-
-![Spark UI aqe_tuned: jobs](../images/edai-1/spark-aqe-jobs.png)
-
-*Chú thích: Danh sách Jobs của **`quotes ⋈ inventory` (`aqe_tuned`)**: Job 0 liệt kê 395 thư mục mất `5.3 min`, các job đọc dữ liệu chính chạy trong `7.8–7.9 min`.*
-
-![Spark UI aqe_tuned: summary metrics stage join](../images/edai-1/spark-aqe-stage-join.png)
-
-*Chú thích: Summary Metrics Stage Join của **`quotes ⋈ inventory` (`aqe_tuned`)**: phân phối khá đồng đều (`Median 13 s / Max 17 s`; `Shuffle Read Median 266.6 MiB / Max 305.7 MiB`, gấp 1,15×) nên AQE không cần tách partition.*
-
-![Spark UI aqe_tuned: scan](../images/edai-1/spark-aqe-sql-scan.png)
-
-*Chú thích: Chi tiết `Scan parquet` của **`quotes ⋈ inventory` (`aqe_tuned`)**: đọc cùng tập `13,328,532,602` dòng quotes (`104.7 GiB`) và `99,750,000` dòng inventory như bản baseline.*
-
-![Spark UI aqe_tuned: exchange](../images/edai-1/spark-aqe-sql-exchange.png)
-
-*Chú thích: Chi tiết `Exchange` của **`quotes ⋈ inventory` (`aqe_tuned`)**: cho thấy `AdaptiveSparkPlan` giữ `1,500` partition với kích thước shuffle đồng đều tương tự baseline.*
-
-![Spark UI aqe_tuned: SortMergeJoin](../images/edai-1/spark-aqe-sql-join.png)
-
-*Chú thích: Chi tiết `SortMergeJoin` dưới `AdaptiveSparkPlan` của **`quotes ⋈ inventory` (`aqe_tuned`)**: task chạy trong `9.4 s (min) / 13.3 s (med) / 17.1 s (max)` với `0.0 B` spill.*
+1. **Tìm skew ở mức partition (`hotel_baseline`).** Join theo `hotel_id` dồn khách sạn nóng nhất vào một partition 9,78 GB. Một task chạy gần 6 phút (357,7 s) trong khi các task khác chỉ vài giây (trung vị 5,5 s), và cả stage chỉ xong khi task đó xong.
+2. **AQE skew join (`hotel_aqe`).** AQE phát hiện partition lớn hơn 5 × trung vị và > 256 MB, tự động tách thành nhiều phần và nhân bản phía `hotels` tương ứng. Số task tăng từ 1.500 lên 1.712, partition lớn nhất còn 1,02 GB (5 × trung vị), task chậm nhất giảm từ 357,7 s xuống 41,7 s, và cả ứng dụng nhanh hơn 25% (815 s).
+3. **Broadcast (`hotel_broadcast`).** Bảng `hotels` chỉ có 50.000 dòng nên được gửi nguyên bảng tới mọi executor, và `quotes` không phải shuffle. Không còn partition lệch, spill về 0, ứng dụng chỉ còn 345 s (nhanh hơn baseline 68%). Đây là cách rẻ nhất khi phía nhỏ đủ nhỏ.
 
 <a id="edai-1-13"></a>
 ## Xử lý thay đổi lược đồ (Schema Evolution) trong Spark
 
-`read_bookings` trong `silver_bookings.py` đọc Bronze bằng `mergeSchema` và gộp
-`coalesce(room_category, room_type)`. `tests/test_silver_bookings.py` chạy pyspark cục bộ trên Bronze vắt qua mốc
-2025-07-01. Trên dữ liệu thật, `spark_jobs/bookings_quality.py` chạy trên GKE (Spark local[6] trong pod
-`bookings-quality`, 6 phút 10 giây) với toàn bộ `s3a://landing/bookings`: 395 ngày, 6.320 file, 3,5 GiB. Job dùng đúng
-`read_bookings` và `dedup_bookings` của `silver_bookings.py`.
+Từ mốc `2025-07-01`, schema bảng `bookings` chuyển từ **v1** sang **v2** (đổi tên cột `room_type` → `room_category` và thêm cột mới `channel`):
+
+- **Cách xử lý (`silver_bookings.py`):** hàm `read_bookings` bật `mergeSchema` khi đọc Parquet và gộp hai cột bằng `coalesce(room_category, room_type)` để đưa toàn bộ dữ liệu về cùng một lược đồ.
+- **Kiểm thử cục bộ:** `tests/test_silver_bookings.py` chạy PySpark trên dữ liệu qua mốc `2025-07-01` để xác minh không mất dòng.
+- **Kiểm chứng trên dữ liệu thật (GKE):** job `spark_jobs/bookings_quality.py` (dùng đúng `read_bookings` và `dedup_bookings`) chạy 6 luồng CPU ngay trong 1 pod `bookings-quality` (mất **6 phút 10 giây**) trên toàn bộ `s3a://landing/bookings` (**395 ngày**, `6.320` file, **3,5 GiB**).
 
 | Phiên bản (theo `dt`) | Số dòng | `room_type` có giá trị | `room_category` có giá trị | `channel` có giá trị |
 |---|---|---|---|---|
@@ -152,38 +68,24 @@ generator sinh. Trên dữ liệu thật, phép đo dùng cùng lần chạy `sp
 | Sau `dedup_bookings` | 149.839.353 |
 | Bản gửi trùng bị bỏ | 2.998.388 (1,962%; config 2%) |
 
-Sau khử trùng, số dòng bằng đúng số `idempotency_key` khác nhau: mỗi lần đặt còn đúng một dòng (dòng có `created_at`
+Sau dedup, số dòng bằng đúng số `idempotency_key` khác nhau: mỗi lần đặt còn đúng một dòng (dòng có `created_at`
 nhỏ nhất). Ảnh output ở mục schema evolution.
 
 <a id="edai-1-15"></a>
 ## Tích hợp Spark Job vào Airflow Pipeline (DP2)
 
-DAG `dp2_bronze_to_gold` gọi `silver_bookings.py` qua `SparkSubmitOperator` ở chế độ `incr`: job chỉ đọc
-partition `dt=ds` rồi MERGE vào Iceberg, kèm điều kiện `created_at` để Iceberg cắt partition. Sau đó `stage_gold.py`
-đưa Silver sang staging Gold qua JDBC. Image Spark có sẵn Iceberg, s3a và JDBC (`k8s/spark.Dockerfile`).
-`tests/test_silver_bookings.py` chạy MERGE thật trên Iceberg trong image Spark và cho kết quả khớp với cách dựng lại cả
-bảng. Pipeline chạy trên GKE (Airflow 2.10.5, KubernetesExecutor, image `airflow-booking:b9cf9a8-1`),
-backfill ngày `ds` = 2025-01-01.
-
-Task `silver_bookings` của DP2 gọi `spark-submit` lên Kubernetes. Pod driver chạy image
-`spark-booking:b9cf9a8` và kết thúc với `phase: Succeeded`, `exit code: 0`; sau đó `stage_gold` (Spark) và `upsert_gold`
-(SQL) chạy tiếp. Log task đọc lại được trên Airflow UI nhờ remote logging lên MinIO (`s3://lake/airflow-logs`).
+Trên GKE, DAG `dp2_bronze_to_gold` xử lý dữ liệu theo từng ngày. Đầu tiên, task `silver_bookings` đẩy job Spark lên Kubernetes để đọc dữ liệu của ngày và gộp vào bảng Iceberg ở tầng Silver (đã đối chiếu khớp với chạy toàn bảng trong `tests/test_silver_bookings.py`). Khi pod Spark chạy xong (`exit code: 0`), `stage_gold` và `upsert_gold` tiếp tục đẩy dữ liệu lên tầng Gold qua JDBC/SQL; toàn bộ log được lưu trên MinIO (`s3://lake/airflow-logs`) để xem trực tiếp trên Airflow UI.
 
 ![Graph DP2](../images/edai-1/airflow-dp2-graph.png)
 
-*Chú thích: Graph View của DAG `dp2_bronze_to_gold` gồm 5 bước tuần tự (`wait_dp1 → silver_bookings → stage_gold → upsert_gold → validate_gold`), hoàn thành ngày 2025-01-01 trong ~4 phút.*
-
 ![Log Spark của task silver_bookings](../images/edai-1/airflow-spark-log.png)
 
-*Chú thích: Log Airflow của task `silver_bookings` đọc từ MinIO (`remote logging`): cho thấy `spark-submit` đẩy pod driver `spark-booking:b9cf9a8` lên Kubernetes và kết thúc với `exit code: 0`.*
+*Chú thích: Log Airflow của task `silver_bookings` lưu trên MinIO: cho thấy job Spark chạy trên Kubernetes và kết thúc thành công (`exit code: 0`).*
 
 <a id="edai-1-16"></a>
 ## Flink Job (Baseline) · Xử lý dữ liệu streaming
 
-Cờ `BASELINE=1` chạy Flink với watermark 0 giây và không khử trùng. Cả baseline và bản tối ưu chạy trên
-GKE với cùng dữ liệu: replay `booking_events` (30 ngày, Kafka 6 partition) từ đầu topic, FlinkDeployment
-`booking-events-window` với parallelism 6. Baseline chạy (image `flink-booking:9850a46-2`), bản tối ưu
-chạy (image `c93fff3-1`). Trước mỗi lần chạy, 3 bảng stream được xoá rồi job đọc lại từ offset đầu.
+Bản baseline chạy Flink với watermark 0 giây và không khử trùng. Cả bản baseline và bản tối ưu đều chạy trên GKE (6 luồng song song) trên cùng luồng dữ liệu `booking_events` (30 ngày qua Kafka, 6 partition). Trước mỗi lần chạy, 3 bảng kết quả stream được xoá sạch để job đọc lại dữ liệu từ đầu.
 
 Cách đối soát: `got` của một ngày bằng tổng `gold.stream_bookings_1m` cộng số dòng `gold.stream_late_bookings` có
 `event_time` trong ngày. Truth là số booking hợp lệ đã khử trùng, do `generator/stream_truth.py` tính từ event log và
@@ -191,7 +93,7 @@ cắt tại 2026-01-03 01:00.
 
 ![Đối soát baseline, bản tối ưu và truth](../images/edai-1/flink-perday-compare.png)
 
-*Chú thích: Bảng đối soát theo ngày giữa Flink Baseline (`BASELINE=1`), Flink Tối ưu và Ground Truth (`stream_truth.py`): Baseline đếm thừa đúng số bản trùng (`+7.547` ngày 01-01), còn bản tối ưu chỉ lệch `0,011%` và `0,005%`.*
+*Chú thích: Bảng đối soát theo ngày giữa Flink Baseline, Flink Tối ưu và Ground Truth (`stream_truth.py`): Baseline đếm thừa đúng số bản trùng (`+7.547` ngày 01-01), còn bản tối ưu chỉ lệch `0,011%` và `0,005%`.*
 
 Baseline cho thấy hai vấn đề:
 
@@ -242,9 +144,7 @@ Mỗi event vào 12 cửa sổ chồng nhau và được xử lý bằng Python,
 ## Xử lý dữ liệu đến trễ (Watermark & Side Output) trong Flink
 
 Nhánh đối soát tumbling 1 phút dùng watermark 10 phút, allowed lateness 5 phút và side output ghi vào
-`gold.stream_late_bookings`. Cửa sổ trượt 1 giờ chỉ đẩy event ra side output khi trễ quá 1 giờ 15 phút. Trên PyFlink
-1.20, timestamp được gán sau source và không dùng `with_idleness`, vì thực nghiệm cho thấy idleness làm watermark đứng
-yên. Test e2e trên Docker xác nhận số đếm cộng side output bằng tổng thật của từng phút. Số liệu dưới đây lấy từ cùng
+`gold.stream_late_bookings`. Cửa sổ trượt 1 giờ chỉ đẩy event ra side output khi trễ quá 1 giờ 15 phút. Test e2e trên Docker xác nhận số đếm cộng side output bằng tổng thật của từng phút. Số liệu dưới đây lấy từ cùng
 lần chạy với baseline Flink.
 
 Số event bị đẩy ra side output (`late`) theo ngày:
@@ -347,10 +247,6 @@ minutes.get_side_output(LATE_TAG).map(late_row, LATE_ROW).add_sink(jdbc_sink(LAT
 
 Hai cửa sổ chạy trên GKE và ghi vào Gold: tumbling 1 phút ra `gold.stream_bookings_1m`, sliding 1 giờ bước
 5 phút ra `gold.feat_hotel_realtime` (`window_end` là bội số của 5 phút).
-
-![gold.stream_bookings_1m](../images/edai-1/flink-stream-bookings-1m.png)
-
-*Chú thích: Dữ liệu trong bảng `gold.stream_bookings_1m` (nhánh Tumbling Window 1 phút) dùng để cộng tổng đối soát theo từng phút với Ground Truth.*
 
 ![gold.feat_hotel_realtime](../images/edai-1/flink-feat-hotel-realtime.png)
 

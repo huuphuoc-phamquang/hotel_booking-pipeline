@@ -2,17 +2,12 @@
 
 Ba pipeline DP1–DP3 chạy trên Airflow, mỗi pipeline gồm bước ingest và bước validate.
 
-Mọi lần chạy dưới đây diễn ra trên GKE (Airflow 2.10.5,
-KubernetesExecutor, image `airflow-booking:b9cf9a8-1`), backfill ngày `ds` = 2025-01-01.
+Mọi lần chạy dưới đây diễn ra trên GKE (Airflow 2.10.5), dữ liệu minh họa ngày 2025-01-01.
 
 <a id="edai-1-22"></a>
 ## Giai đoạn Ingest · Pipeline DP1 (Raw → Bronze)
 
-DP1 gồm DAG `dp1_ingest_bronze` (`check_landing` → ingest → validate) và `dp1_load_dims`. Bước ingest là
-`SparkSubmitOperator` chạy trên Kubernetes, lấy image Spark từ Variable `spark_image`. Connection (`spark_default`,
-`warehouse`, `minio_landing`, `datahub_rest_default`) và Variable (`spark_image`, `landing_start_date`) đặt trong
-Airflow. Dữ liệu cũ được nạp bằng `airflow dags backfill`; DAG đặt `catchup=False` để không tự chạy 600 ngày khi bật.
-`tests/test_dag_integrity.py` kiểm cấu trúc DAG trong image `apache/airflow:2.10.5`.
+DP1 gồm hai DAG: `dp1_load_dims` (nạp 4 bảng danh mục) và `dp1_ingest_bronze` (`check_landing` → ingest bằng Spark trên Kubernetes → validate). Các kết nối (Connections) và biến dùng chung (Variables như `spark_image`, `landing_start_date`) được quản lý tập trung trong Airflow thay vì ghi cứng trong code. DAG tắt tự động chạy bù (`catchup=False`) và nạp dữ liệu lịch sử bằng `airflow dags backfill`; cấu trúc DAG được kiểm tra tự động qua `tests/test_dag_integrity.py`.
 
 `dp1_load_dims` nạp 4 bảng dim. `dp1_ingest_bronze` chạy đủ 12 task (4 bảng × check → ingest → validate),
 tất cả đều success.
@@ -48,7 +43,7 @@ vào (giá âm, `quote_id` trùng, partition rỗng) đều bị bắt.
 
 DAG `dp2_bronze_to_gold` đợi DP1 cùng ngày bằng `ExternalTaskSensor`, rồi chạy lần lượt:
 
-1. `silver_bookings` (Spark, chế độ `incr` theo `dt=ds`).
+1. `silver_bookings` (Spark, xử lý tăng dần theo từng ngày).
 2. `stage_gold` (Spark ghi staging và `gold.hotel_rooms`).
 3. `upsert_gold`: `sql/dp2_upsert_gold.sql` chạy trong một transaction, cập nhật `dim_customer`, `dim_hotel` SCD2 và
    `fact_bookings`; fact join theo khoảng hiệu lực của phiên bản dim.
@@ -86,7 +81,7 @@ Cả 5 kiểm tra đều đạt.
 ## Giai đoạn Ingest · Pipeline DP3 (Tính Offline Features)
 
 DAG `dp3_offline_features` chạy `sql/dp3_features.sql`, upsert `feat_customer_booking_stats` và
-`feat_hotel_demand` trực tiếp trên Gold trong một transaction. `event_timestamp` là cuối ngày `ds` chứ không phải giờ
+`feat_hotel_demand` trực tiếp trên Gold trong một transaction. `event_timestamp` lấy mốc cuối ngày dữ liệu chứ không phải giờ
 máy, nhờ đó backfill sinh đủ lịch sử point-in-time cho training. Task validate phát Airflow Dataset để kích hoạt
 materialize.
 
@@ -102,7 +97,7 @@ dòng `feat_customer_booking_stats` và 46.655 dòng `feat_hotel_demand` (các k
 <a id="edai-1-27"></a>
 ## Giai đoạn Validate · Pipeline DP3 (Tính Offline Features)
 
-`validate_features` kiểm ba điều: có dòng cho ngày `ds`, tỉ lệ nằm trong [0, 1], và
+`validate_features` kiểm tra ba điều: có dữ liệu cho ngày chạy, tỉ lệ nằm trong [0, 1], và
 `event_timestamp` ≤ `created` (`dags/gold_checks.py`; `tests/test_gold_sql.py` chạy trên Postgres thật).
 
 Ba kiểm tra của `feat_hotel_demand` (`hotel_rows_for_ds`, `hotel_rate_in_0_1`, `event_before_created`) đều

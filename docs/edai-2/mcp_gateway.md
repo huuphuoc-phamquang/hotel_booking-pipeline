@@ -5,21 +5,12 @@
 <a id="edai-2-23"></a>
 ## Cấu hình MCP Gateway
 
-Route `/mcp` trong [`gateway/agentgateway.yaml`](../../edai2/gateway/agentgateway.yaml) gom MCP server `booking-tools`
-(booking-mcp, `http://booking-mcp.agents.svc.cluster.local/mcp/`) sau agentgateway v1.6.0. Agent không còn gọi thẳng
-booking-mcp: trong [`agents/agents-gke.yaml`](../../edai2/agents/agents-gke.yaml), mỗi agent có một `RemoteMCPServer`
-riêng trỏ tới `http://agentgateway.gateway.svc.cluster.local:3000/mcp` và gửi header `Authorization` lấy từ Secret của
-chính agent đó (`mcp-token-data`, `mcp-token-policy`).
+Route `/mcp` (cấu hình trong [`gateway/agentgateway.yaml`](../../edai2/gateway/agentgateway.yaml)) đặt MCP server `booking-tools` phía sau `agentgateway` v1.6.0. Các agent trong [`agents/agents-gke.yaml`](../../edai2/agents/agents-gke.yaml) không gọi thẳng `booking-mcp` mà đi qua gateway kèm JWT riêng của từng agent.
 
-Security và policy trên route:
+Gateway áp dụng hai lớp bảo vệ (chi tiết policy xem trong `gateway/agentgateway.yaml`):
 
-- `jwtAuth` (`mode: strict`): token phải do realm `agents` của Keycloak ký, audience `agentgateway`. Request không token
-  bị chặn ở gateway, không tới được MCP server.
-- `mcpAuthorization`: quy tắc CEL theo tên tool và claim `role` của token. `get_booking_features` chỉ dành cho
-  `role == "data-agent"`; `predict_cancellation`, `search_policy`, `propose_overbooking`, `apply_overbooking` chỉ dành
-  cho `role == "policy-agent"`. Claim `role` do mapper hardcoded của từng client Keycloak gắn vào, agent không tự đặt
-  được. Lý do: nguyên tắc quyền tối thiểu, và tool ghi dữ liệu (`apply_overbooking`) chỉ lộ ra với đúng agent có bước
-  duyệt HITL.
+- **Xác thực (`jwtAuth`):** bắt buộc có JWT hợp lệ do Keycloak ký; request thiếu token bị chặn ngay tại gateway.
+- **Phân quyền tool (`mcpAuthorization`):** áp dụng nguyên tắc quyền tối thiểu theo `role` trong token — `data-agent` chỉ dùng được `get_booking_features`, còn `policy-agent` dùng 4 tool còn lại (bao gồm `apply_overbooking` có bước duyệt HITL).
 
 Kiểm bằng [`gateway/check.sh`](../../edai2/gateway/check.sh): `/mcp` không token
 trả 401; `tools/list` với token data-agent chỉ có `get_booking_features`, với token policy-agent có bốn tool còn lại;

@@ -5,23 +5,10 @@ Một `ModelConfig` dùng chung cho mọi agent.
 <a id="edai-2-7"></a>
 ## Global ModelConfig dùng chung cho các agent
 
-kagent 0.9.12 cài bằng Helm với [`k8s/kagent-values.yaml`](../../edai2/k8s/kagent-values.yaml).
-Provider `openAI` của chart sinh ModelConfig `default-model-config`:
+kagent 0.9.12 cài bằng Helm với [`k8s/kagent-values.yaml`](../../edai2/k8s/kagent-values.yaml), tạo sẵn `ModelConfig` dùng chung `default-model-config`. Thay vì gọi thẳng vLLM, mọi agent đều trỏ về route `/v1` của `agentgateway` và xác thực bằng JWT do Keycloak cấp (khởi tạo qua `gateway/deploy.sh`; khoá vLLM chỉ lưu ở gateway).
 
-- `model: qwen-3b`: Qwen2.5-3B-Instruct phục vụ bằng vLLM, parser tool `hermes`.
-- `baseUrl: http://agentgateway.gateway.svc.cluster.local:3000/v1`: route LLM của agentgateway, không gọi thẳng vLLM.
-- `apiKeySecretRef: llm-api`: Secret chứa JWT của client `kagent` do Keycloak cấp (tạo bằng `gateway/deploy.sh`);
-  kagent gửi nó dưới dạng `Authorization: Bearer`. Khoá vLLM chỉ nằm ở gateway.
+Cả 3 agent ([`agents/agents-gke.yaml`](../../edai2/agents/agents-gke.yaml)) dùng chung `ModelConfig` này; `agentgateway` ([`gateway/agentgateway.yaml`](../../edai2/gateway/agentgateway.yaml)) chia tải **90/10** giữa `qwen-3b` và `qwen-booking-v2` nên đổi model chỉ cần sửa tại gateway. Log route `llm` ghi nhận **13 request hợp lệ (`200`)** chia đúng tỉ lệ (`12` tới `qwen-3b`, `1` tới `qwen-booking-v2`) và **6 request sai/thiếu token bị chặn (`401`)**.
 
-Cả ba agent trong [`agents/agents-gke.yaml`](../../edai2/agents/agents-gke.yaml) dùng chung ModelConfig này. Gateway
-chia lưu lượng 90/10 giữa model gốc `qwen-3b` và adapter LoRA `qwen-booking-v2`
-([`gateway/agentgateway.yaml`](../../edai2/gateway/agentgateway.yaml)), nên đổi model hay tỉ lệ chỉ cần sửa gateway,
-không sửa agent. Từ khi chuyển kagent sang gateway tới lúc chụp (các lượt hỏi data-agent, policy-agent,
-coordinator-agent và các lần chạy `gateway/check.sh`), log route `llm` ghi 13 request trả 200, cùng `jwt.sub` của
-client `kagent` (12 tới `qwen-3b`, 1 tới `qwen-booking-v2`), và 6 request không token hoặc token giả mạo trả 401.
-
-vLLM chạy trên máy GPU cá nhân (8 GB, `--max-model-len 4096`) và được đưa ra ngoài qua Cloudflare tunnel; URL tunnel
-đổi mỗi lần khởi động lại, khi đó chỉ cần chạy lại `gateway/deploy.sh`.
 
 ![Log agentgateway: request LLM có JWT, chia 90/10 theo model](../images/edai-2/agentgateway-llm-log.png)
 

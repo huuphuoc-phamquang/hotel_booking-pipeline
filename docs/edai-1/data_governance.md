@@ -2,8 +2,7 @@
 
 Lineage và kết quả kiểm tra dữ liệu của DP1–DP3 được ghi lên DataHub.
 
-Mọi lần chạy dưới đây diễn ra trên GKE (Airflow 2.10.5, KubernetesExecutor, image
-`airflow-booking:b9cf9a8-1`), backfill ngày `ds` = 2025-01-01.
+Mọi lần chạy dưới đây diễn ra trên GKE (Airflow 2.10.5), dữ liệu minh họa ngày 2025-01-01.
 
 <a id="edai-1-28"></a>
 ## Lineage của pipeline DP1 (Landing → Bronze)
@@ -45,7 +44,7 @@ bảng staging Gold → `upsert_gold` → `fact_bookings`, kèm nhánh dim (`raw
 
 `validate_gold` gồm 5 kiểm tra SQL:
 
-- có dòng cho ngày `ds`;
+- có dữ liệu cho ngày chạy;
 - mọi dòng staging đều vào được fact;
 - `amount` > 0;
 - mỗi khách sạn có đúng một phiên bản hiện hành;
@@ -72,7 +71,7 @@ Phía phải ảnh lineage ở mục DP1 thể hiện `fact_bookings` → task `
 <a id="edai-1-33"></a>
 ## Kiểm tra chất lượng dữ liệu DP3
 
-`validate_features` kiểm có dòng cho ngày `ds`, tỉ lệ nằm trong [0, 1], `event_timestamp` ≤ `created`,
+`validate_features` kiểm tra có dữ liệu cho ngày chạy, tỉ lệ nằm trong [0, 1], `event_timestamp` ≤ `created`,
 rồi đẩy kết quả lên DataHub.
 
 Tab Quality của `feat_hotel_demand` có 3 assertion, tất cả đều đạt. `feat_customer_booking_stats` có dấu

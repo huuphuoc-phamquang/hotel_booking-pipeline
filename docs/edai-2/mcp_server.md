@@ -7,7 +7,7 @@
 
 `booking-mcp` xây dựng trên FastAPI với pydantic validation cho toàn bộ input/output của REST và MCP tool (`BookingFeatures`, `RiskRequest`, `CancelRisk`, `BatchRisk`, `OverbookingProposal`). Tool `predict_cancellation` đọc feature từ Feast online rồi gọi KServe `cancel-risk`; cùng logic này được mở qua REST `/v1/cancel-risk` và `/v1/cancel-risk/batch`.
 
-Hai probe `/healthz` (liveness) và `/readyz` (readiness — chỉ trả `200` khi đọc được online store) hoạt động đúng trên GKE (namespace `agents`, chart `helm/api`, image `booking-mcp:e6e53e9-2`). Request sai schema (`booking_id` âm, sai kiểu chuỗi, thiếu trường) bị pydantic chặn ngay với mã `422`.
+Hai probe `/healthz` (liveness) và `/readyz` (readiness — chỉ trả `200` khi đọc được online store) hoạt động đúng trên GKE (namespace `agents`, Helm chart `helm/api`). Request sai schema (`booking_id` âm, sai kiểu chuỗi, thiếu trường) bị pydantic chặn ngay với mã `422`.
 
 ![Healthcheck, validation và async của booking-mcp](../images/edai-2/booking-mcp-api-checks.png)
 
@@ -35,7 +35,7 @@ revision trước. Phép thử chạy trên GKE: upgrade booking-mcp sang một 
 
 Upgrade thất bại sau 90 giây vì pod mới không kéo được image, và Helm tự rollback: `helm history` ghi revision 3
 `failed` và revision 4 "Rollback to 2". Trong suốt quá trình, pod cũ vẫn Running và phục vụ request nhờ
-`maxUnavailable: 0`; sau rollback, Deployment trở lại image `booking-mcp:e6e53e9-2`.
+`maxUnavailable: 0`; sau rollback, Deployment tự khôi phục về phiên bản image ổn định trước đó.
 
 ![helm upgrade --atomic tự rollback](../images/edai-2/helm-atomic-rollback.png)
 
@@ -49,19 +49,9 @@ RemoteMCPServer `booking-tools-data` (route `/mcp` của agentgateway, token rol
 `get_booking_features`. Hỏi về cặp khách 18766768 và khách sạn 8528, agent gọi tool với đúng hai mã rồi trả lời theo
 số liệu online store (1 booking 90 ngày, tỉ lệ huỷ 0%; khách sạn 44 booking 7 ngày, tỉ lệ huỷ 30 ngày 17,24%).
 
-Autoscale dùng KEDA 2.20.2 (Helm `kedacore/keda`, namespace `keda`). Mỗi agent có một ScaledObject trong
-[`k8s/keda.yaml`](../../edai2/k8s/keda.yaml): tối thiểu 2, tối đa 4 replica, trigger Prometheus theo request/giây của
-route A2A trên agentgateway (`agentgateway_requests_total`, ngưỡng 1 request/giây mỗi replica vì mỗi lượt agent chờ
-LLM khoảng 5 s); KEDA tự tạo HPA `keda-hpa-<agent>`. kagent đặt lại `deployment.replicas` của Deployment mỗi lần
-reconcile nếu Agent có trường này (đã thử: scale tay lên 2 bị kéo về 1 ngay), nên Agent trong
-[`agents/agents-gke.yaml`](../../edai2/agents/agents-gke.yaml) không đặt `replicas` và để KEDA quản lý.
+Autoscale dùng **KEDA 2.20.2** ([`k8s/keda.yaml`](../../edai2/k8s/keda.yaml)): mỗi agent chạy tối thiểu **2** và tối đa **4 replica**, trigger theo RPS từ Prometheus trên route A2A của `agentgateway`.
 
-[`tests/keda_load.sh`](../../edai2/tests/keda_load.sh) tạo khoảng 10 request/giây vào route `/a2a/data-agent` (GET
-agent card qua gateway, không gọi LLM) trong 150 s và in trạng thái HPA mỗi 20 s. Lần chạy bắt đầu
-ở 2/2 replica (metric 0,25); 20 s sau metric 1,57 request/giây mỗi replica vượt ngưỡng, desired lên 4; 20 s tiếp theo
-4/4 replica Ready. Hết tải, HPA giữ 4 replica trong 5 phút (cửa sổ ổn định mặc định) rồi về 2. Ở lần chạy đầu, hai
-pod mới không đủ chỗ nên cluster autoscaler của GKE thêm node thứ ba, kéo image kagent (339 MB) mất 53 s, tổng cộng
-khoảng 2,5 phút tới khi Ready.
+Khi chạy kiểm thử tải [`tests/keda_load.sh`](../../edai2/tests/keda_load.sh) (~10 req/s trong 150 s), `data-agent` tự scale từ `2/2` lên **`4/4 Ready` sau 40 giây**, và tự thu gọn về `2` sau 5 phút hết tải.
 
 ![kagent UI: data-agent gọi get_booking_features](../images/edai-2/kagent-data-agent.png)
 
@@ -74,11 +64,11 @@ khoảng 2,5 phút tới khi Ready.
 <a id="edai-2-20"></a>
 ## Chạy Agent trong Sandbox (Agent Substrate)
 
-Hệ thống đã triển khai **Agent Substrate 1.0.1** kết hợp **kagent 1.0.1** trong [agent-substrate-v1.yaml](../../edai2/k8s/agent-substrate-v1.yaml) để cô lập toàn bộ agent ở hai lớp runtime và mạng:
+Hệ thống triển khai **Agent Substrate 1.0.1** kết hợp **kagent 1.0.1** (manifest đầy đủ tại [`edai2/k8s/agent-substrate-v1.yaml`](../../edai2/k8s/agent-substrate-v1.yaml)) để cô lập toàn bộ 4 agent ở cả lớp runtime và mạng:
 
-- **Runtime Sandbox gVisor:** `SandboxConfig/gvisor-default` (`class: gvisor`, `v7`) gắn trên `WorkerPool/agents-warm` (`ateworker-gvisor:v1.0.1`), cô lập tiến trình agent bằng user-space kernel gVisor thay vì chạy trực tiếp trên host kernel.
-- **L7 Egress Allowlist (`EgressPolicy/agents-gateway-only`):** gắn qua `egressPolicyRefs` cho cả 4 agent (`coordinator-agent`, `data-agent`, `policy-agent`, `policy-agent-v2`, đạt `EgressPoliciesApplied=True`). Toàn bộ HTTP/HTTPS từ sandbox được định tuyến qua proxy mTLS/CONNECT `atenet-egress` và chỉ được phép gọi tới `http://vllm-booking.llm.svc.cluster.local:8000` (kèm secret injection `OPENAI_API_KEY` qua `k8s-credential-provider`) và `http://agentgateway.gateway.svc.cluster.local:3000`.
-- **mTLS Ingress (`atenet-router`) & L4 `NetworkPolicy`:** `atenet-router` chỉ chấp nhận kết nối mTLS có SPIFFE ID `spiffe://cluster.local/ns/kagent/sa/kagent-controller`; ở tầng L4, `NetworkPolicy/agents-egress-only-gateway` và `NetworkPolicy/substrate-agents-warm` (áp trên `ate.dev/worker-pool=agents-warm`) thực thi qua `kube-router` iptables chỉ mở `ate-system`, `llm:8000`, `gateway:3000`, `kube-dns:53` và từ chối mọi egress khác bằng `REJECT --reject-with icmp-port-unreachable` (đã xác minh live probe: `vllm-booking:8000` trả `HTTP 200`, còn `1.1.1.1` và `kagent-ui:8080` bị chặn `HTTP 000`).
+- **Runtime Sandbox gVisor:** cô lập tiến trình agent trong user-space kernel gVisor trên `WorkerPool/agents-warm` thay vì chạy trực tiếp trên host kernel.
+- **L7 Egress Allowlist (`EgressPolicy`):** toàn bộ lưu lượng ra từ sandbox đi qua proxy mTLS và chỉ được phép gọi tới `vllm-booking` và `agentgateway` (cả 4 agent đều đạt `EgressPoliciesApplied=True`).
+- **mTLS Ingress & L4 `NetworkPolicy`:** chỉ chấp nhận kết nối mTLS từ `kagent-controller` và chặn mọi kết nối egress ngoài allowlist (kiểm chứng live probe: `vllm-booking:8000` trả `HTTP 200`, còn `1.1.1.1` và `kagent-ui:8080` bị chặn `HTTP 000`).
 
 ![Agent Substrate gVisor Sandbox và Egress isolation](../images/edai-2/substrate-sandbox.jpg)
 
@@ -87,15 +77,9 @@ Hệ thống đã triển khai **Agent Substrate 1.0.1** kết hợp **kagent 1.
 <a id="edai-2-21"></a>
 ## Đăng ký data-agent lên agentregistry
 
-Script [`ci/publish_agent_card.py`](../../edai2/ci/publish_agent_card.py) đăng agent lên agentregistry:
-lấy agent card A2A từ kagent controller, dựng resource `ar.dev/v1alpha1` gồm `MCPServer` `booking-tools` (route `/mcp`
-của agentgateway) và `Agent` (tiêu đề, mô tả, model, MCP server, repository và commit), rồi gửi `POST /v0/apply`.
-Tag là commit đang deploy, nên mỗi lần deploy để lại một phiên bản; apply lại cùng tag thì cập nhật. Card lấy từ
-controller chứ không qua `/a2a/policy-agent` của gateway, vì route đó chia 50/50 và có lúc trả card của v2; script
-dừng nếu tên trong card không khớp agent. Stage `Deploy agents` của [`ci/Jenkinsfile`](../../edai2/ci/Jenkinsfile)
-gọi script này cho cả 4 agent sau khi rollout.
+Script [`ci/publish_agent_card.py`](../../edai2/ci/publish_agent_card.py) lấy A2A agent card trực tiếp từ kagent controller (tránh gọi qua route `/a2a/policy-agent` đang chia 50/50), tạo bản khai báo `Agent` kèm `MCPServer` `booking-tools` gắn tag theo commit deploy rồi gửi `POST /v0/apply` lên `agentregistry`. Stage `Deploy agents` trong [`ci/Jenkinsfile`](../../edai2/ci/Jenkinsfile) tự động chạy bước này cho cả 4 agent sau mỗi lần rollout.
 
-Script đã được chạy cả thủ công (tag `f808e37`) và tự động trong Jenkins `booking-mcp` Build #19 (`WITH_AGENTS=true`, tag `762fa7b`): `data-agent` (tool `get_booking_features`) có trên registry kèm MCP server `booking-tools`.
+Kết quả chạy thủ công và qua Jenkins Build #19 (`WITH_AGENTS=true`) đều đăng ký thành công `data-agent` (tool `get_booking_features`) cùng MCP server `booking-tools` lên registry.
 
 ![agentregistry: catalog 4 agent](../images/edai-2/registry-agents.png)
 

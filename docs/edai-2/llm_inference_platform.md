@@ -5,19 +5,13 @@ Nền tảng LLM chạy vLLM trên Kubernetes có GPU, kèm model tự fine-tune
 <a id="edai-2-3"></a>
 ## Triển khai LLM inference platform (vLLM trên Kubernetes GPU Cluster)
 
-Nền tảng phục vụ mô hình LLM được triển khai trên Kubernetes cluster (K3s) tích hợp GPU vật lý **NVIDIA GeForce RTX 3060 12 GB** (driver 596.41 / CUDA 13.5). Hệ thống cấu hình NVIDIA Container Toolkit (`nvidia-ctk`), Container Device Interface (CDI) và Kubernetes `RuntimeClass/nvidia` cùng NVIDIA Device Plugin (`nvdp`) để cấp phát trực tiếp GPU tài nguyên (`nvidia.com/gpu: 1`) cho các Pod tính toán.
+Nền tảng phục vụ mô hình LLM được triển khai trên Kubernetes cluster (K3s) tích hợp GPU vật lý **NVIDIA GeForce RTX 3060 12 GB**. Hệ thống cấu hình NVIDIA Container Toolkit (`nvidia-ctk`), Container Device Interface (CDI) và Kubernetes `RuntimeClass/nvidia` cùng NVIDIA Device Plugin (`nvdp`) để cấp phát trực tiếp GPU tài nguyên (`nvidia.com/gpu: 1`) cho các Pod tính toán.
 
-Trong namespace `llm`, hệ thống triển khai `Deployment/vllm-booking` và `Service/vllm-booking` (cổng 8000), chạy image `vllm/vllm-openai:v0.9.2` với các tham số tối ưu:
-- `--model Qwen/Qwen2.5-1.5B-Instruct`
-- `--served-model-name qwen-booking`
-- `--enable-lora --lora-modules qwen-booking-v1=/adapters/adapter_v1 --max-lora-rank 16`
-- `--max-model-len 2048 --gpu-memory-utilization 0.80 --enable-prefix-caching --enforce-eager`
+Trong namespace `llm`, `Deployment/vllm-booking` (cấu hình chi tiết tại [`edai2/llm_platform/llm-inference.yaml`](../../edai2/llm_platform/llm-inference.yaml)) chạy `vLLM v0.9.2` phục vụ `Qwen2.5-1.5B-Instruct` (`qwen-booking`) kèm adapter LoRA `qwen-booking-v1` và bật prefix caching.
 
-Pod chiếm 10.326 MiB / 12.288 MiB VRAM cho trọng số và KV Cache. Endpoint `/v1/models` đăng ký thành công model gốc `qwen-booking` và adapter `qwen-booking-v1`. Lời gọi thử nghiệm `/v1/chat/completions` xử lý hội thoại chính sách đặt phòng trả lời hoàn tất (HTTP 200, tốc độ sinh ~78 token/giây), đồng thời phục vụ trực tiếp cho các agent trên **Agent Workbench** qua `agentgateway` (8,9 giây, `completed`, 934/132 tokens). Manifest chuẩn KServe mẫu được lưu trữ tại [`edai2/llm_platform/llm-inference.yaml`](../../edai2/llm_platform/llm-inference.yaml).
+Pod chiếm 10.326 MiB / 12.288 MiB VRAM cho trọng số và KV Cache; endpoint `/v1/chat/completions` trả về `HTTP 200` (~78 token/giây) và phục vụ trực tiếp cho **Agent Workbench** qua `agentgateway` (8,9 giây, `completed`, 934/132 tokens).
 
 ![Pod vllm-booking Ready trên K3s GPU node (ALLOCATABLE_GPU=1)](../images/edai-2/vllm-pod-ready.png)
-
-*Chú thích: Output `kubectl` trên cụm K3s xác nhận node có `ALLOCATABLE_GPU=1` (RTX 3060 12 GB) và pod `vllm-booking` đang ở trạng thái `Running / Ready`.*
 
 ![Agent Workbench gọi inference trực tiếp qua agentgateway tới vLLM trên RTX 3060](../images/edai-2/vllm-workbench-rtx3060.jpg)
 
@@ -35,9 +29,7 @@ Trên GKE (1 GPU L4 spot, 2 epoch, 407 mẫu train / 22 mẫu eval), job đã fi
 | v1 Qwen2.5-1.5B | 6 phút 35 giây | 1,77 → 0,41 | 0,401 | 0,840 | `s3://models/qwen2.5-1.5b-booking-sft/` (10 file) |
 | v2 Qwen2.5-3B | 12 phút | 1,86 → 0,41 | 0,397 | 0,845 | `s3://models/qwen2.5-3b-booking-sft/` (12 file) |
 
-Loss eval tiệm cận loss train cho thấy mô hình không bị overfit; bản 3B chỉ nhỉnh hơn 1.5B rất ít trên tập dữ liệu này.
-vLLM nạp adapter LoRA (`adapter_v1`, `adapter_v2`) từ notebook `kaggle_finetune.ipynb` (cùng dữ liệu và tham số); bản
-gộp trên MinIO dành cho InferenceService.
+Loss eval tiệm cận loss train cho thấy cả hai phiên bản đều hội tụ tốt và không bị overfit; bản gộp được lưu trên MinIO và adapter LoRA được nạp trực tiếp lên vLLM để phục vụ A/B testing.
 
 ![Log fine-tune v1 (Qwen2.5-1.5B)](../images/edai-2/finetune-v1-log.png)
 
@@ -91,7 +83,7 @@ Bật prefix caching giúp tăng throughput 43% và giảm TTFT trung bình 30% 
 
 ### 2. Thử nghiệm trên Kubernetes GPU Node (NVIDIA GeForce RTX 3060 12 GB)
 
-Khi triển khai trên cụm Kubernetes với GPU RTX 3060 12GB (vLLM 0.9.2, `--enable-prefix-caching`, `--enforce-eager`, `--gpu-memory-utilization 0.80`), hệ thống tận dụng thêm 4 GB VRAM để cấp phát dung lượng KV cache lớn hơn:
+Khi triển khai trên cụm Kubernetes với GPU RTX 3060 12 GB (cấu hình vLLM bật prefix caching), hệ thống tận dụng thêm 4 GB VRAM để cấp phát dung lượng KV cache lớn hơn:
 
 | Mức Concurrency | req/s | token ra/s | TTFT trung bình | TTFT p99 | TPOT trung bình |
 |---|---|---|---|---|---|

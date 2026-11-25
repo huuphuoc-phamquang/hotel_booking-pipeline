@@ -13,7 +13,6 @@ Kết quả kiểm thử qua A2A và kagent UI:
 - `propose_overbooking(8528, 2025-01-29)`: tính toán trên 2 booking đang giữ phòng và 15 phòng trống, đề xuất `K = 0` (điểm rủi ro trong `gold.booking_risk` được chấm qua `/v1/cancel-risk/batch`).
 - `apply_overbooking`: gắn cờ `requireApproval` để yêu cầu người duyệt trước khi ghi DB.
 
-Trong quá trình chạy đã khắc phục 2 lỗi thực tế: thiết lập `HF_HOME=/tmp/hf` trong `helm/api/values-booking-mcp.yaml` để `booking-mcp` ghi được cache bge-m3, và nâng ngữ cảnh vLLM từ `2048` lên `4096` để chứa đủ 4 chunk 512 token. Model 3B chọn đúng tool cho các câu hỏi kiểm thử, dù đôi lúc vẫn cần cải thiện độ chính xác khi diễn giải lại số liệu từ tool.
 
 ![kagent UI: policy-agent trả lời bằng search_policy](../images/edai-2/kagent-policy-rag.png)
 
@@ -27,7 +26,7 @@ Trong quá trình chạy đã khắc phục 2 lỗi thực tế: thiết lập `
 
 *Chú thích: Giao diện web `agentregistry` hiển thị đủ catalog 4 Agent (`coordinator-agent`, `data-agent`, `policy-agent`, `policy-agent-v2`) kèm tag commit git.*
 
-Cả `policy-agent` và `policy-agent-v2` đã được triển khai thực tế trong sandbox gVisor (`SandboxConfig/gvisor-default`) qua **kagent 1.0.1 + Agent Substrate** tại [agent-substrate-v1.yaml](../../edai2/k8s/agent-substrate-v1.yaml). Cả hai agent đều đạt `Ready=True` (`ActorTemplate golden snapshot is ready`), `EgressPoliciesApplied=True` theo `EgressPolicy/agents-gateway-only`, dùng `ModelConfig/vllm-booking-config` và chia sẻ chung `WorkerPool/agents-warm`.
+Cả `policy-agent` và `policy-agent-v2` đều chạy trong sandbox gVisor với **kagent 1.0.1 + Agent Substrate** ([`agent-substrate-v1.yaml`](../../edai2/k8s/agent-substrate-v1.yaml)), đạt `Ready=True` và `EgressPoliciesApplied=True` trên cùng `WorkerPool/agents-warm`.
 
 ![policy-agent chạy trong sandbox gVisor và EgressPolicy](../images/edai-2/substrate-sandbox.jpg)
 

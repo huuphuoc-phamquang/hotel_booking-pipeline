@@ -32,13 +32,9 @@ Host `jaeger.booking.local` trên Ingress `observability` trỏ vào service `ja
 <a id="edai-2-40"></a>
 ## Giao diện kiểm thử Agent (Agent Workbench & kagent UI)
 
-Agent Workbench ([`ui/index.html`](../../edai2/ui/index.html), [`ui/nginx.conf`](../../edai2/ui/nginx.conf),
-[`k8s/agent-workbench.yaml`](../../edai2/k8s/agent-workbench.yaml)) là trang tĩnh chạy trên nginx trong namespace
-`kagent`, đứng sau NGINX Ingress tại `workbench.34.124.198.171.nip.io` (chỉ mở cho IP của nhóm). Pod workbench không
-gọi model hay MCP trực tiếp: nginx proxy `/api/` sang kagent controller, trang gửi `message/send` theo giao thức A2A tới
-`/api/a2a/kagent/<agent>/`. Mọi số liệu trên trang lấy từ task A2A trả về: lời gọi tool và agent con (kèm Arguments,
-Results) từ `history`, câu trả lời từ `artifacts`, token từ `kagent_usage_metadata`; thời gian phản hồi đo ở trình duyệt.
-kagent UI gốc cũng được đặt sau ingress tại `agents.34.124.198.171.nip.io` với cùng lớp xác thực.
+Agent Workbench ([`ui/index.html`](../../edai2/ui/index.html), [`k8s/agent-workbench.yaml`](../../edai2/k8s/agent-workbench.yaml)) là giao diện web tĩnh chạy trên nginx trong namespace `kagent`, mở qua NGINX Ingress tại `workbench.34.124.198.171.nip.io` (cùng lớp xác thực với kagent UI gốc tại `agents.34.124.198.171.nip.io`).
+
+Giao diện không gọi trực tiếp LLM hay MCP mà proxy `/api/` sang kagent controller theo giao thức A2A, hiển thị đầy đủ câu trả lời, lịch sử gọi tool/agent con (Arguments & Results), lượng token và thời gian phản hồi.
 
 Thử trên GKE:
 
@@ -63,11 +59,7 @@ Thử trên GKE:
 <a id="edai-2-41"></a>
 ## Giao diện Agent Registry qua Ingress
 
-UI của agentregistry đứng sau NGINX Ingress `agentregistry` trong
-[`k8s/ingress.yaml`](../../edai2/k8s/ingress.yaml), host `registry.34.124.198.171.nip.io`, cùng lớp bảo vệ với UI test
-agent: basic auth bằng Secret htpasswd `kagent-ui-auth` (bản sao trong namespace `agentregistry`) và `limit-rps` 10.
-Service `agentregistry` chỉ là ClusterIP. Kiểm: không đăng nhập trả 401, đăng nhập trả 200, API
-`/v0/agents` qua ingress trả đủ 4 agent.
+UI của `agentregistry` được đưa ra ngoài qua NGINX Ingress ([`k8s/ingress.yaml`](../../edai2/k8s/ingress.yaml), host `registry.34.124.198.171.nip.io`), áp dụng Basic Auth và rate limit `10 req/s` tương tự UI kiểm thử agent. Kiểm tra thực tế: không đăng nhập trả `401`, đăng nhập trả `200`, API `/v0/agents` trả đủ 4 agent.
 
 ![UI agentregistry qua ingress](../images/edai-2/registry-agents.png)
 
@@ -77,10 +69,7 @@ Service `agentregistry` chỉ là ClusterIP. Kiểm: không đăng nhập trả 
 <a id="edai-2-42"></a>
 ## Xác thực Basic Auth và Rate Limit cho UI
 
-Ingress `agent-workbench` ([`k8s/agent-workbench.yaml`](../../edai2/k8s/agent-workbench.yaml)) và `kagent-ui`
-([`k8s/ingress.yaml`](../../edai2/k8s/ingress.yaml)) dùng `auth-type: basic` với Secret htpasswd `kagent-ui-auth`
-(user `admin`, mật khẩu ngẫu nhiên lưu ngoài repo) và `limit-rps: "10"`; NGINX sinh `limit_req rate=10r/s burst=50`,
-request vượt ngưỡng nhận 503 (`limit_req_status` mặc định của ingress-nginx).
+Ingress của `agent-workbench` ([`k8s/agent-workbench.yaml`](../../edai2/k8s/agent-workbench.yaml)) và `kagent-ui` ([`k8s/ingress.yaml`](../../edai2/k8s/ingress.yaml)) đều bật Basic Auth (mật khẩu lưu ngoài repo) và rate limit `10 req/s` (vượt ngưỡng trả `503`).
 
 Tab *Auth & Rate limit* của Agent Workbench gửi request thật qua ingress, kết quả:
 
@@ -88,7 +77,6 @@ Tab *Auth & Rate limit* của Agent Workbench gửi request thật qua ingress, 
   `WWW-Authenticate: Basic realm="Agent test UI"`; với phiên đã đăng nhập: 200.
 - 150 request song song tới `/healthz` trong 0,75 s: 81 request nhận 200, 69 request bị chặn với 503.
 
-Đo thêm bằng curl từ máy của nhóm: 300 request song song tới kagent UI cho 112 × 200 và 188 × 503.
 
 ![Agent Workbench: basic auth 401 và rate limit 503](../images/edai-2/workbench-auth.png)
 
